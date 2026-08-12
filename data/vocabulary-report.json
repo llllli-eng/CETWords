@@ -1,0 +1,148 @@
+{
+  "generatedAt": "2026-08-11T05:49:24.440919+00:00",
+  "source": {
+    "repository": "https://github.com/KyleBing/english-vocabulary",
+    "branch": "master",
+    "directory": "json_original/json-sentence"
+  },
+  "formatVersion": 1,
+  "shortMeaningLimit": 56,
+  "books": {
+    "cet4": {
+      "primarySourceFiles": [
+        "CET4_1.json",
+        "CET4_2.json",
+        "CET4_3.json"
+      ],
+      "primarySourceFileCounts": {
+        "CET4_1.json": 1162,
+        "CET4_2.json": 3739,
+        "CET4_3.json": 2607
+      },
+      "primaryRawEntries": 7508,
+      "primaryUniqueEntries": 4544,
+      "primaryDuplicateWordsRemoved": 2964,
+      "supplementalSourceFiles": [
+        "GaoZhong_2.json",
+        "GaoZhong_3.json"
+      ],
+      "supplementalSourceFileCounts": {
+        "GaoZhong_2.json": 3668,
+        "GaoZhong_3.json": 2340
+      },
+      "supplementalRawEntries": 6008,
+      "supplementalEntriesAdded": 1035,
+      "supplementalEntriesSkipped": 4973,
+      "rawEntriesProcessed": 13516,
+      "finalEntries": 5579,
+      "coreEntries": 4544,
+      "supplementalEntries": 1035,
+      "duplicateWordsRemoved": 7937,
+      "invalidEntriesRemoved": 0,
+      "idCollisionsResolved": 0,
+      "missingPhonetic": 70,
+      "missingExample": 199,
+      "missingExampleTranslation": 201,
+      "longestShortMeaning": 55,
+      "duplicateSamples": [
+        "absent",
+        "absorb",
+        "abstract",
+        "abundant",
+        "abuse",
+        "academic",
+        "accelerate",
+        "access",
+        "accommodate",
+        "accompany",
+        "accomplish",
+        "accumulate",
+        "accurate",
+        "accustom",
+        "achieve",
+        "acquire",
+        "acute",
+        "adapt",
+        "additional",
+        "address"
+      ],
+      "invalidSamples": [],
+      "idCollisionSamples": [],
+      "validation": {
+        "valid": true,
+        "issues": [],
+        "checkedEntries": 5579,
+        "book": "cet4"
+      }
+    },
+    "cet6": {
+      "primarySourceFiles": [
+        "CET6_1.json",
+        "CET6_2.json",
+        "CET6_3.json"
+      ],
+      "primarySourceFileCounts": {
+        "CET6_1.json": 1228,
+        "CET6_2.json": 2078,
+        "CET6_3.json": 2345
+      },
+      "primaryRawEntries": 5651,
+      "primaryUniqueEntries": 3991,
+      "primaryDuplicateWordsRemoved": 1660,
+      "supplementalSourceFiles": [
+        "CET4_1.json",
+        "CET4_2.json",
+        "CET4_3.json"
+      ],
+      "supplementalSourceFileCounts": {
+        "CET4_1.json": 1162,
+        "CET4_2.json": 3739,
+        "CET4_3.json": 2607
+      },
+      "supplementalRawEntries": 7508,
+      "supplementalEntriesAdded": 2671,
+      "supplementalEntriesSkipped": 4837,
+      "rawEntriesProcessed": 13159,
+      "finalEntries": 6662,
+      "coreEntries": 3991,
+      "supplementalEntries": 2671,
+      "duplicateWordsRemoved": 6497,
+      "invalidEntriesRemoved": 0,
+      "idCollisionsResolved": 0,
+      "missingPhonetic": 65,
+      "missingExample": 209,
+      "missingExampleTranslation": 209,
+      "longestShortMeaning": 54,
+      "duplicateSamples": [
+        "integral",
+        "composition",
+        "executive",
+        "descendant",
+        "qualification",
+        "bump",
+        "mount",
+        "diversion",
+        "convert",
+        "transition",
+        "noted",
+        "position",
+        "metropolitan",
+        "category",
+        "species",
+        "indicative",
+        "designate",
+        "merit",
+        "check",
+        "symptom"
+      ],
+      "invalidSamples": [],
+      "idCollisionSamples": [],
+      "validation": {
+        "valid": true,
+        "issues": [],
+        "checkedEntries": 6662,
+        "book": "cet6"
+      }
+    }
+  }
+}

@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="一款简洁、专注、完全本地运行的大学英语四六级背单词应用。"
+    />
+    <meta name="theme-color" content="#f5f7f2" />
+    <title>拾词 · 四六级背单词</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/sample-data.js" defer></script>
+    <script src="js/review-scheduler.js" defer></script>
+    <script src="js/new-word-learning.js" defer></script>
+    <script src="js/storage.js" defer></script>
+    <script src="js/word-utils.js" defer></script>
+    <script src="js/study-modes.js" defer></script>
+    <script src="js/ai-judge.js" defer></script>
+    <script src="js/speech.js" defer></script>
+    <script src="js/word-library.js" defer></script>
+    <script src="js/statistics-service.js" defer></script>
+    <script src="js/backup-service.js" defer></script>
+    <script src="js/study.js" defer></script>
+    <script src="js/app.js" defer></script>
+  </head>
+  <body>
+    <section class="view" id="home-view" aria-label="首页">
+      <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+      <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="拾词首页">
+          <span class="brand__mark" aria-hidden="true">拾</span>
+          <span class="brand__text">
+            <strong>拾词</strong>
+            <small>CET WORDS</small>
+          </span>
+        </a>
+
+        <div class="topbar__actions">
+          <p class="today" id="today-label"></p>
+          <button
+            class="icon-button"
+            id="theme-toggle"
+            type="button"
+            aria-label="切换深色模式"
+            title="切换深色模式"
+          >
+            <span class="theme-icon" aria-hidden="true">☾</span>
+          </button>
+        </div>
+      </header>
+
+      <main id="main-content">
+        <section class="hero" aria-labelledby="greeting-title">
+          <div>
+            <p class="eyebrow">MAKE WORDS STICK</p>
+            <h1 id="greeting-title">今天，也向前一步。</h1>
+            <p class="hero__subtitle">用一点专注，让每个单词都留下来。</p>
+          </div>
+
+          <div class="book-switcher" aria-label="选择词库">
+            <button class="book-option is-active" type="button" data-book="cet4" aria-pressed="true">
+              CET-4 <span>四级</span>
+            </button>
+            <button class="book-option" type="button" data-book="cet6" aria-pressed="false">
+              CET-6 <span>六级</span>
+            </button>
+          </div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="card task-card" aria-labelledby="task-title">
+            <div class="card__header">
+              <div>
+                <p class="section-kicker">DAILY PLAN</p>
+                <h2 id="task-title">今日任务</h2>
+              </div>
+              <span class="book-badge" id="current-book-badge">四级词汇</span>
+            </div>
+
+            <div class="task-overview">
+              <div
+                class="progress-ring"
+                id="daily-progress-ring"
+                role="img"
+                aria-label="今日任务已完成 0%"
+                style="--progress: 0"
+              >
+                <div class="progress-ring__inner">
+                  <strong id="daily-percent">0%</strong>
+                  <span>今日完成</span>
+                </div>
+              </div>
+
+              <div class="task-list">
+                <div class="task-item">
+                  <div class="task-item__top">
+                    <span><i class="status-dot status-dot--new"></i>新词</span>
+                    <strong><span id="new-completed">0</span><small> / <span id="new-total">30</span></small></strong>
+                  </div>
+                  <div class="mini-progress" aria-hidden="true">
+                    <span id="new-progress-bar" style="width: 0"></span>
+                  </div>
+                </div>
+
+                <div class="task-item task-item--pending">
+                  <div class="task-item__top">
+                    <span><i class="status-dot status-dot--pending"></i>待巩固</span>
+                    <strong id="pending-reinforcement-count">0</strong>
+                  </div>
+                </div>
+
+                <div class="task-item">
+                  <div class="task-item__top">
+                    <span><i class="status-dot status-dot--review"></i>复习</span>
+                    <strong><span id="review-completed">0</span><small> / <span id="review-total">0</span></small></strong>
+                  </div>
+                  <div class="mini-progress mini-progress--purple" aria-hidden="true">
+                    <span id="review-progress-bar" style="width: 0"></span>
+                  </div>
+                </div>
+
+                <p class="task-hint"><span aria-hidden="true">✦</span> 准备今日学习任务</p>
+              </div>
+            </div>
+
+            <button class="primary-button" id="continue-button" type="button">
+              <span>继续学习</span>
+              <span class="button-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="home-study-mode" id="home-study-mode-button" type="button">
+              当前模式：英文选中文
+            </button>
+          </section>
+
+          <aside class="side-column" aria-label="学习概览">
+            <section class="card progress-card" aria-labelledby="overall-title">
+              <div class="card__header card__header--compact">
+                <div>
+                  <p class="section-kicker">YOUR JOURNEY</p>
+                  <h2 id="overall-title">总体进度</h2>
+                  <p class="scope-summary" id="overall-scope-label">核心词汇 · 正在统计</p>
+                </div>
+                <strong class="progress-number" id="overall-percent">0%</strong>
+              </div>
+
+              <div class="overall-progress" aria-hidden="true">
+                <span id="overall-progress-bar" style="width: 0"></span>
+              </div>
+
+              <div class="stats-row">
+                <div>
+                  <strong id="learned-count">0</strong>
+                  <span>已学习</span>
+                </div>
+                <div>
+                  <strong id="mastered-count">0</strong>
+                  <span>已掌握</span>
+                </div>
+                <div>
+                  <strong id="remaining-count">0</strong>
+                  <span>未学习</span>
+                </div>
+              </div>
+            </section>
+
+            <blockquote class="quote-card">
+              <span class="quote-mark" aria-hidden="true">“</span>
+              <p>Small steps every day<br />lead to big results.</p>
+              <footer>每天一小步，终会抵达远方。</footer>
+            </blockquote>
+          </aside>
+        </div>
+
+        <section class="quick-section" aria-labelledby="quick-title">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">EXPLORE</p>
+              <h2 id="quick-title">学习工具</h2>
+            </div>
+            <p>让复习更有条理</p>
+          </div>
+
+          <div class="quick-grid">
+            <button class="quick-card" type="button" data-mode="review">
+              <span class="quick-card__icon quick-card__icon--green" aria-hidden="true">⟳</span>
+              <span class="quick-card__text">
+                <strong>今日复习</strong>
+                <small>只复习当前已到期单词</small>
+              </span>
+              <span class="quick-card__count" id="due-review-count">0</span>
+              <span class="quick-card__arrow" aria-hidden="true">›</span>
+            </button>
+
+            <button class="quick-card" type="button" data-page="wrong">
+              <span class="quick-card__icon quick-card__icon--coral" aria-hidden="true">↺</span>
+              <span class="quick-card__text">
+                <strong>错词本</strong>
+                <small>集中攻克薄弱词汇</small>
+              </span>
+              <span class="quick-card__count" id="wrong-word-count">0</span>
+              <span class="quick-card__arrow" aria-hidden="true">›</span>
+            </button>
+
+            <button class="quick-card" type="button" data-page="favorite">
+              <span class="quick-card__icon quick-card__icon--gold" aria-hidden="true">☆</span>
+              <span class="quick-card__text">
+                <strong>收藏</strong>
+                <small>随时回看重点单词</small>
+              </span>
+              <span class="quick-card__count" id="favorite-word-count">0</span>
+              <span class="quick-card__arrow" aria-hidden="true">›</span>
+            </button>
+
+            <button class="quick-card" type="button" data-page="words">
+              <span class="quick-card__icon quick-card__icon--blue" aria-hidden="true">Aa</span>
+              <span class="quick-card__text">
+                <strong>单词列表</strong>
+                <small>搜索与浏览完整词库</small>
+              </span>
+              <span class="quick-card__arrow" aria-hidden="true">›</span>
+            </button>
+
+            <button class="quick-card" type="button" data-page="statistics">
+              <span class="quick-card__icon quick-card__icon--purple" aria-hidden="true">⌁</span>
+              <span class="quick-card__text">
+                <strong>学习统计</strong>
+                <small>看见每一天的积累</small>
+              </span>
+              <span class="quick-card__arrow" aria-hidden="true">›</span>
+            </button>
+
+            <button class="quick-card" type="button" data-page="settings">
+              <span class="quick-card__icon" aria-hidden="true">⚙</span>
+              <span class="quick-card__text">
+                <strong>设置</strong>
+                <small>管理当前词库的学习记录</small>
+              </span>
+              <span class="quick-card__arrow" aria-hidden="true">›</span>
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer class="page-footer">
+        <p>拾词 · 把单词变成你的长期记忆</p>
+      </footer>
+      </div>
+
+      <nav class="mobile-nav" aria-label="主要导航">
+        <button class="mobile-nav__item is-active" type="button" aria-current="page">
+          <span aria-hidden="true">⌂</span>
+          首页
+        </button>
+        <button class="mobile-nav__item" type="button" data-page="words">
+          <span aria-hidden="true">Aa</span>
+          词库
+        </button>
+        <button class="mobile-nav__item" type="button" data-page="statistics">
+          <span aria-hidden="true">⌁</span>
+          统计
+        </button>
+        <button class="mobile-nav__item" type="button" data-page="settings">
+          <span aria-hidden="true">⚙</span>
+          设置
+        </button>
+      </nav>
+    </section>
+
+    <section class="view study-view" id="study-view" aria-label="单词学习" hidden>
+      <div class="study-shell">
+        <header class="study-topbar">
+          <button class="back-button" id="study-back-button" type="button">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+
+          <div class="study-context">
+            <span class="study-book-badge" id="study-book-badge">CET-4</span>
+            <div class="study-mode-control">
+              <span id="study-mode-badge">英文选中文</span>
+              <button id="study-mode-switch" type="button" aria-label="切换为中文选英文">切换模式</button>
+            </div>
+          </div>
+
+          <div class="study-progress-summary">
+            <span id="study-progress-caption">今日学习</span>
+            <strong id="study-progress-text">18 / 30</strong>
+          </div>
+        </header>
+
+        <div
+          class="study-progress-track"
+          role="progressbar"
+          aria-label="今日学习进度"
+          aria-valuemin="0"
+          aria-valuemax="30"
+          aria-valuenow="18"
+        >
+          <span id="study-progress-bar" style="width: 60%"></span>
+        </div>
+
+        <main class="study-main">
+          <section class="study-card" id="question-screen" aria-labelledby="study-word">
+            <div class="question-meta">
+              <span id="question-number">第 1 / 12 词</span>
+              <span class="question-meta__context">
+                <span class="learning-phase-badge" id="study-learning-phase">初学</span>
+                <span id="study-question-mode">英文选中文</span>
+              </span>
+            </div>
+
+            <div class="word-stage">
+              <div class="study-word-heading">
+                <h1 id="study-word">abandon</h1>
+                <button
+                  class="study-favorite-button"
+                  id="study-favorite-button"
+                  type="button"
+                  aria-pressed="false"
+                  aria-label="收藏当前单词"
+                >
+                  <span aria-hidden="true">☆</span>
+                  <span>收藏</span>
+                </button>
+              </div>
+              <p id="study-phonetic">/əˈbændən/</p>
+              <button
+                class="speak-button"
+                id="study-speak-button"
+                type="button"
+                aria-label="朗读当前单词"
+                title="朗读当前单词"
+              >
+                <span aria-hidden="true">🔊</span>
+                听发音
+              </button>
+            </div>
+
+            <div class="answer-area">
+              <div class="answer-heading">
+                <h2 id="answer-instruction">请选择正确的中文释义</h2>
+                <span class="keyboard-hint">按 1–4 选择</span>
+              </div>
+              <div class="answer-options" id="answer-options" aria-label="答案选项"></div>
+              <form class="meaning-answer-form" id="meaning-answer-form" hidden>
+                <label for="meaning-answer-input">中文释义</label>
+                <textarea
+                  id="meaning-answer-input"
+                  rows="3"
+                  maxlength="300"
+                  placeholder="例如：放弃、遗弃"
+                  autocomplete="off"
+                ></textarea>
+                <p class="meaning-answer-status" id="meaning-answer-status" aria-live="polite"></p>
+                <button class="primary-button meaning-submit-button" id="meaning-submit-button" type="submit">
+                  提交答案
+                </button>
+              </form>
+            </div>
+
+            <div class="answer-feedback" id="answer-feedback" role="status" aria-live="polite" hidden>
+              <span class="feedback-icon" id="feedback-icon" aria-hidden="true">✓</span>
+              <div>
+                <strong id="feedback-title">回答正确</strong>
+                <p id="feedback-text">判断得很准，继续保持。</p>
+                <div class="ai-feedback-details" id="ai-feedback-details" hidden>
+                  <p><span>你的回答</span><strong id="ai-feedback-user-answer"></strong></p>
+                  <p><span>标准释义</span><strong id="ai-feedback-standard-meaning"></strong></p>
+                  <p><span>判断说明</span><strong id="ai-feedback-judgement"></strong></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="manual-judgement-actions" id="manual-judgement-actions" hidden>
+              <p>你可以临时自行判断，本次选择仍会使用统一学习规则。</p>
+              <div>
+                <button class="secondary-button" id="manual-correct-button" type="button">我答对了</button>
+                <button class="secondary-button" id="manual-wrong-button" type="button">我答错了</button>
+                <button class="text-button" id="manual-later-button" type="button">稍后再试</button>
+              </div>
+            </div>
+
+            <article class="word-details" id="word-details" aria-label="单词详情" hidden>
+              <div class="word-details__heading">
+                <div>
+                  <h2 id="detail-word">abandon</h2>
+                  <p id="detail-phonetic">/əˈbændən/</p>
+                </div>
+                <button
+                  class="detail-speak-button"
+                  id="detail-speak-button"
+                  type="button"
+                  aria-label="再次朗读当前单词"
+                >
+                  <span aria-hidden="true">🔊</span>
+                  发音
+                </button>
+              </div>
+              <p class="word-details__meaning" id="detail-meaning">v. 放弃；遗弃</p>
+              <div class="example-block">
+                <span>EXAMPLE</span>
+                <p id="detail-example">He abandoned his original plan.</p>
+                <p class="example-translation" id="detail-translation">他放弃了原来的计划。</p>
+              </div>
+            </article>
+
+            <button class="primary-button next-word-button" id="next-word-button" type="button" hidden>
+              <span>下一词</span>
+              <span class="button-arrow" aria-hidden="true">→</span>
+            </button>
+          </section>
+
+          <section class="result-card" id="result-screen" aria-labelledby="result-title" hidden>
+            <span class="result-symbol" aria-hidden="true">✓</span>
+            <p class="section-kicker">DAILY COMPLETE</p>
+            <h1 id="result-title">今日学习完成</h1>
+            <div class="result-total-wrap">
+              <strong id="result-total">30</strong>
+              <span id="result-note">今日累计单词</span>
+            </div>
+
+            <div class="result-stats">
+              <div>
+                <span>正确</span>
+                <strong id="result-correct">25</strong>
+              </div>
+              <div>
+                <span>错误</span>
+                <strong id="result-wrong">5</strong>
+              </div>
+              <div>
+                <span>接近</span>
+                <strong id="result-partial">0</strong>
+              </div>
+              <div>
+                <span>正确率</span>
+                <strong id="result-accuracy">83%</strong>
+              </div>
+            </div>
+
+            <div class="result-actions">
+              <button class="secondary-button" id="result-home-button" type="button">返回首页</button>
+              <button class="primary-button" id="restart-button" type="button">
+                <span>再来一组</span>
+                <span class="button-arrow" aria-hidden="true">→</span>
+              </button>
+            </div>
+          </section>
+        </main>
+
+        <footer class="study-shortcuts">
+          <span><kbd>1</kbd>–<kbd>4</kbd> 选择答案</span>
+          <span><kbd>Enter</kbd> 下一词</span>
+        </footer>
+      </div>
+    </section>
+
+    <section class="view collection-view" id="collection-view" aria-label="单词集合" hidden>
+      <div class="subpage-shell">
+        <header class="subpage-topbar">
+          <button class="back-button" id="collection-back-button" type="button">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+          <span class="study-book-badge" id="collection-book-badge">CET-4</span>
+        </header>
+
+        <main>
+          <section class="collection-hero">
+            <div>
+              <p class="section-kicker" id="collection-kicker">REVIEW & REMEMBER</p>
+              <h1 id="collection-title">错词本</h1>
+              <p id="collection-count-label">共 0 个错词</p>
+            </div>
+            <button class="primary-button collection-study-button" id="collection-study-button" type="button">
+              <span>开始复习错词</span>
+              <span class="button-arrow" aria-hidden="true">→</span>
+            </button>
+          </section>
+
+          <div class="collection-toolbar">
+            <label class="search-field" for="collection-search">
+              <span aria-hidden="true">⌕</span>
+              <input
+                id="collection-search"
+                type="search"
+                autocomplete="off"
+                placeholder="搜索英文或中文释义"
+              />
+            </label>
+          </div>
+
+          <div class="collection-list" id="collection-list"></div>
+
+          <section class="empty-state" id="collection-empty" hidden>
+            <span class="empty-state__icon" id="collection-empty-icon" aria-hidden="true">🎉</span>
+            <h2 id="collection-empty-title">暂无错词</h2>
+            <p id="collection-empty-text">继续保持，你做得很好。</p>
+            <button class="secondary-button empty-state__button" id="collection-empty-action" type="button">
+              去背单词
+            </button>
+          </section>
+        </main>
+      </div>
+    </section>
+
+    <section class="view word-list-view" id="word-list-view" aria-label="完整单词列表" hidden>
+      <div class="subpage-shell word-list-shell">
+        <header class="subpage-topbar">
+          <button class="back-button" id="word-list-back-button" type="button">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+          <span class="study-book-badge" id="word-list-book-badge">CET-4</span>
+        </header>
+
+        <main>
+          <section class="collection-hero word-list-hero">
+            <div>
+              <p class="section-kicker">FULL WORD LIBRARY</p>
+              <h1 id="word-list-title">CET-4 单词</h1>
+              <p id="word-list-count-label">共 0 个单词</p>
+            </div>
+          </section>
+
+          <section class="word-list-controls" aria-label="搜索、筛选与排序">
+            <label class="search-field" for="word-list-search">
+              <span aria-hidden="true">⌕</span>
+              <input
+                id="word-list-search"
+                type="search"
+                autocomplete="off"
+                placeholder="搜索英文、中文释义或例句"
+              />
+            </label>
+
+            <div class="word-filter-row" role="group" aria-label="筛选单词">
+              <button class="is-active" type="button" data-word-filter="all" aria-pressed="true">全部</button>
+              <button type="button" data-word-filter="unlearned" aria-pressed="false">未学习</button>
+              <button type="button" data-word-filter="learning" aria-pressed="false">学习中</button>
+              <button type="button" data-word-filter="mastered" aria-pressed="false">已掌握</button>
+              <button type="button" data-word-filter="wrong" aria-pressed="false">错词</button>
+              <button type="button" data-word-filter="favorite" aria-pressed="false">收藏</button>
+            </div>
+
+            <label class="sort-field" for="word-list-sort">
+              <span>排序</span>
+              <select id="word-list-sort">
+                <option value="default">默认</option>
+                <option value="az">A–Z</option>
+                <option value="mastery">熟练度低 → 高</option>
+                <option value="errors">错误次数多 → 少</option>
+                <option value="recent">最近学习</option>
+              </select>
+            </label>
+          </section>
+
+          <p class="word-list-range" id="word-list-range" aria-live="polite">显示 0 个单词</p>
+          <div class="word-list-grid" id="word-list-grid"></div>
+
+          <section class="empty-state" id="word-list-empty" hidden>
+            <span class="empty-state__icon" aria-hidden="true">⌕</span>
+            <h2>没有找到符合条件的单词</h2>
+            <p>换一个关键词或筛选条件试试。</p>
+          </section>
+
+          <nav class="pagination" id="word-list-pagination" aria-label="单词列表分页">
+            <button class="secondary-button" id="word-list-prev" type="button">上一页</button>
+            <span id="word-list-page-label">第 1 / 1 页</span>
+            <button class="secondary-button" id="word-list-next" type="button">下一页</button>
+          </nav>
+        </main>
+      </div>
+    </section>
+
+    <section class="view statistics-view" id="statistics-view" aria-label="学习统计" hidden>
+      <div class="subpage-shell statistics-shell">
+        <header class="subpage-topbar">
+          <button class="back-button" id="statistics-back-button" type="button">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+          <span class="study-book-badge" id="statistics-book-badge">CET-4</span>
+        </header>
+
+        <main>
+          <section class="statistics-hero">
+            <div>
+              <p class="section-kicker">LEARNING MOMENTUM</p>
+              <h1>学习统计</h1>
+              <p id="statistics-description">回顾 CET-4 的每一步积累。</p>
+            </div>
+            <div class="streak-summary" aria-label="连续学习天数">
+              <div><strong id="current-streak">0</strong><span>连续学习</span></div>
+              <div><strong id="longest-streak">0</strong><span>最长连续</span></div>
+            </div>
+          </section>
+
+          <section class="statistics-grid" aria-label="累计学习统计">
+            <article><span>累计学习</span><strong id="stats-learned">0</strong></article>
+            <article><span>已掌握</span><strong id="stats-mastered">0</strong></article>
+            <article><span>未学习</span><strong id="stats-unlearned">0</strong></article>
+            <article><span>错词</span><strong id="stats-wrong-words">0</strong></article>
+            <article><span>累计答题</span><strong id="stats-answers">0</strong></article>
+            <article><span>正确</span><strong id="stats-correct">0</strong></article>
+            <article><span>错误</span><strong id="stats-wrong-answers">0</strong></article>
+            <article><span>正确率</span><strong id="stats-accuracy">0%</strong></article>
+          </section>
+
+          <section class="statistics-panel today-statistics" aria-labelledby="today-statistics-title">
+            <div class="statistics-panel__heading">
+              <div>
+                <p class="section-kicker">TODAY</p>
+                <h2 id="today-statistics-title">今日</h2>
+              </div>
+              <strong id="today-accuracy">0%</strong>
+            </div>
+            <div class="today-statistics__grid">
+              <div><span>新词</span><strong id="today-new-words">0</strong></div>
+              <div><span>复习</span><strong id="today-review-words">0</strong></div>
+              <div><span>答题</span><strong id="today-answers">0</strong></div>
+              <div><span>正确</span><strong id="today-correct">0</strong></div>
+              <div><span>错误</span><strong id="today-wrong">0</strong></div>
+            </div>
+          </section>
+
+          <section class="statistics-panel" aria-labelledby="seven-days-title">
+            <div class="statistics-panel__heading">
+              <div>
+                <p class="section-kicker">LAST 7 DAYS</p>
+                <h2 id="seven-days-title">最近 7 天</h2>
+              </div>
+              <div class="chart-legend"><span class="is-new">新词</span><span class="is-review">复习</span></div>
+            </div>
+            <div class="seven-day-chart" id="seven-day-chart" role="img" aria-label="最近 7 天新词与复习柱状图"></div>
+          </section>
+
+          <section class="statistics-panel" aria-labelledby="mastery-distribution-title">
+            <div class="statistics-panel__heading">
+              <div>
+                <p class="section-kicker">MASTERY</p>
+                <h2 id="mastery-distribution-title">熟练度分布</h2>
+              </div>
+              <span>只统计已学习单词</span>
+            </div>
+            <div class="mastery-distribution" id="mastery-distribution"></div>
+          </section>
+        </main>
+      </div>
+    </section>
+
+    <section class="view settings-view" id="settings-view" aria-label="设置" hidden>
+      <div class="subpage-shell">
+        <header class="subpage-topbar">
+          <button class="back-button" id="settings-back-button" type="button">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+          <span class="study-book-badge" id="settings-book-badge">CET-4</span>
+        </header>
+
+        <main>
+          <section class="settings-hero">
+            <p class="section-kicker">PREFERENCES</p>
+            <h1>设置</h1>
+            <p>管理当前词库的数据与学习记录。</p>
+          </section>
+
+          <section class="settings-card settings-card--learning" aria-labelledby="learning-settings-title">
+            <div class="settings-card__content">
+              <span class="settings-card__icon" aria-hidden="true">◎</span>
+              <div>
+                <h2 id="learning-settings-title">每日新词数量</h2>
+                <p id="daily-goal-description">CET-4 当前每天学习 30 个新词。</p>
+              </div>
+            </div>
+            <div class="daily-goal-picker" role="group" aria-label="选择每日新词数量">
+              <button type="button" data-daily-goal="10" aria-pressed="false">10</button>
+              <button type="button" data-daily-goal="20" aria-pressed="false">20</button>
+              <button class="is-selected" type="button" data-daily-goal="30" aria-pressed="true">30</button>
+              <button type="button" data-daily-goal="50" aria-pressed="false">50</button>
+              <button type="button" data-daily-goal="80" aria-pressed="false">80</button>
+              <button type="button" data-daily-goal="100" aria-pressed="false">100</button>
+            </div>
+          </section>
+
+          <section class="settings-card settings-card--scope" aria-labelledby="vocabulary-scope-title">
+            <div class="settings-card__content">
+              <span class="settings-card__icon" aria-hidden="true">层</span>
+              <div>
+                <h2 id="vocabulary-scope-title">词汇范围</h2>
+                <p id="vocabulary-scope-description">默认只安排当前考试级别的核心词。</p>
+              </div>
+            </div>
+            <div class="scope-picker" role="radiogroup" aria-label="选择每日新词范围">
+              <button class="is-selected" type="button" data-vocabulary-scope="core" role="radio" aria-checked="true">
+                仅核心词汇
+              </button>
+              <button type="button" data-vocabulary-scope="all" role="radio" aria-checked="false">
+                核心 + 补充词汇
+              </button>
+            </div>
+          </section>
+
+          <section class="settings-card settings-card--study-mode" aria-labelledby="study-mode-title">
+            <div class="settings-card__content">
+              <span class="settings-card__icon" aria-hidden="true">译</span>
+              <div>
+                <h2 id="study-mode-title">学习模式</h2>
+                <p id="study-mode-description">题目显示英文单词，从四个中文释义中选择答案。</p>
+              </div>
+            </div>
+            <div class="study-mode-picker" role="radiogroup" aria-label="选择学习模式">
+              <button class="is-selected" type="button" data-study-mode="en-to-zh" role="radio" aria-checked="true">
+                英文选中文
+              </button>
+              <button type="button" data-study-mode="zh-to-en" role="radio" aria-checked="false">
+                中文选英文
+              </button>
+            </div>
+          </section>
+
+          <section class="settings-card settings-card--ai" aria-labelledby="ai-judge-title">
+            <div class="settings-card__content">
+              <span class="settings-card__icon" aria-hidden="true">AI</span>
+              <div>
+                <h2 id="ai-judge-title">AI 中文释义判断</h2>
+                <p>只用于新词的当日巩固；未启用时继续使用原有反向四选一。</p>
+              </div>
+            </div>
+            <div class="ai-settings-form">
+              <p class="ai-connection-status" id="ai-connection-status" data-status="unconfigured">
+                <span aria-hidden="true"></span>
+                状态：未配置
+              </p>
+              <label for="ai-proxy-url">API 代理地址</label>
+              <input id="ai-proxy-url" type="url" placeholder="http://localhost:8787" autocomplete="url" />
+              <label for="ai-proxy-token">个人访问 Token</label>
+              <input
+                id="ai-proxy-token"
+                type="password"
+                placeholder="只保存在当前设备"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <p class="ai-settings-note">这里不填写 DeepSeek API Key。真正的 Key 只保存在你自己的 Worker Secret 中。</p>
+              <div class="ai-settings-actions">
+                <button class="primary-button" id="ai-test-connection" type="button">保存并测试连接</button>
+                <button class="secondary-button" id="ai-disable-button" type="button" hidden>停用 AI 巩固</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-group" aria-labelledby="data-management-title">
+            <div class="settings-group__heading">
+              <p class="section-kicker">LOCAL DATA</p>
+              <h2 id="data-management-title">数据管理</h2>
+            </div>
+
+            <div class="settings-card settings-card--data">
+              <div class="settings-card__content">
+                <span class="settings-card__icon" aria-hidden="true">⇅</span>
+                <div>
+                  <h3>本地学习数据</h3>
+                  <p class="data-overview">
+                    <span>CET-4 已学习 <strong id="data-overview-cet4">0</strong></span>
+                    <span>CET-6 已学习 <strong id="data-overview-cet6">0</strong></span>
+                    <span>最后备份：<strong id="last-export-time">未知</strong></span>
+                  </p>
+                </div>
+              </div>
+              <div class="data-actions">
+                <button class="secondary-button" id="export-data-button" type="button">导出学习数据</button>
+                <label class="primary-button import-data-button" for="import-data-input">导入学习数据</label>
+                <input class="visually-hidden" id="import-data-input" type="file" accept="application/json,.json" />
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-group settings-group--danger" aria-labelledby="danger-settings-title">
+            <div class="settings-group__heading">
+              <p class="section-kicker">DANGER ZONE</p>
+              <h2 id="danger-settings-title">危险操作</h2>
+            </div>
+
+            <section class="settings-card" aria-labelledby="data-settings-title">
+              <div>
+                <span class="settings-card__icon" aria-hidden="true">⌫</span>
+                <div>
+                  <h3 id="data-settings-title">清空当前词库</h3>
+                  <p id="clear-book-description">只清空 CET-4 的进度、错词与收藏，不影响另一个词库。</p>
+                </div>
+              </div>
+              <button class="danger-button" id="clear-book-button" type="button">清空当前词库</button>
+            </section>
+
+            <section class="settings-card settings-card--reset" aria-labelledby="reset-all-title">
+              <div>
+                <span class="settings-card__icon" aria-hidden="true">!</span>
+                <div>
+                  <h3 id="reset-all-title">重置全部数据</h3>
+                  <p>删除 CET-4、CET-6 的全部学习记录和偏好设置，建议先导出备份。</p>
+                </div>
+              </div>
+              <button class="danger-button" id="reset-all-button" type="button">重置全部数据</button>
+            </section>
+          </section>
+        </main>
+      </div>
+    </section>
+
+    <dialog class="confirm-dialog" id="clear-confirm-dialog" aria-labelledby="clear-dialog-title">
+      <div class="confirm-dialog__content">
+        <span class="confirm-dialog__icon" aria-hidden="true">!</span>
+        <h2 id="clear-dialog-title">确定清空学习记录吗？</h2>
+        <p id="clear-dialog-message">将清空 CET-4 的全部学习记录，该操作无法撤销。</p>
+        <div class="confirm-dialog__actions">
+          <button class="secondary-button" id="clear-cancel-button" type="button">取消</button>
+          <button class="danger-button" id="clear-confirm-button" type="button">确认清空</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="word-detail-dialog" id="word-detail-dialog" aria-labelledby="word-detail-title">
+      <article class="word-detail-dialog__content">
+        <button class="dialog-close-button" id="word-detail-close" type="button" aria-label="关闭单词详情">×</button>
+        <p class="section-kicker" id="word-detail-book">CET-4 WORD</p>
+        <div class="word-detail-dialog__heading">
+          <div>
+            <h2 id="word-detail-title">abandon</h2>
+            <p id="word-detail-phonetic">/əˈbændən/</p>
+          </div>
+          <button class="secondary-button" id="word-detail-speak" type="button">🔊 发音</button>
+        </div>
+        <p class="word-detail-dialog__meaning" id="word-detail-meaning">v. 放弃；遗弃</p>
+
+        <section class="word-detail-example" aria-labelledby="word-detail-example-title">
+          <h3 id="word-detail-example-title">例句</h3>
+          <p id="word-detail-example"></p>
+          <p id="word-detail-translation"></p>
+        </section>
+
+        <section class="word-detail-learning" aria-label="学习状态">
+          <div class="word-detail-mastery" id="word-detail-mastery"></div>
+          <dl>
+            <div><dt>学习状态</dt><dd id="word-detail-learning-state">尚未学习</dd></div>
+            <div><dt>正确</dt><dd id="word-detail-correct">0 次</dd></div>
+            <div><dt>错误</dt><dd id="word-detail-wrong">0 次</dd></div>
+            <div><dt>首次学习</dt><dd id="word-detail-first-date">—</dd></div>
+            <div><dt>最近学习</dt><dd id="word-detail-last-date">—</dd></div>
+            <div><dt>下次复习</dt><dd id="word-detail-next-date">待安排</dd></div>
+          </dl>
+        </section>
+
+        <div class="word-detail-actions">
+          <button class="secondary-button" id="word-detail-favorite" type="button" aria-pressed="false">☆ 收藏</button>
+          <button class="secondary-button" id="word-detail-wrong-book" type="button" aria-pressed="false">加入错词本</button>
+        </div>
+      </article>
+    </dialog>
+
+    <dialog class="confirm-dialog import-confirm-dialog" id="import-confirm-dialog" aria-labelledby="import-dialog-title">
+      <div class="confirm-dialog__content">
+        <span class="confirm-dialog__icon confirm-dialog__icon--safe" aria-hidden="true">⇥</span>
+        <h2 id="import-dialog-title">确认恢复学习数据？</h2>
+        <div class="import-summary">
+          <span>CET-4 已学习 <strong id="import-summary-cet4">0</strong></span>
+          <span>CET-6 已学习 <strong id="import-summary-cet6">0</strong></span>
+          <span>收藏 <strong id="import-summary-favorite">0</strong></span>
+          <span>错词 <strong id="import-summary-wrong">0</strong></span>
+        </div>
+        <p>恢复后，当前全部学习数据将被覆盖。</p>
+        <div class="confirm-dialog__actions">
+          <button class="secondary-button" id="import-cancel-button" type="button">取消</button>
+          <button class="primary-button" id="import-confirm-button" type="button">确认恢复</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="confirm-dialog" id="reset-all-dialog" aria-labelledby="reset-all-dialog-title">
+      <div class="confirm-dialog__content">
+        <span class="confirm-dialog__icon" aria-hidden="true">!</span>
+        <h2 id="reset-all-dialog-title">删除全部学习记录？</h2>
+        <p id="reset-all-dialog-message">将删除 CET-4 和 CET-6 的全部学习记录。是否继续？</p>
+        <div class="confirm-dialog__actions">
+          <button class="secondary-button" id="reset-all-cancel" type="button">取消</button>
+          <button class="danger-button" id="reset-all-confirm" type="button">继续</button>
+        </div>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>
