@@ -1,12 +1,12 @@
 /**
- * 拾词 · 本地学习数据服务 v7
+ * 拾词 · 本地学习数据服务 v8
  * 保持原有 localStorage key，只保存用户状态，不复制词库正文。
  */
 
 (function registerStorageService(app) {
   const { reviewScheduler, newWordLearning } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
-  const DATA_VERSION = 7;
+  const DATA_VERSION = 8;
   const AI_PROXY_TOKEN_KEY = "shi-ci-ai-proxy-token";
   const DEFAULT_STUDY_MODE = "en-to-zh";
   const DAILY_GOAL_OPTIONS = Object.freeze([10, 20, 30, 50, 80, 100]);
@@ -188,6 +188,7 @@
     return {
       learned,
       correctCount: toNonNegativeInteger(value.correctCount),
+      partialCount: toNonNegativeInteger(value.partialCount),
       wrongCount: toNonNegativeInteger(value.wrongCount),
       consecutiveCorrect,
       masteryLevel,

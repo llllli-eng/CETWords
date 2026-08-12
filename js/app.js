@@ -114,8 +114,11 @@ const elements = {
   wordDetailPhonetic: document.querySelector("#word-detail-phonetic"),
   wordDetailSpeak: document.querySelector("#word-detail-speak"),
   wordDetailMeaning: document.querySelector("#word-detail-meaning"),
+  wordDetailCoreMeaning: document.querySelector("#word-detail-core-meaning"),
+  wordDetailMeaningGroups: document.querySelector("#word-detail-meaning-groups"),
   wordDetailExample: document.querySelector("#word-detail-example"),
   wordDetailTranslation: document.querySelector("#word-detail-translation"),
+  wordDetailExampleList: document.querySelector("#word-detail-example-list"),
   wordDetailMastery: document.querySelector("#word-detail-mastery"),
   wordDetailLearningState: document.querySelector("#word-detail-learning-state"),
   wordDetailCorrect: document.querySelector("#word-detail-correct"),
@@ -732,7 +735,7 @@ function createCollectionCard(word, progress, mode) {
   heading.append(identity, actions);
   card.append(
     heading,
-    createElement("p", "collection-word-card__meaning", word.meaning),
+    createElement("p", "collection-word-card__meaning", word.coreMeaning || word.shortMeaning || word.meaning),
     createMasteryStatus(progress),
     createElement(
       "p",
@@ -789,7 +792,9 @@ function renderCollection() {
   const query = elements.collectionSearch.value.trim().toLocaleLowerCase("zh-CN");
   const filtered = records.filter(({ word }) => {
     if (!query) return true;
-    return word.word.toLocaleLowerCase("en-US").includes(query) || word.meaning.includes(query);
+    return word.word.toLocaleLowerCase("en-US").includes(query)
+      || word.meaning.includes(query)
+      || (word.coreMeaning || "").includes(query);
   });
 
   elements.collectionCountLabel.textContent = mode === "wrong"
@@ -871,7 +876,7 @@ function createWordListCard(record) {
   identity.append(createElement("h2", "", word.word), createElement("p", "", word.phonetic), sourceTag);
   mainButton.append(
     identity,
-    createElement("p", "word-list-card__meaning", word.meaning),
+    createElement("p", "word-list-card__meaning", word.coreMeaning || word.shortMeaning || word.meaning),
     createMasteryStatus(progress),
     createElement(
       "p",
@@ -971,16 +976,38 @@ function renderWordDetail() {
   elements.wordDetailTitle.textContent = word.word;
   elements.wordDetailPhonetic.textContent = word.phonetic || "";
   elements.wordDetailPhonetic.hidden = !word.phonetic;
-  const fullMeaning = Array.isArray(word.meanings)
-    ? word.meanings
-      .map((item) => `${item.partOfSpeech || ""} ${item.translation || ""}`.trim())
-      .filter(Boolean)
-      .join("；")
-    : "";
-  elements.wordDetailMeaning.textContent = fullMeaning || word.meaning;
+  elements.wordDetailCoreMeaning.textContent = word.coreMeaning || word.shortMeaning || word.meaning;
+  const meaningsByPos = word.meaningsByPos && typeof word.meaningsByPos === "object"
+    ? word.meaningsByPos
+    : {};
+  elements.wordDetailMeaningGroups.replaceChildren(
+    ...Object.entries(meaningsByPos).map(([partOfSpeech, meanings]) => {
+      const group = createElement("section", "word-detail-meaning-group");
+      group.append(
+        createElement("strong", "", partOfSpeech),
+        createElement("p", "", meanings.join("\n")),
+      );
+      return group;
+    }),
+  );
+  elements.wordDetailMeaning.textContent = word.meaning;
+  elements.wordDetailMeaning.hidden = true;
   elements.wordDetailExample.textContent = word.example || "暂无例句";
+  elements.wordDetailExample.hidden = true;
   elements.wordDetailTranslation.textContent = word.translation || "";
-  elements.wordDetailTranslation.hidden = !word.translation;
+  elements.wordDetailTranslation.hidden = true;
+  const examples = Array.isArray(word.examples) && word.examples.length
+    ? word.examples.slice(0, 3)
+    : [{ sentence: word.example || "暂无例句", translation: word.translation || "" }];
+  elements.wordDetailExampleList.replaceChildren(
+    ...examples.map((example, index) => {
+      const item = createElement("article", "word-detail-example-item");
+      if (index > 0) item.append(createElement("span", "", "更多例句"));
+      item.append(createElement("p", "", example.sentence));
+      if (example.translation) item.append(createElement("p", "", example.translation));
+      return item;
+    }),
+  );
   elements.wordDetailMastery.replaceChildren(createMasteryStatus(progress));
   elements.wordDetailLearningState.textContent = progress.learned
     ? `熟练度 ${level} / 5 · ${reviewScheduler.MASTERY_LABELS[level]}`

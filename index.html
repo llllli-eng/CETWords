@@ -835,12 +835,18 @@
           </div>
           <button class="secondary-button" id="word-detail-speak" type="button">🔊 发音</button>
         </div>
-        <p class="word-detail-dialog__meaning" id="word-detail-meaning">v. 放弃；遗弃</p>
+        <section class="word-detail-meanings" aria-labelledby="word-detail-meanings-title">
+          <h3 id="word-detail-meanings-title">释义</h3>
+          <p class="word-detail-core-meaning"><span>核心义</span><strong id="word-detail-core-meaning">放弃；遗弃</strong></p>
+          <div class="word-detail-meaning-groups" id="word-detail-meaning-groups"></div>
+          <p class="word-detail-dialog__meaning" id="word-detail-meaning" hidden>v. 放弃；遗弃</p>
+        </section>
 
         <section class="word-detail-example" aria-labelledby="word-detail-example-title">
-          <h3 id="word-detail-example-title">例句</h3>
-          <p id="word-detail-example"></p>
-          <p id="word-detail-translation"></p>
+          <h3 id="word-detail-example-title">核心例句</h3>
+          <div class="word-detail-example-list" id="word-detail-example-list"></div>
+          <p id="word-detail-example" hidden></p>
+          <p id="word-detail-translation" hidden></p>
         </section>
 
         <section class="word-detail-learning" aria-label="学习状态">

@@ -1,145 +1,104 @@
 # 词库来源与转换记录
 
-## 来源
+## 来源与授权边界
 
-- 仓库：KyleBing/english-vocabulary
-- 地址：https://github.com/KyleBing/english-vocabulary
+- 仓库：[KyleBing/english-vocabulary](https://github.com/KyleBing/english-vocabulary)
 - 分支：`master`
 - 数据目录：`json_original/json-sentence`
-- 转换日期：2026-08-11
+- 本次转换日期：2026-08-12
 
-正式词库在开发阶段从上述仓库转换，运行“拾词”时只读取本项目内的 `data/cet4.json` 与 `data/cet6.json`，不访问网络。
+正式词库仅在构建时读取源文件；网页运行时只读取本项目内的 `data/cet4.json` 与 `data/cet6.json`。本阶段没有引入外部词典、商业网页抓取或 AI 批量生成释义。
 
-## 使用的具体文件
+截至本次核对，仓库根目录没有明确的 `LICENSE` 文件，README 中的学习分享说明不能替代正式开源许可证。因此这里只记录来源，不声称获得商业再分发授权；如需公开或商业使用，应先向上游作者确认授权。
 
-### CET4 主词表
+## 词汇归属
 
-- `CET4_1.json`：1,162 条
-- `CET4_2.json`：3,739 条
-- `CET4_3.json`：2,607 条
-- 主词表合计：7,508 条
+| 词库 | 主来源 | 主来源原始条目 | 核心词 | 补充来源 | 补充词 | 最终总数 |
+|---|---|---:|---:|---|---:|---:|
+| CET4 | `CET4_1/2/3.json` | 7,508 | 4,544 | `GaoZhong_2/3.json` | 1,035 | 5,579 |
+| CET6 | `CET6_1/2/3.json` | 5,651 | 3,991 | `CET4_1/2/3.json` | 2,671 | 6,662 |
 
-主词表按英文拼写忽略大小写去重后只有 4,544 个不同单词。为同时满足“单词不重复”和 5,000+ 的完整学习路径，继续使用同一仓库的真实高中先修词：
+词汇归属与释义来源是两个独立步骤：
 
-- `GaoZhong_2.json`
-- `GaoZhong_3.json`
+- 单词是否属于 CET4/CET6 核心词，只由目标考试主文件决定。
+- 同一拼写的释义、例句、短语和音标，可以从高中、CET4、CET6 八个源文件聚合。
+- 低级别来源补充了基础义，不会把 `isCore` 或 `sourceLevel` 改掉。
 
-主词表优先；先修词只补充主词表中不存在的 1,035 个单词。最终 CET4 为 5,579 个不同单词。
+例如 `paper` 在 CET6 中仍保持 `id: "cet6-paper"`、`sourceLevel: "cet6"`、`isCore: true`，但释义会同时吸收 CET4、高中和 CET6 的记录。
 
-- CET4 核心词：4,544 个（`sourceLevel: "cet4"`，`isCore: true`）
-- 高中补充词：1,035 个（`sourceLevel: "high-school"`，`isCore: false`）
+## 原问题与新合并策略
 
-### CET6 主词表
+旧脚本按规范化拼写去重后采用“第一条记录胜出”：一旦某个单词进入 `seen_words`，后续文件中的同词记录全部跳过。这正确解决了最终单词重复，却同时丢掉了不同词书中的词性、义项和核心例句。上游源数据本身也按文件拆分且单条 translation 并不完整，例如：
 
-- `CET6_1.json`：1,228 条
-- `CET6_2.json`：2,078 条
-- `CET6_3.json`：2,345 条
-- 主词表合计：5,651 条
+- CET6 的 `paper` 只有动词义“贴壁纸”；
+- CET4 包含名词义“纸、文章”；
+- 高中记录包含“纸、论文、文件、报纸”和动词义。
 
-主词表按英文拼写忽略大小写去重后只有 3,991 个不同单词。CET6 学习路径因此补入同一仓库 CET4 主词表中尚未出现的 2,671 个先修词。CET6 释义与例句始终优先于 CET4 补充记录。最终 CET6 为 6,662 个不同单词。
+新脚本执行以下步骤：
 
-这项补全是为了处理上游数据“标称条目数超过 5,000、严格去重后却低于 5,000”的客观矛盾。质量报告同时保留主词表原始数、主词表唯一数和补充数，不用补充数据掩盖主词表问题。
-
-- CET6 核心词：3,991 个（`sourceLevel: "cet6"`，`isCore: true`）
-- CET4 先修补充词：2,671 个（`sourceLevel: "cet4"`，`isCore: false`）
-
-## 核心与补充分层
-
-每条正式数据都由转换脚本根据所在的原始文件组自动生成以下字段：
-
-```json
-{
-  "book": "cet6",
-  "sourceLevel": "cet4",
-  "isCore": false
-}
-```
-
-- 来自当前词库主文件的记录：`sourceLevel` 等于当前 `book`，`isCore` 为 `true`。
-- CET4 的高中补充记录：`sourceLevel` 为 `high-school`，`isCore` 为 `false`。
-- CET6 的 CET4 先修记录：`sourceLevel` 为 `cet4`，`isCore` 为 `false`。
-- 同一英文同时出现在主文件和补充文件时，主文件优先，所以该词仍被认定为核心词。
-
-“拾词”默认只从核心词中生成每日新词。补充词继续保留在完整列表、搜索、收藏、错词和到期复习中；只有用户主动把词汇范围切换为“核心 + 补充词汇”后，补充词才可以作为新词进入每日任务。
-
-## 转换与清洗
-
-转换脚本：`scripts/build-vocabulary.py`
-
-脚本执行以下操作：
-
-1. 读取上述真实 JSON 数据，不生成或猜测释义、例句和音标。
-2. 清理首尾空白与异常连续空格。
-3. 按 `word.trim().toLowerCase()` 在每个最终词库内去重。
-4. 合并并保留结构化的全部释义与全部有效例句。
-5. 根据原始文件组自动生成 `book`、`sourceLevel` 和 `isCore`。
-6. 从第一条释义生成不超过 56 个字符的 `meaning` / `shortMeaning`。
-7. 第一条有效例句写入兼容字段 `example` / `translation`。
-8. 英音写入 `phoneticUK`，美音写入 `phoneticUS`；兼容字段 `phonetic` 优先英音。
-9. 验证空 ID、空单词、空释义、来源标记、重复 ID、重复英文拼写和生成后的 JSON。
-10. 生成 `data/vocabulary-report.json`。
-
-在项目目录中可使用已下载的源文件重新构建：
-
-```text
-python scripts/build-vocabulary.py --source-dir <json-sentence目录>
-```
-
-也可以让脚本只在开发阶段下载缺少的源文件：
-
-```text
-python scripts/build-vocabulary.py --download
-```
-
-## 稳定 ID
-
-ID 由词库名和规范化后的英文拼写生成：
-
-```text
-cet4-abandon
-cet6-comprehensive
-```
-
-规范化规则为：Unicode NFKC、转小写、移除英文撇号、把其他特殊分隔符转为连字符。ID 不使用数组下标，因此重新排序不会改变 ID。
-
-当前已有学习记录仍以英文拼写作为兼容键读取，这是为了无损保留第 1–5 阶段已经保存的正确次数、错误次数、收藏、错词、熟练度和复习时间。正式词条同时带稳定 `id`，后续可以在显式迁移后改用它，不需要再次改造词库文件。
+1. 对 `word` 做 Unicode NFKC、trim、lowercase 与空白规范化。
+2. 先聚合八个文件中同一规范化拼写的所有记录。
+3. 独立生成 CET4/CET6 的核心与补充成员关系。
+4. 收集所有来源、所有 `translations`，按标准化词性与释义去重。
+5. 按跨来源出现次数、学习级别、常见词性和原始顺序排序。
+6. 单来源通常保留一个主要义项；两个来源目标为两个；三个及以上目标为三个，最多六个，每个词性最多两个自动义项。
+7. 对 17 个高风险多义词使用可审计的常用义校正表。校正以现有来源为依据；`paper` 的“试卷”按本阶段明确验收标准补入。
+8. 生成 `coreMeaning` 供题目使用，生成完整 `meaning`、`meanings`、`meaningsByPos` 供详情和 AI 判题使用。
+9. 例句优先选择与核心义和首要词性重合的源例句，再保留其他源例句；不生成虚构例句。
+10. 输出构建统计和逐词质量警告。
 
 ## 最终数据结构
 
 ```json
 {
-  "id": "cet6-comprehensive",
-  "word": "comprehensive",
+  "id": "cet6-paper",
+  "word": "paper",
   "book": "cet6",
   "sourceLevel": "cet6",
   "isCore": true,
-  "phonetic": "/ˌkɒmprɪˈhensɪv/",
-  "phoneticUS": "/ˌkɑːmprɪˈhensɪv/",
-  "phoneticUK": "/ˌkɒmprɪˈhensɪv/",
-  "meaning": "adj. 全面的；综合的",
-  "shortMeaning": "adj. 全面的；综合的",
+  "coreMeaning": "纸；论文；试卷",
+  "shortMeaning": "纸；论文；试卷",
+  "meaning": "n. 纸；纸张；论文；文章；试卷 v. 给……贴壁纸",
   "meanings": [
-    { "partOfSpeech": "adj.", "translation": "全面的；综合的" }
+    { "pos": "n.", "meaning": "纸；纸张" },
+    { "pos": "n.", "meaning": "论文；文章" },
+    { "pos": "n.", "meaning": "试卷" },
+    { "pos": "v.", "meaning": "给……贴壁纸" }
   ],
-  "example": "The report provides a comprehensive analysis.",
-  "translation": "这份报告提供了全面的分析。",
-  "examples": [
-    {
-      "sentence": "The report provides a comprehensive analysis.",
-      "translation": "这份报告提供了全面的分析。"
-    }
-  ]
+  "meaningsByPos": {
+    "n.": ["纸；纸张", "论文；文章", "试卷"],
+    "v.": ["给……贴壁纸"]
+  },
+  "examples": []
 }
 ```
 
-示例只说明字段形状；正式字段值全部来自上游数据。
+为兼容旧代码，每个 `meanings` 项还保留 `partOfSpeech` / `translation` 别名；`shortMeaning` 始终等于 `coreMeaning`，旧字段 `example` / `translation` 始终指向第一条优先例句。
 
-## 已知数据质量问题
+## 稳定 ID 与历史数据
 
-- 上游六个 CET 主文件合计数中包含大量跨文件重复拼写：CET4 有 2,964 条重复，CET6 有 1,660 条重复。
-- 最终 CET4 有 70 个词缺少音标、199 个词缺少例句、201 个词缺少例句翻译。
-- 最终 CET6 有 65 个词缺少音标、209 个词缺少例句、209 个词缺少例句翻译。
-- 个别原始音标使用源仓库自身的标注形式；转换只加斜杠，不校订、不猜测。
-- 截至转换日，上游仓库根目录未提供明确的 `LICENSE` 文件。项目保留完整来源说明；如需公开发布或商业使用，应先向上游作者确认授权范围。
+ID 仍由词库名和规范化英文拼写生成，例如 `cet4-abandon`、`cet6-paper`。本次构建与阶段 11 数据逐词比较：CET4 5,579 个、CET6 6,662 个单词的集合、顺序和 ID 变化数均为 0。
 
-机器可读的完整统计见 `data/vocabulary-report.json`。
+用户进度继续使用既有英文键读取。本地数据版本从 7 顺延到 8，只补齐结构，不改变 word progress、错词、收藏、每日统计、复习时间、当日巩固状态、AI 设置、词汇范围或学习模式。
+
+## 构建与报告
+
+```text
+python scripts/build-vocabulary.py --download
+```
+
+或使用已下载的源目录：
+
+```text
+python scripts/build-vocabulary.py --source-dir <json-sentence目录>
+```
+
+输出：
+
+- `data/cet4.json`
+- `data/cet6.json`
+- `data/vocabulary-report.json`
+- `data/vocabulary-quality-report.json`
+- `docs/VOCABULARY_QUALITY_REPORT.md`
+
+机器报告用于 CI 和逐词复核；Markdown 报告说明汇总指标与高风险回归样本。警告是自动筛选出的复核候选，不代表对应词条已经确认错误。

@@ -799,10 +799,13 @@
       this.elements.detailWord.textContent = question.word.word;
       this.elements.detailPhonetic.textContent = question.word.phonetic || "";
       this.elements.detailPhonetic.hidden = !question.word.phonetic;
-      this.elements.detailMeaning.textContent = question.word.meaning;
-      this.elements.detailExample.textContent = question.word.example || "暂无例句";
-      this.elements.detailTranslation.textContent = question.word.translation || "";
-      this.elements.detailTranslation.hidden = !question.word.translation;
+      this.elements.detailMeaning.textContent = `核心义：${question.word.coreMeaning || question.word.shortMeaning || question.word.meaning}\n${question.word.meaning}`;
+      const primaryExample = Array.isArray(question.word.examples) && question.word.examples.length
+        ? question.word.examples[0]
+        : { sentence: question.word.example, translation: question.word.translation };
+      this.elements.detailExample.textContent = primaryExample?.sentence || "暂无例句";
+      this.elements.detailTranslation.textContent = primaryExample?.translation || "";
+      this.elements.detailTranslation.hidden = !primaryExample?.translation;
       this.elements.details.hidden = false;
     }
 

@@ -28,9 +28,9 @@
         if (!matchesFilter(progress, filter)) return false;
         if (!query) return true;
         const fullMeanings = Array.isArray(word.meanings)
-          ? word.meanings.map((item) => `${item.partOfSpeech || ""} ${item.translation || ""}`)
+          ? word.meanings.map((item) => `${item.pos || item.partOfSpeech || ""} ${item.meaning || item.translation || ""}`)
           : [];
-        const searchText = [word.word, word.meaning, ...fullMeanings, word.example, word.translation]
+        const searchText = [word.word, word.coreMeaning, word.shortMeaning, word.meaning, ...fullMeanings, word.example, word.translation]
           .filter(Boolean)
           .join(" ")
           .toLocaleLowerCase("zh-CN");

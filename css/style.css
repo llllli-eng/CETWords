@@ -2315,6 +2315,7 @@ a:focus-visible {
   color: var(--primary-dark);
   font-size: 15px;
   font-weight: 700;
+  white-space: pre-line;
 }
 
 .example-block {
@@ -2951,10 +2952,70 @@ kbd {
   flex: 0 0 auto;
 }
 
-.word-detail-dialog__meaning {
+.word-detail-dialog__meaning,
+.word-detail-meanings {
   margin: 22px 0 0;
+}
+
+.word-detail-meanings > h3,
+.word-detail-example h3 {
+  margin: 0 0 10px;
+  color: var(--primary-dark);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.word-detail-core-meaning {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 15px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.word-detail-core-meaning span {
+  flex: 0 0 auto;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.word-detail-core-meaning strong {
   font-size: 16px;
   font-weight: 700;
+}
+
+.word-detail-meaning-groups {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.word-detail-meaning-group {
+  display: grid;
+  align-items: start;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.word-detail-meaning-group > strong {
+  color: var(--primary-dark);
+  font-family: Georgia, serif;
+  font-size: 13px;
+}
+
+.word-detail-meaning-group p {
+  margin: 0;
+  white-space: pre-line;
+  font-size: 12px;
+  line-height: 1.65;
 }
 
 .word-detail-example {
@@ -2969,6 +3030,31 @@ kbd {
   color: var(--primary-dark);
   font-size: 10px;
   letter-spacing: 0.12em;
+}
+
+.word-detail-example-list {
+  display: grid;
+  gap: 13px;
+}
+
+.word-detail-example-item + .word-detail-example-item {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.word-detail-example-item > span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-faint);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.word-detail-example-item p:nth-last-child(1):not(:first-child) {
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 12px;
 }
 
 .word-detail-example p {

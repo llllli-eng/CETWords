@@ -1,12 +1,23 @@
 {
-  "generatedAt": "2026-08-11T05:49:24.440919+00:00",
+  "generatedAt": "2026-08-12T03:18:15.358663+00:00",
   "source": {
     "repository": "https://github.com/KyleBing/english-vocabulary",
     "branch": "master",
-    "directory": "json_original/json-sentence"
+    "directory": "json_original/json-sentence",
+    "files": [
+      "GaoZhong_2.json",
+      "GaoZhong_3.json",
+      "CET4_1.json",
+      "CET4_2.json",
+      "CET4_3.json",
+      "CET6_1.json",
+      "CET6_2.json",
+      "CET6_3.json"
+    ]
   },
-  "formatVersion": 1,
-  "shortMeaningLimit": 56,
+  "formatVersion": 2,
+  "coreMeaningLimit": 56,
+  "maxMeanings": 6,
   "books": {
     "cet4": {
       "primarySourceFiles": [
@@ -21,6 +32,7 @@
       },
       "primaryRawEntries": 7508,
       "primaryUniqueEntries": 4544,
+      "primaryDuplicateWordsMerged": 2964,
       "primaryDuplicateWordsRemoved": 2964,
       "supplementalSourceFiles": [
         "GaoZhong_2.json",
@@ -32,6 +44,7 @@
       },
       "supplementalRawEntries": 6008,
       "supplementalEntriesAdded": 1035,
+      "supplementalEntriesMergedIntoExisting": 4973,
       "supplementalEntriesSkipped": 4973,
       "rawEntriesProcessed": 13516,
       "finalEntries": 5579,
@@ -40,34 +53,23 @@
       "duplicateWordsRemoved": 7937,
       "invalidEntriesRemoved": 0,
       "idCollisionsResolved": 0,
-      "missingPhonetic": 70,
-      "missingExample": 199,
-      "missingExampleTranslation": 201,
-      "longestShortMeaning": 55,
-      "duplicateSamples": [
-        "absent",
-        "absorb",
-        "abstract",
-        "abundant",
-        "abuse",
-        "academic",
-        "accelerate",
-        "access",
-        "accommodate",
-        "accompany",
-        "accomplish",
-        "accumulate",
-        "accurate",
-        "accustom",
-        "achieve",
-        "acquire",
-        "acute",
-        "adapt",
-        "additional",
-        "address"
-      ],
-      "invalidSamples": [],
-      "idCollisionSamples": [],
+      "polysemousEntries": 4501,
+      "singleSenseEntries": 1078,
+      "averageMeaningsPerWord": 2.103,
+      "crossSourceMergedEntries": 4690,
+      "qualityWarningEntries": 3384,
+      "qualityWarningCounts": {
+        "single_sense": 889,
+        "source_senses_compacted": 500,
+        "source_pos_conflict": 2592,
+        "phrase_rich_meaning_sparse": 220,
+        "single_specific_sense": 3,
+        "suspicious_symbols": 1
+      },
+      "missingPhonetic": 36,
+      "missingExample": 102,
+      "missingExampleTranslation": 105,
+      "longestShortMeaning": 51,
       "validation": {
         "valid": true,
         "issues": [],
@@ -88,6 +90,7 @@
       },
       "primaryRawEntries": 5651,
       "primaryUniqueEntries": 3991,
+      "primaryDuplicateWordsMerged": 1660,
       "primaryDuplicateWordsRemoved": 1660,
       "supplementalSourceFiles": [
         "CET4_1.json",
@@ -101,6 +104,7 @@
       },
       "supplementalRawEntries": 7508,
       "supplementalEntriesAdded": 2671,
+      "supplementalEntriesMergedIntoExisting": 4837,
       "supplementalEntriesSkipped": 4837,
       "rawEntriesProcessed": 13159,
       "finalEntries": 6662,
@@ -109,34 +113,23 @@
       "duplicateWordsRemoved": 6497,
       "invalidEntriesRemoved": 0,
       "idCollisionsResolved": 0,
-      "missingPhonetic": 65,
-      "missingExample": 209,
-      "missingExampleTranslation": 209,
-      "longestShortMeaning": 54,
-      "duplicateSamples": [
-        "integral",
-        "composition",
-        "executive",
-        "descendant",
-        "qualification",
-        "bump",
-        "mount",
-        "diversion",
-        "convert",
-        "transition",
-        "noted",
-        "position",
-        "metropolitan",
-        "category",
-        "species",
-        "indicative",
-        "designate",
-        "merit",
-        "check",
-        "symptom"
-      ],
-      "invalidSamples": [],
-      "idCollisionSamples": [],
+      "polysemousEntries": 4826,
+      "singleSenseEntries": 1836,
+      "averageMeaningsPerWord": 1.976,
+      "crossSourceMergedEntries": 5022,
+      "qualityWarningEntries": 4127,
+      "qualityWarningCounts": {
+        "single_sense": 1640,
+        "source_pos_conflict": 2478,
+        "source_senses_compacted": 413,
+        "phrase_rich_meaning_sparse": 243,
+        "suspicious_symbols": 1,
+        "single_specific_sense": 5
+      },
+      "missingPhonetic": 27,
+      "missingExample": 112,
+      "missingExampleTranslation": 115,
+      "longestShortMeaning": 51,
       "validation": {
         "valid": true,
         "issues": [],
@@ -144,5 +137,289 @@
         "book": "cet6"
       }
     }
-  }
+  },
+  "regressionSamples": [
+    {
+      "book": "cet4",
+      "word": "paper",
+      "coreMeaning": "纸；论文；试卷",
+      "meaning": "n. 纸；纸张；论文；文章；试卷 v. 给……贴壁纸",
+      "meanings": [
+        {
+          "pos": "n.",
+          "meaning": "纸；纸张",
+          "partOfSpeech": "n.",
+          "translation": "纸；纸张"
+        },
+        {
+          "pos": "n.",
+          "meaning": "论文；文章",
+          "partOfSpeech": "n.",
+          "translation": "论文；文章"
+        },
+        {
+          "pos": "n.",
+          "meaning": "试卷",
+          "partOfSpeech": "n.",
+          "translation": "试卷"
+        },
+        {
+          "pos": "v.",
+          "meaning": "给……贴壁纸",
+          "partOfSpeech": "v.",
+          "translation": "给……贴壁纸"
+        }
+      ],
+      "sourceRecordsCount": 3
+    },
+    {
+      "book": "cet4",
+      "word": "address",
+      "coreMeaning": "地址；处理；向……讲话",
+      "meaning": "n. 地址；演说 v. 处理；解决；向……讲话；写姓名地址",
+      "meanings": [
+        {
+          "pos": "n.",
+          "meaning": "地址；演说",
+          "partOfSpeech": "n.",
+          "translation": "地址；演说"
+        },
+        {
+          "pos": "v.",
+          "meaning": "处理；解决",
+          "partOfSpeech": "v.",
+          "translation": "处理；解决"
+        },
+        {
+          "pos": "v.",
+          "meaning": "向……讲话；写姓名地址",
+          "partOfSpeech": "v.",
+          "translation": "向……讲话；写姓名地址"
+        }
+      ],
+      "sourceRecordsCount": 5
+    },
+    {
+      "book": "cet4",
+      "word": "present",
+      "coreMeaning": "现在的；礼物；呈现",
+      "meaning": "adj. 现在的；出席的 n. 现在；礼物 v. 提出；呈现；赠送",
+      "meanings": [
+        {
+          "pos": "adj.",
+          "meaning": "现在的；出席的",
+          "partOfSpeech": "adj.",
+          "translation": "现在的；出席的"
+        },
+        {
+          "pos": "n.",
+          "meaning": "现在；礼物",
+          "partOfSpeech": "n.",
+          "translation": "现在；礼物"
+        },
+        {
+          "pos": "v.",
+          "meaning": "提出；呈现；赠送",
+          "partOfSpeech": "v.",
+          "translation": "提出；呈现；赠送"
+        }
+      ],
+      "sourceRecordsCount": 4
+    },
+    {
+      "book": "cet4",
+      "word": "issue",
+      "coreMeaning": "问题；发行；发布",
+      "meaning": "n. 问题；期号；发行 v. 发布；发行；分发",
+      "meanings": [
+        {
+          "pos": "n.",
+          "meaning": "问题",
+          "partOfSpeech": "n.",
+          "translation": "问题"
+        },
+        {
+          "pos": "n.",
+          "meaning": "期号；发行",
+          "partOfSpeech": "n.",
+          "translation": "期号；发行"
+        },
+        {
+          "pos": "v.",
+          "meaning": "发布；发行；分发",
+          "partOfSpeech": "v.",
+          "translation": "发布；发行；分发"
+        }
+      ],
+      "sourceRecordsCount": 4
+    },
+    {
+      "book": "cet4",
+      "word": "subject",
+      "coreMeaning": "主题；学科；主语",
+      "meaning": "n. 主题；学科；主语 adj. 易受……的；受制于……的 v. 使服从；使隶属",
+      "meanings": [
+        {
+          "pos": "n.",
+          "meaning": "主题；学科；主语",
+          "partOfSpeech": "n.",
+          "translation": "主题；学科；主语"
+        },
+        {
+          "pos": "adj.",
+          "meaning": "易受……的；受制于……的",
+          "partOfSpeech": "adj.",
+          "translation": "易受……的；受制于……的"
+        },
+        {
+          "pos": "v.",
+          "meaning": "使服从；使隶属",
+          "partOfSpeech": "v.",
+          "translation": "使服从；使隶属"
+        }
+      ],
+      "sourceRecordsCount": 4
+    },
+    {
+      "book": "cet6",
+      "word": "paper",
+      "coreMeaning": "纸；论文；试卷",
+      "meaning": "n. 纸；纸张；论文；文章；试卷 v. 给……贴壁纸",
+      "meanings": [
+        {
+          "pos": "n.",
+          "meaning": "纸；纸张",
+          "partOfSpeech": "n.",
+          "translation": "纸；纸张"
+        },
+        {
+          "pos": "n.",
+          "meaning": "论文；文章",
+          "partOfSpeech": "n.",
+          "translation": "论文；文章"
+        },
+        {
+          "pos": "n.",
+          "meaning": "试卷",
+          "partOfSpeech": "n.",
+          "translation": "试卷"
+        },
+        {
+          "pos": "v.",
+          "meaning": "给……贴壁纸",
+          "partOfSpeech": "v.",
+          "translation": "给……贴壁纸"
+        }
+      ],
+      "sourceRecordsCount": 3
+    },
+    {
+      "book": "cet6",
+      "word": "address",
+      "coreMeaning": "地址；处理；向……讲话",
+      "meaning": "n. 地址；演说 v. 处理；解决；向……讲话；写姓名地址",
+      "meanings": [
+        {
+          "pos": "n.",
+          "meaning": "地址；演说",
+          "partOfSpeech": "n.",
+          "translation": "地址；演说"
+        },
+        {
+          "pos": "v.",
+          "meaning": "处理；解决",
+          "partOfSpeech": "v.",
+          "translation": "处理；解决"
+        },
+        {
+          "pos": "v.",
+          "meaning": "向……讲话；写姓名地址",
+          "partOfSpeech": "v.",
+          "translation": "向……讲话；写姓名地址"
+        }
+      ],
+      "sourceRecordsCount": 5
+    },
+    {
+      "book": "cet6",
+      "word": "present",
+      "coreMeaning": "现在的；礼物；呈现",
+      "meaning": "adj. 现在的；出席的 n. 现在；礼物 v. 提出；呈现；赠送",
+      "meanings": [
+        {
+          "pos": "adj.",
+          "meaning": "现在的；出席的",
+          "partOfSpeech": "adj.",
+          "translation": "现在的；出席的"
+        },
+        {
+          "pos": "n.",
+          "meaning": "现在；礼物",
+          "partOfSpeech": "n.",
+          "translation": "现在；礼物"
+        },
+        {
+          "pos": "v.",
+          "meaning": "提出；呈现；赠送",
+          "partOfSpeech": "v.",
+          "translation": "提出；呈现；赠送"
+        }
+      ],
+      "sourceRecordsCount": 4
+    },
+    {
+      "book": "cet6",
+      "word": "issue",
+      "coreMeaning": "问题；发行；发布",
+      "meaning": "n. 问题；期号；发行 v. 发布；发行；分发",
+      "meanings": [
+        {
+          "pos": "n.",
+          "meaning": "问题",
+          "partOfSpeech": "n.",
+          "translation": "问题"
+        },
+        {
+          "pos": "n.",
+          "meaning": "期号；发行",
+          "partOfSpeech": "n.",
+          "translation": "期号；发行"
+        },
+        {
+          "pos": "v.",
+          "meaning": "发布；发行；分发",
+          "partOfSpeech": "v.",
+          "translation": "发布；发行；分发"
+        }
+      ],
+      "sourceRecordsCount": 4
+    },
+    {
+      "book": "cet6",
+      "word": "subject",
+      "coreMeaning": "主题；学科；主语",
+      "meaning": "n. 主题；学科；主语 adj. 易受……的；受制于……的 v. 使服从；使隶属",
+      "meanings": [
+        {
+          "pos": "n.",
+          "meaning": "主题；学科；主语",
+          "partOfSpeech": "n.",
+          "translation": "主题；学科；主语"
+        },
+        {
+          "pos": "adj.",
+          "meaning": "易受……的；受制于……的",
+          "partOfSpeech": "adj.",
+          "translation": "易受……的；受制于……的"
+        },
+        {
+          "pos": "v.",
+          "meaning": "使服从；使隶属",
+          "partOfSpeech": "v.",
+          "translation": "使服从；使隶属"
+        }
+      ],
+      "sourceRecordsCount": 4
+    }
+  ]
 }

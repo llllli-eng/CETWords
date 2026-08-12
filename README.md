@@ -1,143 +1,103 @@
 # 拾词 · 四六级背单词
 
-当前数据版本：`7`。第 10 阶段新增了可选的 DeepSeek V4 Flash 中文释义巩固：它仅用于新词的当日巩固，支持本地保守判定、AI 的 `correct / partial / wrong` 三档结果、温和的 partial 重试，以及 AI 故障时的手动灾备。
+当前本地数据版本：`8`。第 12 阶段修复了词库构建时“第一条同词记录胜出”的问题：现在会跨高中、CET4、CET6 来源合并多词性与常见义，同时保持全部单词 ID、核心/补充归属和既有学习进度不变。
 
-AI 功能默认关闭。配置方法和安全说明见 [docs/AI_SETUP.md](docs/AI_SETUP.md)；前端项目仍是静态站点，`worker/` 只负责保护 DeepSeek API Key 和执行判题请求。
+## 第 12 阶段结果
 
-当前为第 9 阶段版本：新词采用“初学 + 智能当日巩固”流程，根据首次表现、题型、失败次数、答题序号和真实时间共同决定何时再次出现。
+- CET4：5,579 词；核心 4,544；补充 1,035；多义词 4,501；平均 2.103 个主要义项。
+- CET6：6,662 词；核心 3,991；补充 2,671；多义词 4,826；平均 1.976 个主要义项。
+- CET4 有 4,690 个词、CET6 有 5,022 个词合并了两个以上源文件。
+- 所有正式词条包含 `coreMeaning`、`meaning`、`meanings`、`meaningsByPos` 和多条例句。
+- 英选中与中选英统一使用 `coreMeaning`，并排除与正确核心义重叠的干扰项。
+- 详情页先显示核心义，再按词性展示常见义和核心优先例句。
+- AI 判题发送核心义和全部常见义；回答任一正确常见义均可判 `correct`，非核心义只给学习建议，不扣熟练度。
+- `paper` 现在以“纸；论文；试卷”为核心义，并保留名词/动词结构与核心名词例句。
 
-## 第 9 阶段：智能当日巩固调度
-
-- 初学答错：约隔 4 道题且至少等待 90 秒
-- 英文选中文初学答对：约隔 6 道题且至少等待 3 分钟
-- 中文选英文初学答对：约隔 8 道题且至少等待 4 分钟
-- 第一次巩固失败：约隔 4 道题且至少等待 2 分钟；再次失败后缩短为 3 道题和 90 秒
-- 正常巩固必须同时满足题数和真实时间，资格使用绝对时间戳保存，刷新或关闭后仍然有效
-- 没有其他可做任务时，可在“已经过 2 道其他题”或“已等待 90 秒”任一条件满足后启用兜底
-- 多个候选词按风险排序：答错、巩固失败和识别型初学的词优先，同风险下等待更久的词优先
-- 最近 3 道出现过的词会优先避开；除非当前确实没有其他可用词
-- 待巩固达到 10 个时暂停继续引入新词，优先降低积压后再恢复交错学习
-- 队列优先级为：到期复习 → 跨天待巩固 → 已满足双条件的待巩固 → 新词初学 → 允许兜底的待巩固
-
-## 第 8 阶段：新词双阶段学习
-
-- 未见过的新词先完成“初学”，此时记为已学习但保持 `Level 0`，不提前安排正式到期复习
-- 初学后进入可恢复的“待巩固”状态；同一学习会话中默认间隔 7 道其他题再次出现
-- 当日巩固自动使用初学方向的反向模式：英文选中文 ↔ 中文选英文
-- 巩固答对后升至 `Level 1`，并按原间隔重复规则安排 1 天后的正式复习
-- 巩固答错保持 `Level 0`、加入错词本，并在至少 5 道其他题后重试
-- 关闭、刷新或跨天后，待巩固状态不会丢失；跨天待巩固词会优先继续处理
-- 每日“已完成新词”只统计已通过巩固的不同单词；初学和巩固都会计入总答题数
-- 队列顺序为：到期复习 → 已可巩固 → 当天新词初学 → 最早等待中的待巩固词
-- 错词和收藏中的主动练习不会替代正式巩固，也不会把待巩固词提前升至 `Level 1`
-
-## 第 6 阶段结果
-
-- CET4：5,579 个不重复单词
-- CET6：6,662 个不重复单词
-- CET4 核心词 4,544 个，高中补充词 1,035 个
-- CET6 核心词 3,991 个，CET4 先修补充词 2,671 个
-- 每个词条都有稳定 `id`、英文拼写和中文释义
-- 音标、结构化释义、第一条例句和完整例句数组按源数据保留
-- `meaning` / `shortMeaning` 最长 56 个字符，适合四选一和列表
-- 同一词库内按英文拼写忽略大小写去重；CET4 与 CET6 独立
-- 正常学习完全离线，不会在运行时访问 GitHub 或其他服务
-- 默认每日新词只安排核心词；补充词必须由用户在设置中主动开启
-
-## 核心与补充词范围
-
-- 每个词条包含 `book`、`sourceLevel` 和 `isCore`，由转换脚本根据原始文件组自动生成
-- 设置中可分别为 CET4、CET6 选择“仅核心词汇”或“核心 + 补充词汇”
-- 选择仅核心时，首页和学习统计的分母使用真实核心词数量
-- 完整单词列表始终显示全部词，并用柔和标签标明 `CET-4`、`CET-6`、`高中补充`或`CET-4 先修`
-- 已经学习的补充词不受范围切换影响，仍可收藏、进入错词本并按原计划到期复习
-
-指定仓库的 CET 主文件在严格去重后少于 5,000 个不同拼写。为满足 5,000+ 的完整学习路径，CET4 使用同仓库高中先修词补全，CET6 使用同仓库 CET4 先修词补全；主词表记录始终优先。具体文件、原始条目、重复项和已知质量问题见 `docs/VOCABULARY_SOURCE.md` 与 `data/vocabulary-report.json`。
-
-## 学习稳定性
-
-- 当天首次生成的新词 ID 会写入当天本地记录，关闭或刷新后仍是同一批
-- 每日目标增加时只追加，不替换已有任务；目标减少时不删除已安排单词
-- 未学习单词使用持久化随机队列，先完整覆盖一轮再补回未完成项
-- 词库替换后，旧版正确次数、错误次数、收藏、错词、熟练度和复习时间继续按英文拼写识别
-- 已从正式词库消失的旧记录保留在备份中，但不进入当前词库的进度、错词和收藏数量
-
-## 四选一与加载性能
-
-- 英文选中文保留原有逻辑；中文选英文优先使用 `shortMeaning` 显示题目
-- 两种模式的干扰项都先从相同词性中选择，不足时再用其他词性补齐
-- 中文选英文在相同词性内优先选择英文长度接近的单词
-- 四个选项完全不重复，正确答案始终唯一，答案位置随机
-- 普通学习、今日复习、错词复习和收藏复习共用同一个 Study 页面
-- 学习模式只改变出题方式，不改变学习队列、熟练度或间隔重复规则
-- CET4 与 CET6 在首次加载时并行读取，并缓存在内存中
-- 首页、学习、单词列表和统计页共用同一份内存词库，不重复请求 JSON
-- 单词列表仍以每页 50 条渲染，搜索同时覆盖短释义、完整释义、例句和翻译
-- 完整词库不会写入 `localStorage`；本地只保存用户进度、每日任务 ID 和新词队列
+完整来源、合并规则与授权边界见 [词库来源文档](docs/VOCABULARY_SOURCE.md)，汇总和高风险词检查见 [词库质量报告](docs/VOCABULARY_QUALITY_REPORT.md)。机器可读报告位于 `data/vocabulary-report.json` 与 `data/vocabulary-quality-report.json`。
 
 ## 数据结构
 
-正式词条兼容原有五个字段，并增加扩展字段：
-
 ```json
 {
-  "id": "cet4-abandon",
-  "word": "abandon",
-  "book": "cet4",
-  "sourceLevel": "cet4",
+  "id": "cet6-paper",
+  "word": "paper",
+  "book": "cet6",
+  "sourceLevel": "cet6",
   "isCore": true,
-  "phonetic": "/əˈbændən/",
-  "phoneticUS": "/əˈbændən/",
-  "phoneticUK": "/əˈbændən/",
-  "meaning": "v. 放弃；遗弃",
-  "shortMeaning": "v. 放弃；遗弃",
+  "coreMeaning": "纸；论文；试卷",
+  "shortMeaning": "纸；论文；试卷",
+  "meaning": "n. 纸；纸张；论文；文章；试卷 v. 给……贴壁纸",
   "meanings": [
-    { "partOfSpeech": "v.", "translation": "放弃；遗弃" }
+    { "pos": "n.", "meaning": "纸；纸张" },
+    { "pos": "n.", "meaning": "论文；文章" },
+    { "pos": "n.", "meaning": "试卷" },
+    { "pos": "v.", "meaning": "给……贴壁纸" }
   ],
-  "example": "He abandoned his original plan.",
-  "translation": "他放弃了原来的计划。",
+  "meaningsByPos": {
+    "n.": ["纸；纸张", "论文；文章", "试卷"],
+    "v.": ["给……贴壁纸"]
+  },
   "examples": []
 }
 ```
 
-## 主要文件
+旧字段仍兼容：`shortMeaning` 等于核心义，`example` / `translation` 指向第一条核心优先例句，每个结构化义项同时保留旧的 `partOfSpeech` / `translation` 别名。
 
-```text
-data/cet4.json                 CET4 正式词库
-data/cet6.json                 CET6 正式词库
-data/vocabulary-report.json    机器可读质量报告
-docs/VOCABULARY_SOURCE.md      来源、清洗与已知问题
-scripts/build-vocabulary.py    可重复执行的转换与验证脚本
-js/word-utils.js               词库缓存、验证和干扰项
-js/study-modes.js              双学习模式的题目与选项生成
-js/new-word-learning.js        新词双阶段状态、反向巩固、间隔与队列规则
-js/storage.js                  本地进度、模式统计、每日固定任务与新词学习状态
-```
+## 现有学习功能
 
-## 如何运行
+- CET4/CET6 核心词与补充词分层，默认每日任务仅使用核心词。
+- 英文选中文、中文选英文两种四选一模式。
+- 新词“初学 + 当日巩固”、智能调度、到期复习、五级熟练度与间隔重复。
+- 本地学习记录、错词本、收藏、统计、完整词库浏览、搜索筛选、备份恢复。
+- 可选 DeepSeek V4 Flash 中文释义巩固；前端不保存 DeepSeek API Key。
 
-在项目目录启动一个本地静态服务：
+本阶段没有改变熟练度算法、当日巩固间隔、队列优先级、部署架构或存储键。
+
+## 本地运行
+
+在项目根目录启动静态服务：
 
 ```text
 python -m http.server 8000
 ```
 
-然后访问：
+打开 `http://localhost:8000`。网页除可选 AI 判题外可完全离线使用。直接双击 `index.html` 时，部分浏览器会禁止读取本地 JSON，因此建议使用静态服务。
+
+重新构建词库：
 
 ```text
-http://localhost:8000
+python scripts/build-vocabulary.py --download
 ```
 
-页面运行时不需要账号、后端、数据库、API 或网络连接。直接双击 `index.html` 时，如果浏览器禁止读取本地 JSON，会使用内置测试词作为开发兜底。
+已有源数据时：
+
+```text
+python scripts/build-vocabulary.py --source-dir <json-sentence目录>
+```
 
 ## 本地数据与备份
 
-- 浏览器存储键保持为 `cetwords-user-data-v1`
-- 数据版本升级为 `version: 6`，旧 `version: 1/2/3/4/5` 会自动无损迁移
-- 词汇范围保存在 `preferences.vocabularyScope`，默认 CET4、CET6 都为 `core`
-- 学习模式保存在 `preferences.studyMode`，默认 `en-to-zh`
-- 每日分模式统计保存在当天记录的 `modeStats`；双阶段完成数保存在 `completedNewWordIds`
-- 待巩固状态保存在各词库的 `newWordLearning`，包含初学方向与结果、绝对可巩固时间、可巩固答题序号、调度原因、重试次数和完成时间
-- 导出文件仍同时包含两个词库的进度、每日统计、收藏、错词和复习计划
-- 导出不包含 5,000+ 词库正文
-- 导入支持 `version: 1/2/3/4/5/6`，恢复时统一复用现有迁移逻辑
+- 存储键保持 `cetwords-user-data-v1`。
+- 数据版本为 `version: 8`，支持导入并迁移 `version: 1` 至 `version: 8`。
+- 迁移保留正确/错误/partial 次数、熟练度、首次学习日期、下次复习时间、收藏、错词、每日统计、新词队列、当日巩固状态、AI 设置、`vocabularyScope` 和 `studyMode`。
+- 完整词库正文不会写入 `localStorage` 或学习备份。
+- 个人代理 Token 使用独立本地键保存，不进入学习备份；DeepSeek API Key 只存在 Cloudflare Worker Secret 中。
+
+## 主要文件
+
+```text
+data/cet4.json                         CET4 正式词库
+data/cet6.json                         CET6 正式词库
+data/vocabulary-report.json            构建统计
+data/vocabulary-quality-report.json    逐词质量警告
+docs/VOCABULARY_SOURCE.md              来源、合并规则与授权边界
+docs/VOCABULARY_QUALITY_REPORT.md      人类可读质量报告
+scripts/build-vocabulary.py            可重复构建和验证脚本
+js/word-utils.js                       词库规范化与四选一干扰项
+js/study-modes.js                      双学习模式题目生成
+js/ai-judge.js                         本地判定与 Worker 请求
+js/storage.js                          本地数据 v8 迁移与持久化
+worker/src/index.js                    DeepSeek 多义词判题代理
+```
+
+AI Worker 的本地与正式配置见 [AI 配置文档](docs/AI_SETUP.md)。因为本阶段修改了 Worker 请求结构和系统提示词，更新正式站点时必须重新执行 `pnpm deploy`；不要提交 `.dev.vars` 或任何 API Key。

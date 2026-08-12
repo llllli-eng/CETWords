@@ -5,7 +5,7 @@
     cet4: new URL("data/cet4.json", window.location.href),
     cet6: new URL("data/cet6.json", window.location.href),
   };
-  const REQUIRED_FIELDS = ["id", "word", "meaning"];
+  const REQUIRED_FIELDS = ["id", "word", "meaning", "coreMeaning"];
   const wordBookCache = new Map();
 
   function shuffleArray(items, random = Math.random) {
@@ -32,12 +32,39 @@
     const result = Array.isArray(value)
       ? value
         .map((item) => ({
-          partOfSpeech: typeof item?.partOfSpeech === "string" ? item.partOfSpeech.trim() : "",
-          translation: typeof item?.translation === "string" ? item.translation.trim() : "",
+          pos: typeof item?.pos === "string" ? item.pos.trim() : (typeof item?.partOfSpeech === "string" ? item.partOfSpeech.trim() : ""),
+          meaning: typeof item?.meaning === "string" ? item.meaning.trim() : (typeof item?.translation === "string" ? item.translation.trim() : ""),
+          partOfSpeech: typeof item?.partOfSpeech === "string" ? item.partOfSpeech.trim() : (typeof item?.pos === "string" ? item.pos.trim() : ""),
+          translation: typeof item?.translation === "string" ? item.translation.trim() : (typeof item?.meaning === "string" ? item.meaning.trim() : ""),
         }))
         .filter((item) => item.translation)
       : [];
-    return result.length ? result : [{ partOfSpeech: "", translation: fallbackMeaning }];
+    return result.length ? result : [{
+      pos: "",
+      meaning: fallbackMeaning,
+      partOfSpeech: "",
+      translation: fallbackMeaning,
+    }];
+  }
+
+  function normalizeMeaningsByPos(value, meanings) {
+    const result = {};
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      Object.entries(value).forEach(([partOfSpeech, entries]) => {
+        const normalized = Array.isArray(entries)
+          ? entries.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim())
+          : [];
+        if (normalized.length) result[partOfSpeech] = normalized;
+      });
+    }
+    if (!Object.keys(result).length) {
+      meanings.forEach((item) => {
+        const partOfSpeech = item.pos || item.partOfSpeech || "其他";
+        if (!result[partOfSpeech]) result[partOfSpeech] = [];
+        if (!result[partOfSpeech].includes(item.meaning)) result[partOfSpeech].push(item.meaning);
+      });
+    }
+    return result;
   }
 
   function normalizeExamples(value, example, translation) {
@@ -64,6 +91,10 @@
     const sourceLevel = typeof item?.sourceLevel === "string" && item.sourceLevel.trim()
       ? item.sourceLevel.trim()
       : bookId;
+    const coreMeaning = typeof item?.coreMeaning === "string" && item.coreMeaning.trim()
+      ? item.coreMeaning.trim()
+      : (typeof item?.shortMeaning === "string" && item.shortMeaning.trim() ? item.shortMeaning.trim() : meaning);
+    const meanings = normalizeMeanings(item?.meanings, meaning);
     return {
       ...item,
       id: typeof item?.id === "string" && item.id.trim() ? item.id.trim() : buildStableId(bookId, word),
@@ -75,10 +106,10 @@
       phoneticUS,
       phoneticUK,
       meaning,
-      shortMeaning: typeof item?.shortMeaning === "string" && item.shortMeaning.trim()
-        ? item.shortMeaning.trim()
-        : meaning,
-      meanings: normalizeMeanings(item?.meanings, meaning),
+      coreMeaning,
+      shortMeaning: coreMeaning,
+      meanings,
+      meaningsByPos: normalizeMeaningsByPos(item?.meaningsByPos, meanings),
       example,
       translation,
       examples: normalizeExamples(item?.examples, example, translation),
@@ -89,8 +120,22 @@
     return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase("zh-CN");
   }
 
+  function meaningSegments(value) {
+    return new Set(String(value || "")
+      .replace(/(^|\s)(n|v|vt|vi|adj|adv|prep|conj|pron|num)\./gi, "$1")
+      .split(/[；;,，、/|]+/)
+      .map(normalizeMeaningKey)
+      .filter((item) => item.length >= 2));
+  }
+
+  function meaningsOverlap(left, right) {
+    const leftSegments = meaningSegments(left);
+    const rightSegments = meaningSegments(right);
+    return [...leftSegments].some((item) => rightSegments.has(item));
+  }
+
   function getPrimaryPartOfSpeech(word) {
-    const structured = word?.meanings?.[0]?.partOfSpeech;
+    const structured = word?.meanings?.[0]?.pos || word?.meanings?.[0]?.partOfSpeech;
     const source = typeof structured === "string" && structured.trim()
       ? structured
       : String(word?.meaning || "").match(/^([A-Za-z]+)\./)?.[1] || "";
@@ -108,13 +153,21 @@
 
   /** Generate one correct meaning and three unique, part-of-speech-aware distractors. */
   function generateOptions(currentWord, wordList, random = Math.random) {
-    const correctKey = normalizeMeaningKey(currentWord.meaning);
+    const correctMeaning = currentWord.coreMeaning || currentWord.shortMeaning || currentWord.meaning;
+    const correctKey = normalizeMeaningKey(correctMeaning);
     const correctPartOfSpeech = getPrimaryPartOfSpeech(currentWord);
     const uniqueDistractors = new Map();
 
     for (const item of wordList) {
-      const meaningKey = normalizeMeaningKey(item.meaning);
-      if (item.id === currentWord.id || item.word === currentWord.word || !meaningKey || meaningKey === correctKey) {
+      const meaningKey = normalizeMeaningKey(item.coreMeaning || item.shortMeaning || item.meaning);
+      const candidateMeaning = item.coreMeaning || item.shortMeaning || item.meaning;
+      if (
+        item.id === currentWord.id
+        || item.word === currentWord.word
+        || !meaningKey
+        || meaningKey === correctKey
+        || meaningsOverlap(correctMeaning, candidateMeaning)
+      ) {
         continue;
       }
       if (!uniqueDistractors.has(meaningKey)) uniqueDistractors.set(meaningKey, item);
@@ -136,8 +189,8 @@
       ...shuffleArray(otherPartsOfSpeech, random),
     ].slice(0, 3);
     const options = [
-      { meaning: currentWord.meaning, isCorrect: true },
-      ...distractors.map((item) => ({ meaning: item.meaning, isCorrect: false })),
+      { meaning: correctMeaning, isCorrect: true },
+      ...distractors.map((item) => ({ meaning: item.coreMeaning || item.shortMeaning || item.meaning, isCorrect: false })),
     ];
     return shuffleArray(options, random);
   }
@@ -155,6 +208,9 @@
         (field) => typeof item[field] === "string" && item[field].trim().length > 0,
       );
       if (!isValid) throw new Error(`${bookId.toUpperCase()} 词库第 ${index + 1} 条数据不完整。`);
+      if (!Array.isArray(item.meanings) || !item.meanings.length || !Object.keys(item.meaningsByPos).length) {
+        throw new Error(`${bookId.toUpperCase()} 词库第 ${index + 1} 条多义词结构无效。`);
+      }
       if (item.book !== bookId || typeof item.sourceLevel !== "string" || typeof item.isCore !== "boolean") {
         throw new Error(`${bookId.toUpperCase()} 词库第 ${index + 1} 条来源标记无效。`);
       }
@@ -190,6 +246,7 @@
   app.shuffleArray = shuffleArray;
   app.generateOptions = generateOptions;
   app.getPrimaryPartOfSpeech = getPrimaryPartOfSpeech;
+  app.meaningsOverlap = meaningsOverlap;
   app.validateWordList = validateWordList;
   app.loadWordBook = loadWordBook;
 })(window.CETWords);

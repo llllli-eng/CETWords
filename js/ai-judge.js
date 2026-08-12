@@ -33,13 +33,18 @@
     return stripPartOfSpeech(value)
       .split(/[；;,，、/|]+/)
       .map((item) => normalizeText(item))
-      .filter((item) => item.length >= 2);
+      .filter(Boolean);
   }
 
   function extractMeaningSegments(word) {
-    const values = [word?.shortMeaning, word?.meaning];
+    const values = [word?.coreMeaning, word?.shortMeaning, word?.meaning];
     if (Array.isArray(word?.meanings)) {
-      word.meanings.forEach((item) => values.push(item?.translation));
+      word.meanings.forEach((item) => values.push(item?.meaning || item?.translation));
+    }
+    if (word?.meaningsByPos && typeof word.meaningsByPos === "object") {
+      Object.values(word.meaningsByPos).forEach((items) => {
+        if (Array.isArray(items)) items.forEach((item) => values.push(item));
+      });
     }
     return [...new Set(values.flatMap(splitMeanings))];
   }
@@ -97,15 +102,24 @@
   function buildJudgePayload(word, userAnswer) {
     const meanings = Array.isArray(word?.meanings)
       ? word.meanings.slice(0, 12).map((item) => ({
-        partOfSpeech: String(item?.partOfSpeech || "").slice(0, 30),
-        translation: String(item?.translation || "").slice(0, 500),
+        pos: String(item?.pos || item?.partOfSpeech || "").slice(0, 30),
+        meaning: String(item?.meaning || item?.translation || "").slice(0, 500),
       }))
       : [];
+    const meaningsByPos = {};
+    if (word?.meaningsByPos && typeof word.meaningsByPos === "object") {
+      Object.entries(word.meaningsByPos).slice(0, 12).forEach(([partOfSpeech, items]) => {
+        const normalized = Array.isArray(items)
+          ? items.slice(0, 6).map((item) => String(item || "").slice(0, 500)).filter(Boolean)
+          : [];
+        if (normalized.length) meaningsByPos[String(partOfSpeech).slice(0, 30)] = normalized;
+      });
+    }
     return {
       word: String(word?.word || "").slice(0, 100),
-      partOfSpeech: String(meanings[0]?.partOfSpeech || "").slice(0, 30),
-      shortMeaning: String(word?.shortMeaning || word?.meaning || "").slice(0, 500),
+      coreMeaning: String(word?.coreMeaning || word?.shortMeaning || word?.meaning || "").slice(0, 500),
       meanings,
+      meaningsByPos,
       userAnswer: String(userAnswer || "").trim().slice(0, MAX_USER_ANSWER_LENGTH),
     };
   }

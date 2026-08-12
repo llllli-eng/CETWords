@@ -20,16 +20,17 @@
   }
 
   function getChinesePrompt(word) {
+    const coreMeaning = typeof word?.coreMeaning === "string" ? word.coreMeaning.trim() : "";
     const shortMeaning = typeof word?.shortMeaning === "string" ? word.shortMeaning.trim() : "";
     const fullMeaning = typeof word?.meaning === "string" ? word.meaning.trim() : "";
-    const source = shortMeaning || fullMeaning;
+    const source = coreMeaning || shortMeaning || fullMeaning;
     if (!source) {
-      console.warn(`[学习模式] ${word?.word || "未知单词"} 缺少 shortMeaning 和 meaning，已跳过中文选英文题目。`);
+      console.warn(`[学习模式] ${word?.word || "未知单词"} 缺少 coreMeaning、shortMeaning 和 meaning，已跳过中文选英文题目。`);
       return null;
     }
 
-    let partOfSpeech = typeof word?.meanings?.[0]?.partOfSpeech === "string"
-      ? word.meanings[0].partOfSpeech.trim()
+    let partOfSpeech = typeof (word?.meanings?.[0]?.pos || word?.meanings?.[0]?.partOfSpeech) === "string"
+      ? (word.meanings[0].pos || word.meanings[0].partOfSpeech).trim()
       : "";
     let meaning = source;
 

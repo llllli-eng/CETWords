@@ -3,7 +3,7 @@ const MAX_BODY_BYTES = 16 * 1024;
 const MAX_MEANINGS = 12;
 const REQUEST_TIMEOUT_MS = 12 * 1000;
 const VALID_RESULTS = new Set(["correct", "partial", "wrong"]);
-const ALLOWED_FIELDS = new Set(["word", "partOfSpeech", "shortMeaning", "meanings", "userAnswer"]);
+const ALLOWED_FIELDS = new Set(["word", "coreMeaning", "meanings", "meaningsByPos", "userAnswer"]);
 
 const SYSTEM_PROMPT = `你是大学英语四六级单词中文释义判题器。
 
@@ -12,13 +12,14 @@ const SYSTEM_PROMPT = `你是大学英语四六级单词中文释义判题器。
 判定原则：
 1. 用户不需要逐字匹配标准答案。
 2. 同义词、近义表达、自然口语解释，只要语义正确即可。
-3. 多义词只要用户明确答出至少一个正确的主要义项，就判 correct。
+3. 多义词只要用户明确答出 meanings 或 meaningsByPos 中任一常见且正确的义项，就判 correct，不要求覆盖全部义项。
 4. 不得因为用户没有写出全部义项而判错。
 5. 如果含义相关但过于模糊、范围偏差明显，判 partial。
 6. 如果含义错误、相反或无关，判 wrong。
 7. 不要依据用户自信程度，只判断语义。
 8. 优先且主要依据传入的标准四六级释义判断，不要用偏门、专业、古旧或词库外义项替用户找理由。
-9. 必须只输出合法 JSON，不得输出 Markdown 或额外文字。
+9. 如果用户答对的是非核心义，仍判 correct；feedback 可简短说明这是次要义，并建议优先掌握 coreMeaning。
+10. 必须只输出合法 JSON，不得输出 Markdown 或额外文字。
 
 JSON 格式：
 {"result":"correct|partial|wrong","confidence":0.0,"matchedMeaning":"","feedback":""}`;
@@ -87,15 +88,10 @@ function validatePayload(raw) {
   if (unexpected) return { error: `不允许的字段：${unexpected}` };
 
   const word = validateString(raw.word, "word", 100);
-  const shortMeaning = validateString(raw.shortMeaning, "shortMeaning", 500);
+  const coreMeaning = validateString(raw.coreMeaning, "coreMeaning", 500);
   const userAnswer = validateString(raw.userAnswer, "userAnswer", 300);
-  if (word.error || shortMeaning.error || userAnswer.error) {
-    return { error: word.error || shortMeaning.error || userAnswer.error };
-  }
-
-  const partOfSpeech = typeof raw.partOfSpeech === "string" ? raw.partOfSpeech.trim().slice(0, 30) : "";
-  if (raw.partOfSpeech !== undefined && (typeof raw.partOfSpeech !== "string" || raw.partOfSpeech.length > 30)) {
-    return { error: "partOfSpeech 格式不正确" };
+  if (word.error || coreMeaning.error || userAnswer.error) {
+    return { error: word.error || coreMeaning.error || userAnswer.error };
   }
   if (raw.meanings !== undefined && !Array.isArray(raw.meanings)) return { error: "meanings 必须是数组" };
   const meanings = [];
@@ -104,24 +100,43 @@ function validatePayload(raw) {
     if (meanings.length >= MAX_MEANINGS) return { error: "meanings 数量超出限制" };
     if (!item || typeof item !== "object" || Array.isArray(item)) return { error: "meanings 项格式不正确" };
     const keys = Object.keys(item);
-    if (keys.some((key) => !["partOfSpeech", "translation"].includes(key))) {
+    if (keys.some((key) => !["pos", "meaning"].includes(key))) {
       return { error: "meanings 包含不允许的字段" };
     }
-    const translation = validateString(item.translation, "translation", 500);
-    if (translation.error) return { error: translation.error };
-    const pos = typeof item.partOfSpeech === "string" ? item.partOfSpeech.trim() : "";
+    const meaning = validateString(item.meaning, "meaning", 500);
+    if (meaning.error) return { error: meaning.error };
+    const pos = typeof item.pos === "string" ? item.pos.trim() : "";
     if (pos.length > 30) return { error: "meanings 词性超出长度限制" };
-    totalMeaningLength += translation.value.length + pos.length;
+    totalMeaningLength += meaning.value.length + pos.length;
     if (totalMeaningLength > 3000) return { error: "meanings 总长度超出限制" };
-    meanings.push({ partOfSpeech: pos, translation: translation.value });
+    meanings.push({ pos, meaning: meaning.value });
+  }
+
+  const meaningsByPos = {};
+  if (raw.meaningsByPos !== undefined && (!raw.meaningsByPos || typeof raw.meaningsByPos !== "object" || Array.isArray(raw.meaningsByPos))) {
+    return { error: "meaningsByPos 必须是对象" };
+  }
+  for (const [partOfSpeech, entries] of Object.entries(raw.meaningsByPos || {})) {
+    if (!partOfSpeech || partOfSpeech.length > 30 || !Array.isArray(entries) || entries.length > 6) {
+      return { error: "meaningsByPos 格式不正确" };
+    }
+    const normalized = [];
+    for (const entry of entries) {
+      const meaning = validateString(entry, "meaningsByPos meaning", 500);
+      if (meaning.error) return { error: meaning.error };
+      totalMeaningLength += meaning.value.length;
+      if (totalMeaningLength > 3000) return { error: "释义总长度超出限制" };
+      normalized.push(meaning.value);
+    }
+    meaningsByPos[partOfSpeech] = normalized;
   }
 
   return {
     value: {
       word: word.value,
-      partOfSpeech,
-      shortMeaning: shortMeaning.value,
+      coreMeaning: coreMeaning.value,
       meanings,
+      meaningsByPos,
       userAnswer: userAnswer.value,
     },
   };
