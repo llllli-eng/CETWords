@@ -1,6 +1,18 @@
 # 拾词 · 四六级背单词
 
-当前本地数据版本：`8`。第 12 阶段修复了词库构建时“第一条同词记录胜出”的问题：现在会跨高中、CET4、CET6 来源合并多词性与常见义，同时保持全部单词 ID、核心/补充归属和既有学习进度不变。
+当前本地数据版本：`9`。第 13B 阶段已接入 2021—2025 CET 真题频率层级，用于新词学习顺序，并为 Level 0 新词增加“四选一至少答对一次”的识别门槛。
+
+## 第 13B 阶段结果
+
+- 设置新增“智能顺序 / 完全随机”，默认智能顺序，且与英选中/中选英学习模式相互独立。
+- 智能顺序只使用 `S/A/B/C/D/E` 层级跨档混抽；同一层级独立随机，不使用 `tokenCount`、`tierScore` 或层内排名。
+- 各档按 `40/30/15/8/5/2` 权重平滑混排；空档自动让位，D/E 档不会永久饥饿。
+- 高频功能词通过独立的 `data/cet-learning-priority-overrides.json` 进入持久化 `neutral` 随机队列；它不占 S–E 权重槽位，但会定期插入且最终全部学到。原始频率 JSON 完全不改写。
+- Level 0 新词首次四选一答错后进入 `choice_retry`，保持原题目方向；至少一次四选一正确后才进入 `ai_reinforcement`。
+- 四选一正确只通过识别门槛，熟练度仍为 Level 0；释义巩固判定正确后才进入 Level 1 并计为今日完成新词。
+- AI `partial` / `wrong` 继续释义巩固，不退回四选一；远程 AI 不可用时可使用本地判定或人工兜底。
+- 到期复习仅按个人薄弱度排序：逾期、低熟练度、错误率、近期答错；真题频率不改变熟练度或复习时间。
+- v8 → v9 无损迁移；旧待巩固记录视为已通过四选一门槛，保留进度、复习时间、每日记录和既有随机队列。
 
 ## 第 12 阶段结果
 
@@ -51,7 +63,7 @@
 - 本地学习记录、错词本、收藏、统计、完整词库浏览、搜索筛选、备份恢复。
 - 可选 DeepSeek V4 Flash 中文释义巩固；前端不保存 DeepSeek API Key。
 
-本阶段没有改变熟练度算法、当日巩固间隔、队列优先级、部署架构或存储键。
+本阶段没有修改正式词库正文、Level 0～5 算法、长期复习间隔、Worker、部署架构或存储键。
 
 ## 本地运行
 
@@ -78,7 +90,7 @@ python scripts/build-vocabulary.py --source-dir <json-sentence目录>
 ## 本地数据与备份
 
 - 存储键保持 `cetwords-user-data-v1`。
-- 数据版本为 `version: 8`，支持导入并迁移 `version: 1` 至 `version: 8`。
+- 数据版本为 `version: 9`，支持导入并迁移 `version: 1` 至 `version: 9`。
 - 迁移保留正确/错误/partial 次数、熟练度、首次学习日期、下次复习时间、收藏、错词、每日统计、新词队列、当日巩固状态、AI 设置、`vocabularyScope` 和 `studyMode`。
 - 完整词库正文不会写入 `localStorage` 或学习备份。
 - 个人代理 Token 使用独立本地键保存，不进入学习备份；DeepSeek API Key 只存在 Cloudflare Worker Secret 中。
@@ -96,8 +108,10 @@ scripts/build-vocabulary.py            可重复构建和验证脚本
 js/word-utils.js                       词库规范化与四选一干扰项
 js/study-modes.js                      双学习模式题目生成
 js/ai-judge.js                         本地判定与 Worker 请求
-js/storage.js                          本地数据 v8 迁移与持久化
+js/smart-learning-order.js            真题分层混抽、同档随机与只读词频加载
+js/new-word-learning.js               四选一门槛与当日释义巩固状态机
+js/storage.js                          本地数据 v9 迁移与持久化
 worker/src/index.js                    DeepSeek 多义词判题代理
 ```
 
-AI Worker 的本地与正式配置见 [AI 配置文档](docs/AI_SETUP.md)。因为本阶段修改了 Worker 请求结构和系统提示词，更新正式站点时必须重新执行 `pnpm deploy`；不要提交 `.dev.vars` 或任何 API Key。
+AI Worker 的本地与正式配置见 [AI 配置文档](docs/AI_SETUP.md)。第 13B 阶段没有修改 Worker，更新正式站点只需提交并推送静态站点文件；不要提交 `.dev.vars` 或任何 API Key。

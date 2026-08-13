@@ -17,6 +17,7 @@ const {
   getStudyModeLabel,
   newWordLearning,
   aiJudge,
+  smartLearningOrder,
 } = window.CETWords;
 
 const appState = {
@@ -26,6 +27,12 @@ const appState = {
   wordList: { query: "", filter: "all", sort: "default", page: 1, detailWordId: null },
   pendingImport: null,
   resetAllStep: 1,
+  frequency: {
+    status: "loading",
+    maps: { cet4: null, cet6: null },
+    overrides: new Map(),
+    error: null,
+  },
   books: {
     cet4: {
       id: "cet4",
@@ -128,6 +135,11 @@ const elements = {
   wordDetailNextDate: document.querySelector("#word-detail-next-date"),
   wordDetailFavorite: document.querySelector("#word-detail-favorite"),
   wordDetailWrongBook: document.querySelector("#word-detail-wrong-book"),
+  wordDetailFrequencyTier: document.querySelector("#word-detail-frequency-tier"),
+  wordDetailFrequencySessions: document.querySelector("#word-detail-frequency-sessions"),
+  wordDetailFrequencyPapers: document.querySelector("#word-detail-frequency-papers"),
+  wordDetailFrequencyTokens: document.querySelector("#word-detail-frequency-tokens"),
+  wordDetailFrequencyNote: document.querySelector("#word-detail-frequency-note"),
   statisticsBackButton: document.querySelector("#statistics-back-button"),
   statisticsBookBadge: document.querySelector("#statistics-book-badge"),
   statisticsDescription: document.querySelector("#statistics-description"),
@@ -157,6 +169,9 @@ const elements = {
   vocabularyScopeDescription: document.querySelector("#vocabulary-scope-description"),
   studyModeOptions: document.querySelectorAll("[data-study-mode]"),
   studyModeDescription: document.querySelector("#study-mode-description"),
+  learningOrderOptions: document.querySelectorAll("[data-learning-order]"),
+  learningOrderDescription: document.querySelector("#learning-order-description"),
+  learningOrderStatus: document.querySelector("#learning-order-status"),
   aiConnectionStatus: document.querySelector("#ai-connection-status"),
   aiProxyUrl: document.querySelector("#ai-proxy-url"),
   aiProxyToken: document.querySelector("#ai-proxy-token"),
@@ -240,8 +255,7 @@ function getFullBookSummary(book) {
 function getScopedDailyIdCount(book, daily, fieldName, fallback = 0) {
   const ids = Array.isArray(daily[fieldName]) ? daily[fieldName] : [];
   if (!ids.length) return fallback;
-  const allowed = new Set(getScopedWordIds(book));
-  return ids.filter((wordId) => allowed.has(wordId)).length;
+  return ids.length;
 }
 
 function getScopedIntroducedNewWordCount(book, daily) {
@@ -478,17 +492,28 @@ function getModeStudyPlan(book, sessionMode) {
       return {
         word,
         taskType: "reinforcement",
-        learningPhase: newWordLearning.LEARNING_PHASES.REINFORCEMENT,
-        forcedStudyMode: newWordLearning.getReinforcementMode(entry.learningState.introStudyMode),
+        learningPhase: entry.learningState.phase,
+        forcedStudyMode: newWordLearning.getPendingStudyMode(entry.learningState),
         learningState: entry.learningState,
       };
     })
     .filter(Boolean);
-  const assignmentTarget = Math.max(0, book.dailyGoal - daily.completedNewWords);
+  const assignmentTarget = book.dailyGoal;
+  const preferredOrder = storage.getLearningOrder();
+  const effectiveOrder = preferredOrder === "smart" && appState.frequency.status === "ready"
+    ? "smart"
+    : "random";
+  const schedulingOptions = {
+    learningOrder: effectiveOrder,
+    frequencyByWord: appState.frequency.maps[book.id],
+    overridesByWord: appState.frequency.overrides,
+    scopeKey: `${book.id}:${getVocabularyScope(book)}`,
+  };
   let scheduledNewWordIds = storage.getOrCreateDailyNewWordIds(
     book.id,
     eligibleNewWordIds,
     assignmentTarget,
+    schedulingOptions,
   );
   rawDaily = storage.getDailyStats(book.id);
   daily = {
@@ -508,6 +533,7 @@ function getModeStudyPlan(book, sessionMode) {
       book.id,
       eligibleNewWordIds,
       scheduledNewWordIds.length + (newLimit - unlearnedScheduledWords.length),
+      schedulingOptions,
     );
     unlearnedScheduledWords = scheduledNewWordIds
       .map((wordId) => wordMap.get(wordId))
@@ -1019,6 +1045,26 @@ function renderWordDetail() {
   elements.wordDetailNextDate.textContent = progress.learned
     ? reviewScheduler.formatReviewTime(progress.nextReviewTime)
     : "待安排";
+  const priority = smartLearningOrder.getLearningPriority(
+    word.word,
+    appState.frequency.maps[book.id],
+    appState.frequency.overrides,
+  );
+  const frequency = priority.frequency;
+  elements.wordDetailFrequencyTier.textContent = frequency
+    ? `${frequency.frequencyTier}（学习优先级 ${priority.effectiveLearningTier}）`
+    : "暂无统计";
+  elements.wordDetailFrequencySessions.textContent = frequency
+    ? `${frequency.sessionCount} / ${frequency.sessionCountPossible || 10}`
+    : "—";
+  elements.wordDetailFrequencyPapers.textContent = frequency
+    ? `${frequency.paperCount} / ${frequency.paperCountPossible || 30}`
+    : "—";
+  elements.wordDetailFrequencyTokens.textContent = frequency ? formatNumber(frequency.tokenCount) : "—";
+  elements.wordDetailFrequencyNote.textContent = priority.priorityAdjustmentReason
+    || (frequency
+      ? "智能顺序只使用频率层级；同层级内独立随机，不按出现次数或分数暗中排序。"
+      : "这个词暂未匹配到真题频率记录，智能顺序按保守层级处理。 ");
   elements.wordDetailFavorite.textContent = progress.favorite ? "★ 已收藏" : "☆ 收藏";
   elements.wordDetailFavorite.setAttribute("aria-pressed", String(progress.favorite));
   elements.wordDetailWrongBook.textContent = progress.inWrongBook ? "移出错词本" : "加入错词本";
@@ -1256,6 +1302,24 @@ function renderStudyModePicker() {
     : "题目显示英文单词，从四个中文释义中选择答案。";
 }
 
+function renderLearningOrderPicker() {
+  const order = storage.getLearningOrder();
+  elements.learningOrderOptions.forEach((option) => {
+    const isSelected = option.dataset.learningOrder === order;
+    option.classList.toggle("is-selected", isSelected);
+    option.setAttribute("aria-checked", String(isSelected));
+  });
+  elements.learningOrderDescription.textContent = order === "smart"
+    ? "优先安排真题覆盖更广的词；每个频率层级独立洗牌，不按层内词频排序。"
+    : "使用原有持久随机队列，未学词全部轮到一次后再开启下一轮。";
+  elements.learningOrderStatus.dataset.status = appState.frequency.status;
+  elements.learningOrderStatus.textContent = appState.frequency.status === "ready"
+    ? "词频数据已加载 · 智能顺序可用"
+    : appState.frequency.status === "fallback-random"
+      ? "词频数据暂不可用 · 本次自动回退为完全随机"
+      : "词频数据准备中…";
+}
+
 function setAiConnectionStatus(status, message) {
   elements.aiConnectionStatus.dataset.status = status;
   elements.aiConnectionStatus.textContent = `状态：${message}`;
@@ -1308,7 +1372,7 @@ function disableAiReinforcement() {
   studyController.clearSessions("cet4");
   studyController.clearSessions("cet6");
   renderAiJudgeSettings();
-  showToast("已停用 AI 巩固，恢复使用反向四选一");
+  showToast("已停用远程 AI；释义巩固仍可使用本地判定或手动确认");
 }
 
 function showSettings() {
@@ -1319,6 +1383,7 @@ function showSettings() {
   renderGoalPicker();
   renderVocabularyScopePicker();
   renderStudyModePicker();
+  renderLearningOrderPicker();
   renderAiJudgeSettings();
   renderDataOverview();
   document.title = "设置 · 拾词";
@@ -1354,11 +1419,16 @@ async function initializeWordBooks() {
   elements.continueButton.querySelector("span:first-child").textContent = "正在准备词库";
 
   try {
-    const [cet4Result, cet6Result] = await Promise.all([loadWordBook("cet4"), loadWordBook("cet6")]);
+    const [cet4Result, cet6Result, frequencyResult] = await Promise.all([
+      loadWordBook("cet4"),
+      loadWordBook("cet6"),
+      smartLearningOrder.loadFrequencyResources(),
+    ]);
     appState.books.cet4.words = cet4Result.words;
     appState.books.cet4.source = cet4Result.source;
     appState.books.cet6.words = cet6Result.words;
     appState.books.cet6.source = cet6Result.source;
+    appState.frequency = frequencyResult;
 
     elements.continueButton.disabled = false;
     updateDashboard(appState.activeBookId);
@@ -1366,6 +1436,8 @@ async function initializeWordBooks() {
     const isFallback = [cet4Result, cet6Result].some((result) => result.source === "fallback");
     if (storage.getStatus().migrationPerformed) {
       showToast("旧版学习记录已无损升级，现有错词、收藏与答题次数均已保留");
+    } else if (frequencyResult.status !== "ready") {
+      showToast("真题词频数据暂不可用，本次已自动回退为完全随机顺序");
     } else if (isFallback) {
       showToast("当前使用内置测试词；通过本地服务运行可读取完整 JSON 词库");
     } else if (storage.getStatus().recoveredInvalidData) {
@@ -1493,6 +1565,15 @@ elements.studyModeOptions.forEach((option) => {
     renderStudyModePicker();
     updateDashboard();
     showToast(`学习模式已切换为${getStudyModeLabel(savedMode)}`);
+  });
+});
+elements.learningOrderOptions.forEach((option) => {
+  option.addEventListener("click", () => {
+    const savedOrder = storage.setLearningOrder(option.dataset.learningOrder);
+    studyController.clearSessions("cet4");
+    studyController.clearSessions("cet6");
+    renderLearningOrderPicker();
+    showToast(savedOrder === "smart" ? "新词已切换为真题智能顺序" : "新词已切换为完全随机顺序");
   });
 });
 elements.exportDataButton.addEventListener("click", () => {

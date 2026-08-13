@@ -108,10 +108,36 @@
     return result;
   }
 
+  function calculateReviewPriority(progress, now = Date.now()) {
+    const safeNow = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const nextReviewTime = Number(progress?.nextReviewTime) || safeNow;
+    const overdueDays = Math.max(0, safeNow - nextReviewTime) / DAY;
+    const overdueScore = Math.min(50, overdueDays * 5);
+    const masteryScore = ((5 - getMasteryLevel(progress)) / 5) * 25;
+    const correctCount = toNonNegativeInteger(progress?.correctCount);
+    const wrongCount = toNonNegativeInteger(progress?.wrongCount);
+    const answerCount = correctCount + wrongCount;
+    const errorRateScore = answerCount ? (wrongCount / answerCount) * 15 : 0;
+    const lastWrongTime = Number(progress?.lastWrongTime);
+    const wrongAge = Number.isFinite(lastWrongTime) ? Math.max(0, safeNow - lastWrongTime) : Number.POSITIVE_INFINITY;
+    const recentWrongScore = wrongAge <= 7 * DAY ? (1 - wrongAge / (7 * DAY)) * 10 : 0;
+    return {
+      total: overdueScore + masteryScore + errorRateScore + recentWrongScore,
+      overdueScore,
+      masteryScore,
+      errorRateScore,
+      recentWrongScore,
+    };
+  }
+
   function getDueWords(records, now = Date.now()) {
     return [...records]
       .filter((entry) => isDueForReview(entry.progress, now))
-      .sort((a, b) => a.progress.nextReviewTime - b.progress.nextReviewTime);
+      .sort((a, b) => {
+        const priorityDifference = calculateReviewPriority(b.progress, now).total
+          - calculateReviewPriority(a.progress, now).total;
+        return priorityDifference || a.progress.nextReviewTime - b.progress.nextReviewTime;
+      });
   }
 
   function formatReviewTime(timestamp, now = Date.now()) {
@@ -142,6 +168,7 @@
     getNextReviewTime,
     handleCorrect,
     handleWrong,
+    calculateReviewPriority,
     isDueForReview,
     getDueWords,
     formatReviewTime,

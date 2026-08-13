@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/sample-data.js" defer></script>
     <script src="js/review-scheduler.js" defer></script>
+    <script src="js/smart-learning-order.js" defer></script>
     <script src="js/new-word-learning.js" defer></script>
     <script src="js/storage.js" defer></script>
     <script src="js/word-utils.js" defer></script>
@@ -705,6 +706,21 @@
             </div>
           </section>
 
+          <section class="settings-card settings-card--learning-order" aria-labelledby="learning-order-title">
+            <div class="settings-card__content">
+              <span class="settings-card__icon" aria-hidden="true">频</span>
+              <div>
+                <h2 id="learning-order-title">新词学习顺序</h2>
+                <p id="learning-order-description">优先安排真题覆盖更广的词，同层级内保持随机。</p>
+                <p class="learning-order-status" id="learning-order-status" data-status="loading">词频数据准备中…</p>
+              </div>
+            </div>
+            <div class="learning-order-picker" role="radiogroup" aria-label="选择新词学习顺序">
+              <button class="is-selected" type="button" data-learning-order="smart" role="radio" aria-checked="true">智能顺序</button>
+              <button type="button" data-learning-order="random" role="radio" aria-checked="false">完全随机</button>
+            </div>
+          </section>
+
           <section class="settings-card settings-card--study-mode" aria-labelledby="study-mode-title">
             <div class="settings-card__content">
               <span class="settings-card__icon" aria-hidden="true">译</span>
@@ -728,7 +744,7 @@
               <span class="settings-card__icon" aria-hidden="true">AI</span>
               <div>
                 <h2 id="ai-judge-title">AI 中文释义判断</h2>
-                <p>只用于新词的当日巩固；未启用时继续使用原有反向四选一。</p>
+                <p>只用于已通过四选一门槛的新词释义巩固；不可用时可本地判定或手动确认。</p>
               </div>
             </div>
             <div class="ai-settings-form">
@@ -859,6 +875,17 @@
             <div><dt>最近学习</dt><dd id="word-detail-last-date">—</dd></div>
             <div><dt>下次复习</dt><dd id="word-detail-next-date">待安排</dd></div>
           </dl>
+        </section>
+
+        <section class="word-detail-frequency" aria-labelledby="word-detail-frequency-title">
+          <h3 id="word-detail-frequency-title">真题频率参考</h3>
+          <dl>
+            <div><dt>频率层级</dt><dd id="word-detail-frequency-tier">—</dd></div>
+            <div><dt>覆盖场次</dt><dd id="word-detail-frequency-sessions">—</dd></div>
+            <div><dt>覆盖试卷</dt><dd id="word-detail-frequency-papers">—</dd></div>
+            <div><dt>出现次数</dt><dd id="word-detail-frequency-tokens">—</dd></div>
+          </dl>
+          <p id="word-detail-frequency-note"></p>
         </section>
 
         <div class="word-detail-actions">

@@ -1,2 +1,6 @@
 # Local copyrighted exam corpus and generated local-only audit files.
 /local-corpus/
+
+# Local Python build/test cache.
+__pycache__/
+*.py[cod]

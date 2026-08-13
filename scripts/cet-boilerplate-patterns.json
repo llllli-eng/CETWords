@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "description": "Conservative, line-oriented CET paper boilerplate rules. Rules intentionally target exam instructions and page furniture rather than passage prose.",
+  "patterns": [
+    {
+      "id": "part-heading",
+      "mode": "line",
+      "scopes": ["*"],
+      "regex": "^\\s*Part\\s+(?:[IVX]+|[NnJjIi\\[\\]]{1,4})\\b.*(?:minutes?)?\\s*$"
+    },
+    {
+      "id": "section-heading",
+      "mode": "line",
+      "scopes": ["*"],
+      "regex": "^\\s*Section\\s+[ABC]\\s*$"
+    },
+    {
+      "id": "page-number",
+      "mode": "line",
+      "scopes": ["*"],
+      "regex": "^\\s*\\d{1,2}\\s*$"
+    },
+    {
+      "id": "source-footer",
+      "mode": "line",
+      "scopes": ["*"],
+      "regex": "(?:burningvocabulary\\.cn|zhenti\\.|www\\.[A-Za-z0-9.-]+\\.(?:cn|com))"
+    },
+    {
+      "id": "directions-line-non-writing",
+      "mode": "line",
+      "scopes": ["listening_printed", "reading_cloze", "reading_matching", "reading_careful", "question_stems", "options", "translation_prompt", "unknown"],
+      "regex": "^\\s*Directions\\s*:"
+    },
+    {
+      "id": "answer-sheet-instruction",
+      "mode": "line",
+      "scopes": ["*"],
+      "regex": "Answer\\s+Sheet\\s*[12]"
+    },
+    {
+      "id": "question-range-template",
+      "mode": "line",
+      "scopes": ["listening_printed", "reading_careful", "question_stems", "options"],
+      "regex": "^\\s*Questions?\\s+\\d{1,2}\\s+(?:(?:to|and)\\s+\\d{1,2}\\s+)?(?:are|is)\\s+based\\s+on\\b"
+    },
+    {
+      "id": "listening-replay-instruction",
+      "mode": "line",
+      "scopes": ["listening_printed"],
+      "regex": "(?:you\\s+will\\s+hear|read\\s+only\\s+once|at\\s+the\\s+end\\s+of\\s+each|both\\s+the\\s+.*questions|after\\s+you\\s+hear)"
+    },
+    {
+      "id": "choice-marking-instruction",
+      "mode": "line",
+      "scopes": ["listening_printed", "reading_cloze", "reading_matching", "reading_careful", "question_stems", "options"],
+      "regex": "(?:mark\\s+the\\s+corresponding\\s+letter|single\\s+line\\s+through\\s+the\\s+centre|decide\\s+on\\s+the\\s+best\\s+choice)"
+    },
+    {
+      "id": "reading-instruction-continuation",
+      "mode": "line",
+      "scopes": ["reading_cloze", "reading_matching", "reading_careful"],
+      "regex": "(?:you\\s+are\\s+required\\s+to\\s+select|you\\s+are\\s+going\\s+to\\s+read|each\\s+statement\\s+contains\\s+information|each\\s+passage\\s+is\\s+followed\\s+by|read\\s+the\\s+passage\\s+through\\s+carefully|you\\s+may\\s+not\\s+use\\s+any\\s+of\\s+the\\s+words)"
+    },
+    {
+      "id": "translation-instruction-continuation",
+      "mode": "line",
+      "scopes": ["translation_prompt"],
+      "regex": "(?:translate\\s+a\\s+passage\\s+from\\s+Chinese\\s+into\\s+English|write\\s+your\\s+answer)"
+    },
+    {
+      "id": "writing-fixed-prefix",
+      "mode": "regex",
+      "scopes": ["writing_prompt"],
+      "regex": "\\bDirections\\s*:\\s*(?:For\\s+this\\s+part,?\\s+you\\s+are\\s+allowed\\s+\\d+\\s+minutes\\s+to\\s+write\\s+an?\\s+(?:short\\s+)?essay|Suppose\\s+you\\s+are\\s+going\\s+to\\s+write)\\b"
+    },
+    {
+      "id": "writing-length-instruction",
+      "mode": "regex",
+      "scopes": ["writing_prompt"],
+      "regex": "\\bYou\\s+should\\s+write\\s+at\\s+least\\s+\\d+\\s+words(?:\\s+but\\s+no\\s+more\\s+than\\s+\\d+\\s+words)?\\.?"
+    },
+    {
+      "id": "writing-answer-sheet-instruction",
+      "mode": "regex",
+      "scopes": ["writing_prompt"],
+      "regex": "\\bWrite\\s+your\\s+essay\\s+on\\s+Answer\\s+Sheet\\s*1\\.?"
+    }
+  ]
+}

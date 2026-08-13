@@ -1599,13 +1599,15 @@ a:focus-visible {
 }
 
 .settings-card--scope,
-.settings-card--study-mode {
+.settings-card--study-mode,
+.settings-card--learning-order {
   margin-top: 16px;
   border-color: color-mix(in srgb, var(--primary) 14%, var(--line));
 }
 
 .settings-card--scope .settings-card__icon,
-.settings-card--study-mode .settings-card__icon {
+.settings-card--study-mode .settings-card__icon,
+.settings-card--learning-order .settings-card__icon {
   background: color-mix(in srgb, var(--primary-soft) 65%, var(--surface));
   color: var(--primary-dark);
   font-size: 12px;
@@ -1641,7 +1643,8 @@ a:focus-visible {
 }
 
 .scope-picker,
-.study-mode-picker {
+.study-mode-picker,
+.learning-order-picker {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
@@ -1649,7 +1652,8 @@ a:focus-visible {
 }
 
 .scope-picker button,
-.study-mode-picker button {
+.study-mode-picker button,
+.learning-order-picker button {
   min-height: 44px;
   padding: 0 15px;
   cursor: pointer;
@@ -1665,7 +1669,9 @@ a:focus-visible {
 .scope-picker button:hover,
 .scope-picker button.is-selected,
 .study-mode-picker button:hover,
-.study-mode-picker button.is-selected {
+.study-mode-picker button.is-selected,
+.learning-order-picker button:hover,
+.learning-order-picker button.is-selected {
   border-color: var(--primary);
   background: var(--primary);
   color: #fff;
@@ -1683,13 +1689,15 @@ a:focus-visible {
   }
 
   .scope-picker,
-  .study-mode-picker {
+  .study-mode-picker,
+  .learning-order-picker {
     width: 100%;
     justify-content: flex-start;
   }
 
   .scope-picker button,
-  .study-mode-picker button {
+  .study-mode-picker button,
+  .learning-order-picker button {
     flex: 1 1 44%;
   }
 
@@ -1701,6 +1709,67 @@ a:focus-visible {
     align-items: flex-start;
     flex-direction: column;
     gap: 9px;
+  }
+}
+
+.settings-card .learning-order-status {
+  color: var(--primary-dark);
+  font-weight: 750;
+}
+
+.settings-card .learning-order-status[data-status="fallback-random"] {
+  color: var(--coral);
+}
+
+.word-detail-frequency {
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-soft);
+}
+
+.word-detail-frequency h3 {
+  margin: 0 0 10px;
+  color: var(--primary-dark);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.word-detail-frequency dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 18px;
+  margin: 0;
+}
+
+.word-detail-frequency dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.word-detail-frequency dt,
+.word-detail-frequency p {
+  color: var(--text-faint);
+  font-size: 10px;
+}
+
+.word-detail-frequency dd {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.word-detail-frequency p {
+  margin: 12px 0 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 620px) {
+  .word-detail-frequency dl {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1902,6 +1971,18 @@ a:focus-visible {
   border-color: color-mix(in srgb, var(--gold) 28%, var(--line));
   background: color-mix(in srgb, var(--gold) 10%, var(--surface));
   color: color-mix(in srgb, var(--gold) 74%, var(--text)) !important;
+}
+
+.learning-phase-badge[data-learning-phase="choice-retry"] {
+  border-color: color-mix(in srgb, var(--coral) 30%, var(--line));
+  background: color-mix(in srgb, var(--coral) 9%, var(--surface));
+  color: color-mix(in srgb, var(--coral) 78%, var(--text)) !important;
+}
+
+.learning-phase-badge[data-learning-phase="ai-reinforcement"] {
+  border-color: color-mix(in srgb, var(--purple) 28%, var(--line));
+  background: color-mix(in srgb, var(--purple) 9%, var(--surface));
+  color: color-mix(in srgb, var(--purple) 74%, var(--text)) !important;
 }
 
 .answer-feedback[data-learning-phase="intro"] {

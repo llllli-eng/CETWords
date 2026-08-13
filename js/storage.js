@@ -1,14 +1,15 @@
 /**
- * 拾词 · 本地学习数据服务 v8
+ * 拾词 · 本地学习数据服务 v9
  * 保持原有 localStorage key，只保存用户状态，不复制词库正文。
  */
 
 (function registerStorageService(app) {
-  const { reviewScheduler, newWordLearning } = app;
+  const { reviewScheduler, newWordLearning, smartLearningOrder } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
-  const DATA_VERSION = 8;
+  const DATA_VERSION = 9;
   const AI_PROXY_TOKEN_KEY = "shi-ci-ai-proxy-token";
   const DEFAULT_STUDY_MODE = "en-to-zh";
+  const DEFAULT_LEARNING_ORDER = "smart";
   const DAILY_GOAL_OPTIONS = Object.freeze([10, 20, 30, 50, 80, 100]);
 
   const EMPTY_WORD_PROGRESS = {
@@ -74,7 +75,13 @@
   }
 
   function createEmptyBookData() {
-    return { words: {}, daily: {}, newWordQueue: [], newWordLearning: {} };
+    return {
+      words: {},
+      daily: {},
+      newWordQueue: [],
+      smartNewWordQueue: smartLearningOrder.normalizeQueueState(null),
+      newWordLearning: {},
+    };
   }
 
   function createDefaultData() {
@@ -86,6 +93,7 @@
         dailyNewWordGoals: { cet4: 30, cet6: 30 },
         vocabularyScope: { cet4: "core", cet6: "core" },
         studyMode: DEFAULT_STUDY_MODE,
+        learningOrder: DEFAULT_LEARNING_ORDER,
         aiJudge: { enabled: false, proxyUrl: "" },
         lastExportTime: null,
       },
@@ -123,6 +131,10 @@
 
   function normalizeStudyMode(value) {
     return value === "zh-to-en" ? "zh-to-en" : DEFAULT_STUDY_MODE;
+  }
+
+  function normalizeLearningOrder(value) {
+    return value === "random" ? "random" : DEFAULT_LEARNING_ORDER;
   }
 
   function normalizeProxyUrl(value) {
@@ -244,6 +256,7 @@
     const value = raw && typeof raw === "object" ? raw : {};
     const result = createEmptyBookData();
     result.newWordQueue = normalizeStringIds(value.newWordQueue);
+    result.smartNewWordQueue = smartLearningOrder.normalizeQueueState(value.smartNewWordQueue);
 
     if (sourceVersion >= 5 && value.newWordLearning && typeof value.newWordLearning === "object" && !Array.isArray(value.newWordLearning)) {
       Object.entries(value.newWordLearning).forEach(([wordId, record]) => {
@@ -305,6 +318,9 @@
           cet6: normalizeVocabularyScope(raw.preferences?.vocabularyScope?.cet6),
         },
         studyMode: normalizeStudyMode(raw.preferences?.studyMode),
+        learningOrder: sourceVersion >= 9
+          ? normalizeLearningOrder(raw.preferences?.learningOrder)
+          : DEFAULT_LEARNING_ORDER,
         aiJudge: normalizeAiJudgeSettings(raw.preferences?.aiJudge, sourceVersion),
         lastExportTime: normalizeIsoTime(raw.preferences?.lastExportTime),
       },
@@ -463,6 +479,17 @@
     return normalizeStudyMode(getMutableData().preferences.studyMode);
   }
 
+  function getLearningOrder() {
+    return normalizeLearningOrder(getMutableData().preferences.learningOrder);
+  }
+
+  function setLearningOrder(order) {
+    const normalized = normalizeLearningOrder(order);
+    getMutableData().preferences.learningOrder = normalized;
+    persist();
+    return normalized;
+  }
+
   function setStudyMode(mode) {
     const normalizedMode = normalizeStudyMode(mode);
     getMutableData().preferences.studyMode = normalizedMode;
@@ -587,9 +614,23 @@
       : null;
     const isPendingReinforcement = Boolean(existingLearningState)
       && newWordLearning.isPending(existingLearningState);
-    if (learningPhase === newWordLearning.LEARNING_PHASES.REINFORCEMENT && !isPendingReinforcement) {
+    if (
+      (learningPhase === newWordLearning.LEARNING_PHASES.CHOICE_RETRY
+        || learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT)
+      && !isPendingReinforcement
+    ) {
       learningPhase = newWordLearning.LEARNING_PHASES.STANDARD_REVIEW;
     }
+    if (
+      isPendingReinforcement
+      && learningPhase === newWordLearning.LEARNING_PHASES.CHOICE_RETRY
+      && !newWordLearning.isChoiceRetry(existingLearningState)
+    ) learningPhase = newWordLearning.LEARNING_PHASES.STANDARD_REVIEW;
+    if (
+      isPendingReinforcement
+      && learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT
+      && !newWordLearning.isAiReinforcement(existingLearningState)
+    ) learningPhase = newWordLearning.LEARNING_PHASES.STANDARD_REVIEW;
 
     if (sessionMode === "normal") daily.normalSessionAnswerSequence += 1;
     const answerSequence = daily.normalSessionAnswerSequence;
@@ -610,11 +651,20 @@
       });
       book.newWordLearning[wordId] = learningState;
       newWordLearning.debugSchedule(wordId, learningState);
-    } else if (learningPhase === newWordLearning.LEARNING_PHASES.REINFORCEMENT) {
+    } else if (learningPhase === newWordLearning.LEARNING_PHASES.CHOICE_RETRY) {
+      updated = newWordLearning.handleChoiceAttempt(progress, correct, { now: timestamp });
+      learningState = newWordLearning.markChoiceResult(existingLearningState, correct, {
+        now: timestamp,
+        dateKey,
+        sequence: answerSequence,
+      });
+      book.newWordLearning[wordId] = learningState;
+      newWordLearning.debugSchedule(wordId, learningState);
+    } else if (learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT) {
       updated = judgement === "partial"
         ? newWordLearning.handleReinforcementPartial(progress, { now: timestamp })
         : newWordLearning.handleReinforcement(progress, correct, { now: timestamp });
-      learningState = newWordLearning.markReinforcementResult(existingLearningState, judgement, {
+      learningState = newWordLearning.markAiResult(existingLearningState, judgement, {
         now: timestamp,
         dateKey,
         sequence: answerSequence,
@@ -766,28 +816,44 @@
     const book = ensureBook(bookId);
     const timestamp = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
     const random = typeof options.random === "function" ? options.random : Math.random;
+    const learningOrder = normalizeLearningOrder(options.learningOrder);
     const dateKey = getLocalDateKey(timestamp);
     const daily = ensureDailyStats(bookId, dateKey);
     const validIds = normalizeStringIds(validWordIds);
     const allowed = new Set(validIds);
     const isUnlearned = (wordId) => !normalizeWordProgress(book.words[wordId] || EMPTY_WORD_PROGRESS).learned;
 
-    daily.scheduledNewWordIds = normalizeStringIds(daily.scheduledNewWordIds)
-      .filter((wordId) => allowed.has(wordId));
+    // Today's assignment is immutable across refresh, scope changes, and order changes.
+    daily.scheduledNewWordIds = normalizeStringIds(daily.scheduledNewWordIds);
     const scheduled = new Set(daily.scheduledNewWordIds);
-    book.newWordQueue = normalizeStringIds(book.newWordQueue)
-      .filter((wordId) => allowed.has(wordId) && isUnlearned(wordId) && !scheduled.has(wordId));
 
     const target = Math.max(0, Math.floor(Number(requestedCount)) || 0);
     let needed = Math.max(0, target - daily.scheduledNewWordIds.length);
     if (needed > 0) {
-      const queued = new Set(book.newWordQueue);
-      const available = validIds.filter(
-        (wordId) => isUnlearned(wordId) && !scheduled.has(wordId) && !queued.has(wordId),
-      );
-      book.newWordQueue.push(...shuffleIds(available, random));
-
-      const additions = book.newWordQueue.splice(0, needed);
+      let additions = [];
+      if (learningOrder === "smart" && options.frequencyByWord instanceof Map) {
+        const available = validIds.filter((wordId) => isUnlearned(wordId) && !scheduled.has(wordId));
+        book.smartNewWordQueue = smartLearningOrder.reconcileQueueState({
+          state: book.smartNewWordQueue,
+          candidateIds: available,
+          frequencyByWord: options.frequencyByWord,
+          overridesByWord: options.overridesByWord,
+          scopeKey: options.scopeKey || `${bookId}:core`,
+          random,
+        });
+        const draw = smartLearningOrder.takeFromQueue(book.smartNewWordQueue, needed);
+        book.smartNewWordQueue = draw.state;
+        additions = draw.ids;
+      } else {
+        book.newWordQueue = normalizeStringIds(book.newWordQueue)
+          .filter((wordId) => allowed.has(wordId) && isUnlearned(wordId) && !scheduled.has(wordId));
+        const queued = new Set(book.newWordQueue);
+        const available = validIds.filter(
+          (wordId) => isUnlearned(wordId) && !scheduled.has(wordId) && !queued.has(wordId),
+        );
+        book.newWordQueue.push(...shuffleIds(available, random));
+        additions = book.newWordQueue.splice(0, needed);
+      }
       additions.forEach((wordId) => {
         if (addUniqueId(daily.scheduledNewWordIds, wordId)) scheduled.add(wordId);
       });
@@ -910,6 +976,8 @@
     setVocabularyScope,
     getStudyMode,
     setStudyMode,
+    getLearningOrder,
+    setLearningOrder,
     getAiJudgeSettings,
     setAiJudgeSettings,
     getAiProxyToken,

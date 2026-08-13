@@ -242,8 +242,7 @@
     isAiSubjectiveQuestion(question) {
       return Boolean(
         question
-        && question.learningPhase === newWordLearning.LEARNING_PHASES.REINFORCEMENT
-        && this.isAiReinforcementEnabled?.(),
+        && question.learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT,
       );
     }
 
@@ -303,7 +302,8 @@
       this.elements.questionMode.textContent = isAiSubjective ? "AI 释义巩固" : getStudyModeLabel(question.studyMode);
       const phaseLabels = {
         [newWordLearning.LEARNING_PHASES.INTRO]: "初学",
-        [newWordLearning.LEARNING_PHASES.REINFORCEMENT]: "当日巩固",
+        [newWordLearning.LEARNING_PHASES.CHOICE_RETRY]: "四选一重试",
+        [newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT]: "释义巩固",
         [newWordLearning.LEARNING_PHASES.STANDARD_REVIEW]: question.taskType === "review" ? "到期复习" : "主动练习",
       };
       this.elements.learningPhase.textContent = phaseLabels[question.learningPhase] || "常规学习";
@@ -402,7 +402,10 @@
         return;
       }
 
-      if (question?.learningPhase === newWordLearning.LEARNING_PHASES.REINFORCEMENT) {
+      if (
+        question?.learningPhase === newWordLearning.LEARNING_PHASES.CHOICE_RETRY
+        || question?.learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT
+      ) {
         this.elements.progressCaption.textContent = "当日巩固";
         this.elements.progressText.textContent = `${session.book.completedToday} / ${session.book.dailyGoal}`;
         this.setProgressBar(session.book.completedToday, session.book.dailyGoal);
@@ -657,7 +660,10 @@
         const candidate = session.questions[index];
         if (
           candidate.word.word === question.word.word
-          && candidate.learningPhase === newWordLearning.LEARNING_PHASES.REINFORCEMENT
+          && (
+            candidate.learningPhase === newWordLearning.LEARNING_PHASES.CHOICE_RETRY
+            || candidate.learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT
+          )
         ) {
           session.questions.splice(index, 1);
         }
@@ -666,7 +672,8 @@
       if (!result.learningState || !newWordLearning.isPending(result.learningState)) return;
       if (
         question.learningPhase !== newWordLearning.LEARNING_PHASES.INTRO
-        && question.learningPhase !== newWordLearning.LEARNING_PHASES.REINFORCEMENT
+        && question.learningPhase !== newWordLearning.LEARNING_PHASES.CHOICE_RETRY
+        && question.learningPhase !== newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT
       ) return;
 
       const gap = Math.max(
@@ -681,9 +688,9 @@
       session.questions.splice(insertionIndex, 0, {
         word: question.word,
         taskType: "reinforcement",
-        learningPhase: newWordLearning.LEARNING_PHASES.REINFORCEMENT,
+        learningPhase: result.learningState.phase,
         learningState: result.learningState,
-        forcedStudyMode: newWordLearning.getReinforcementMode(result.learningState.introStudyMode),
+        forcedStudyMode: newWordLearning.getPendingStudyMode(result.learningState),
         studyMode: null,
         prompt: null,
         options: null,
@@ -720,15 +727,20 @@
       this.elements.feedback.dataset.learningPhase = question.learningPhase;
       this.elements.feedbackIcon.textContent = isCorrect ? "✓" : "×";
       if (question.learningPhase === newWordLearning.LEARNING_PHASES.INTRO) {
-        this.elements.feedbackTitle.textContent = isCorrect ? "已完成初学" : "已记录为错词";
+        this.elements.feedbackTitle.textContent = isCorrect ? "四选一门槛已通过" : "四选一门槛尚未通过";
         this.elements.feedbackText.textContent = isCorrect
-          ? "稍后会用反向题型再次巩固，通过后熟练度才会提升。"
-          : "稍后会再次巩固，通过后才会获得 Level 1。";
-      } else if (question.learningPhase === newWordLearning.LEARNING_PHASES.REINFORCEMENT) {
+          ? "稍后会进行中文释义巩固；释义正确后才会获得 Level 1。"
+          : "稍后仍用相同方向的四选一重试；选对前不会进入释义巩固。";
+      } else if (question.learningPhase === newWordLearning.LEARNING_PHASES.CHOICE_RETRY) {
+        this.elements.feedbackTitle.textContent = isCorrect ? "四选一门槛已补过" : "四选一重试未通过";
+        this.elements.feedbackText.textContent = isCorrect
+          ? "门槛已通过，稍后进入中文释义巩固；当前熟练度仍为 Level 0。"
+          : "仍保持 Level 0，稍后会按原题目方向再次出现。";
+      } else if (question.learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT) {
         this.elements.feedbackTitle.textContent = isCorrect ? "巩固通过" : "巩固未通过";
         this.elements.feedbackText.textContent = isCorrect
           ? `熟练度提升至 Level 1 · 下次复习：${nextReview}`
-          : "这个词稍后还会再次出现。";
+          : "仍保持 Level 0，稍后继续中文释义巩固。";
       } else {
         this.elements.feedbackTitle.textContent = isCorrect ? "回答正确" : "回答错误";
         this.elements.feedbackText.textContent = isPendingPractice
