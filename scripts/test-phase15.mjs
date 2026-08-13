@@ -458,7 +458,7 @@ await test("formal and recovery labels expose Level without revealing the meanin
 
 await test("partial and wrong feedback reveals the standard meaning after judgement", () => {
   const source = fs.readFileSync(path.join(ROOT, "js/study.js"), "utf8");
-  assert.match(source, /aiFeedbackStandardMeaning\.textContent = question\.word\.meaning/);
+  assert.match(source, /aiFeedbackStandardMeaning\.textContent = question\.word\.coreMeaning[\s\S]*question\.word\.meaning/);
   assert.match(source, /renderSubjectiveFeedback/);
 });
 

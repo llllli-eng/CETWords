@@ -2158,6 +2158,21 @@ a:focus-visible {
   width: 100%;
 }
 
+.study-card.is-active-recall-result .answer-area {
+  display: none;
+}
+
+.study-card.is-active-recall-result .word-stage {
+  min-height: 150px;
+  padding-top: 20px;
+  padding-bottom: 16px;
+}
+
+.study-card.is-active-recall-result .word-stage p {
+  margin-top: 8px;
+  margin-bottom: 11px;
+}
+
 .answer-option {
   display: grid;
   min-width: 0;
@@ -2250,6 +2265,16 @@ a:focus-visible {
   border-radius: 16px;
 }
 
+.study-card.is-active-recall-result .answer-feedback {
+  align-items: start;
+  margin-top: 5px;
+  padding: 16px 18px;
+}
+
+.feedback-content {
+  min-width: 0;
+}
+
 .answer-feedback.is-success {
   border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
   background: color-mix(in srgb, var(--primary-soft) 68%, var(--surface));
@@ -2295,12 +2320,17 @@ a:focus-visible {
   font-size: 11px;
 }
 
+.answer-feedback .feedback-outcome {
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
 .ai-feedback-details {
   display: grid;
   gap: 6px;
   margin-top: 11px;
-  padding-top: 10px;
-  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: 10px 0 0;
 }
 
 .ai-feedback-details[hidden] {
@@ -2917,6 +2947,25 @@ kbd {
 
   .answer-feedback {
     margin-top: 13px;
+  }
+
+  .study-card.is-active-recall-result .word-stage {
+    min-height: 126px;
+    padding: 14px 8px 13px;
+  }
+
+  .study-card.is-active-recall-result .answer-feedback {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 10px;
+    margin-top: 4px;
+    padding: 13px;
+  }
+
+  .study-card.is-active-recall-result .feedback-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    font-size: 18px;
   }
 
   .word-details {

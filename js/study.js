@@ -8,6 +8,7 @@
     reviewScheduler,
     newWordLearning,
     reviewRecovery,
+    activeRecallResult,
     aiJudge,
   } = app;
   const OPTION_LABELS = ["A", "B", "C", "D"];
@@ -161,6 +162,7 @@
           judgementSource: "",
           judgementFeedback: "",
           aiPending: false,
+          resultScrollHandled: false,
           wasPresented: false,
         })),
         currentIndex: 0,
@@ -517,15 +519,23 @@
 
     renderAnswerArea(question) {
       const isSubjective = question.studyMode === "ai-meaning";
+      const isFinalSubjectiveResult = isSubjective && activeRecallResult.isFinalResult(question);
       this.elements.options.hidden = isSubjective;
-      this.elements.meaningForm.hidden = !isSubjective;
+      this.elements.meaningForm.hidden = !isSubjective || isFinalSubjectiveResult;
       this.elements.keyboardHint.hidden = isSubjective;
+      this.elements.questionScreen.classList.toggle("is-active-recall-result", isFinalSubjectiveResult);
       if (!isSubjective) {
         this.renderOptions(question);
         return;
       }
 
       this.elements.options.replaceChildren();
+      if (isFinalSubjectiveResult) {
+        this.elements.meaningInput.blur();
+        this.elements.meaningStatus.textContent = "";
+        this.elements.meaningStatus.classList.remove("is-error");
+        return;
+      }
       this.elements.meaningInput.value = question.userAnswer || "";
       this.elements.meaningInput.disabled = question.selectedIndex !== null || question.aiPending;
       this.elements.meaningSubmit.disabled = question.selectedIndex !== null || question.aiPending;
@@ -761,6 +771,7 @@
         judgementSource: "",
         judgementFeedback: "",
         aiPending: false,
+        resultScrollHandled: false,
         wasPresented: false,
       });
     }
@@ -793,6 +804,7 @@
         judgementSource: "",
         judgementFeedback: "",
         aiPending: false,
+        resultScrollHandled: false,
         wasPresented: false,
       });
     }
@@ -859,27 +871,27 @@
       const isRecovery = question.learningPhase === reviewRecovery.RECOVERY_PHASE;
       const level = progress ? reviewScheduler.getMasteryLevel(progress) : 0;
       const labels = isFormalReview ? {
-        correct: { icon: "✓", title: "正式复习通过", text: `熟练度提升至 Level ${level} · 下次复习：${nextReview}` },
-        partial: { icon: "≈", title: "意思接近，进入纠错", text: `熟练度保持 Level ${level}；稍后会在随机窗口后再次主动回忆。` },
-        wrong: { icon: "×", title: "正式复习未通过", text: `熟练度调整至 Level ${level}；稍后进入 Recovery 纠错。` },
+        correct: { icon: "✓", title: "复习结果 · 回答正确", text: `熟练度提升至 Level ${level} · 下次复习：${nextReview}` },
+        partial: { icon: "≈", title: "复习结果 · 部分正确", text: `熟练度保持 Level ${level}；稍后会在随机窗口后再次主动回忆。` },
+        wrong: { icon: "×", title: "复习结果 · 未通过", text: `熟练度调整至 Level ${level}；稍后进入 Recovery 纠错。` },
       } : isRecovery ? {
-        correct: { icon: "✓", title: "纠错完成", text: `熟练度保持 Level ${level} · 下次正式复习：${nextReview}` },
-        partial: { icon: "≈", title: "仍需纠错", text: `熟练度保持 Level ${level}；达到下一随机窗口后会再次出现。` },
-        wrong: { icon: "×", title: "继续纠错", text: `熟练度保持 Level ${level}；本次不会再次降级。` },
+        correct: { icon: "✓", title: "纠错结果 · 回答正确", text: `熟练度保持 Level ${level} · 下次正式复习：${nextReview}` },
+        partial: { icon: "≈", title: "纠错结果 · 部分正确", text: `熟练度保持 Level ${level}；达到下一随机窗口后会再次出现。` },
+        wrong: { icon: "×", title: "纠错结果 · 未通过", text: `熟练度保持 Level ${level}；本次不会再次降级。` },
       } : {
         correct: {
           icon: "✓",
-          title: "巩固通过",
+          title: "巩固结果 · 回答正确",
           text: `意思正确，熟练度提升至 Level 1 · 下次复习：${nextReview}`,
         },
         partial: {
           icon: "≈",
-          title: "意思接近",
+          title: "巩固结果 · 部分正确",
           text: "核心方向接近，但还不够完整；本次不记错词，稍后会再次巩固。",
         },
         wrong: {
           icon: "×",
-          title: "巩固未通过",
+          title: "巩固结果 · 未通过",
           text: "这次释义不匹配，这个词稍后还会再次出现。",
         },
       };
@@ -901,11 +913,22 @@
       this.renderWordDetails(question);
       this.elements.nextButton.hidden = false;
       this.updateNextButtonLabel();
+      this.scheduleFeedbackVisibility(question);
+    }
+
+    scheduleFeedbackVisibility(question) {
+      if (!activeRecallResult.isFinalResult(question) || question.resultScrollHandled) return;
+      window.requestAnimationFrame(() => {
+        if (this.getCurrentQuestion() !== question || !activeRecallResult.isFinalResult(question)) return;
+        activeRecallResult.scrollFeedbackIntoViewIfNeeded(this.elements.feedback, question);
+      });
     }
 
     renderAiFeedbackDetails(question, judgementText) {
       this.elements.aiFeedbackUserAnswer.textContent = question.userAnswer || "（未填写）";
-      this.elements.aiFeedbackStandardMeaning.textContent = question.word.meaning;
+      this.elements.aiFeedbackStandardMeaning.textContent = question.word.coreMeaning
+        || question.word.shortMeaning
+        || question.word.meaning;
       this.elements.aiFeedbackJudgement.textContent = judgementText;
       this.elements.aiFeedbackDetails.hidden = false;
     }

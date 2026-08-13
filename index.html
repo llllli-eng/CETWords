@@ -15,6 +15,7 @@
     <script src="js/smart-learning-order.js" defer></script>
     <script src="js/review-recovery.js" defer></script>
     <script src="js/new-word-learning.js" defer></script>
+    <script src="js/active-recall-result.js" defer></script>
     <script src="js/storage.js" defer></script>
     <script src="js/word-utils.js" defer></script>
     <script src="js/study-modes.js" defer></script>
@@ -366,14 +367,14 @@
 
             <div class="answer-feedback" id="answer-feedback" role="status" aria-live="polite" hidden>
               <span class="feedback-icon" id="feedback-icon" aria-hidden="true">✓</span>
-              <div>
+              <div class="feedback-content">
                 <strong id="feedback-title">回答正确</strong>
-                <p id="feedback-text">判断得很准，继续保持。</p>
                 <div class="ai-feedback-details" id="ai-feedback-details" hidden>
                   <p><span>你的回答</span><strong id="ai-feedback-user-answer"></strong></p>
                   <p><span>标准释义</span><strong id="ai-feedback-standard-meaning"></strong></p>
                   <p><span>判断说明</span><strong id="ai-feedback-judgement"></strong></p>
                 </div>
+                <p class="feedback-outcome" id="feedback-text">判断得很准，继续保持。</p>
               </div>
             </div>
 
