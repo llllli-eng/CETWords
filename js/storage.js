@@ -1,12 +1,12 @@
 /**
- * 拾词 · 本地学习数据服务 v9
+ * 拾词 · 本地学习数据服务 v10
  * 保持原有 localStorage key，只保存用户状态，不复制词库正文。
  */
 
 (function registerStorageService(app) {
   const { reviewScheduler, newWordLearning, smartLearningOrder } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
-  const DATA_VERSION = 9;
+  const DATA_VERSION = 10;
   const AI_PROXY_TOKEN_KEY = "shi-ci-ai-proxy-token";
   const DEFAULT_STUDY_MODE = "en-to-zh";
   const DEFAULT_LEARNING_ORDER = "smart";
@@ -43,6 +43,16 @@
     reviewedWordIds: [],
     scheduledNewWordIds: [],
     normalSessionAnswerSequence: 0,
+    learningMetrics: {
+      firstChoice: { correct: 0, wrong: 0 },
+      choiceRetryCount: 0,
+      reinforcement: { correct: 0, partial: 0, wrong: 0 },
+      choiceModes: {
+        "en-to-zh": { answerCount: 0, correctCount: 0, wrongCount: 0 },
+        "zh-to-en": { answerCount: 0, correctCount: 0, wrongCount: 0 },
+      },
+      words: {},
+    },
   };
 
   const EMPTY_AI_STATS = {
@@ -81,6 +91,7 @@
       newWordQueue: [],
       smartNewWordQueue: smartLearningOrder.normalizeQueueState(null),
       newWordLearning: {},
+      dailyReviews: {},
     };
   }
 
@@ -180,6 +191,91 @@
     return result;
   }
 
+  function normalizeLearningMetrics(raw) {
+    const value = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const firstChoice = value.firstChoice && typeof value.firstChoice === "object" ? value.firstChoice : {};
+    const reinforcement = value.reinforcement && typeof value.reinforcement === "object" ? value.reinforcement : {};
+    const choiceModes = value.choiceModes && typeof value.choiceModes === "object" ? value.choiceModes : {};
+    const words = {};
+    if (value.words && typeof value.words === "object" && !Array.isArray(value.words)) {
+      Object.entries(value.words).forEach(([wordId, entry]) => {
+        if (typeof wordId !== "string" || !wordId.trim() || !entry || typeof entry !== "object") return;
+        words[wordId] = {
+          choiceWrongCount: toNonNegativeInteger(entry.choiceWrongCount),
+          choiceRetryCount: toNonNegativeInteger(entry.choiceRetryCount),
+          reinforcementWrongCount: toNonNegativeInteger(entry.reinforcementWrongCount),
+          reinforcementPartialCount: toNonNegativeInteger(entry.reinforcementPartialCount),
+          eventuallyPassed: Boolean(entry.eventuallyPassed),
+        };
+      });
+    }
+    return {
+      firstChoice: {
+        correct: toNonNegativeInteger(firstChoice.correct),
+        wrong: toNonNegativeInteger(firstChoice.wrong),
+      },
+      choiceRetryCount: toNonNegativeInteger(value.choiceRetryCount),
+      reinforcement: {
+        correct: toNonNegativeInteger(reinforcement.correct),
+        partial: toNonNegativeInteger(reinforcement.partial),
+        wrong: toNonNegativeInteger(reinforcement.wrong),
+      },
+      choiceModes: {
+        "en-to-zh": {
+          answerCount: toNonNegativeInteger(choiceModes["en-to-zh"]?.answerCount),
+          correctCount: toNonNegativeInteger(choiceModes["en-to-zh"]?.correctCount),
+          wrongCount: toNonNegativeInteger(choiceModes["en-to-zh"]?.wrongCount),
+        },
+        "zh-to-en": {
+          answerCount: toNonNegativeInteger(choiceModes["zh-to-en"]?.answerCount),
+          correctCount: toNonNegativeInteger(choiceModes["zh-to-en"]?.correctCount),
+          wrongCount: toNonNegativeInteger(choiceModes["zh-to-en"]?.wrongCount),
+        },
+      },
+      words,
+    };
+  }
+
+  function normalizeDailyReviewRecord(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const generatedAt = normalizeIsoTime(raw.generatedAt);
+    const target = toNonNegativeInteger(raw.dailyTarget);
+    const completedNewWords = toNonNegativeInteger(raw.completedNewWords);
+    const reviewValue = raw.review && typeof raw.review === "object" && !Array.isArray(raw.review)
+      ? raw.review
+      : null;
+    const normalizeReviewList = (value, maximum, length = 180) => Array.isArray(value)
+      ? value.slice(0, maximum).map((item) => String(item || "").trim().slice(0, length)).filter(Boolean)
+      : [];
+    const review = reviewValue && String(reviewValue.summary || "").trim()
+      ? {
+        summary: String(reviewValue.summary).trim().slice(0, 400),
+        strengths: normalizeReviewList(reviewValue.strengths, 5),
+        weaknesses: normalizeReviewList(reviewValue.weaknesses, 5),
+        focusWords: Array.isArray(reviewValue.focusWords)
+          ? reviewValue.focusWords.slice(0, 10).map((entry) => ({
+            word: String(entry?.word || "").trim().slice(0, 100),
+            reason: String(entry?.reason || "").trim().slice(0, 220),
+            suggestion: String(entry?.suggestion || "").trim().slice(0, 220),
+          })).filter((entry) => entry.word && entry.reason && entry.suggestion)
+          : [],
+        tomorrowAdvice: normalizeReviewList(reviewValue.tomorrowAdvice, 5),
+      }
+      : null;
+    if (!generatedAt || !review) return null;
+    return {
+      generatedAt,
+      dailyTarget: target,
+      completedNewWords,
+      stale: Boolean(raw.stale),
+      review,
+      usage: {
+        promptTokens: toNonNegativeInteger(raw.usage?.promptTokens),
+        completionTokens: toNonNegativeInteger(raw.usage?.completionTokens),
+      },
+    };
+  }
+
   function normalizeIsoTime(value) {
     if (typeof value !== "string") return null;
     return Number.isFinite(Date.parse(value)) ? value : null;
@@ -249,6 +345,7 @@
       reviewedWordIds,
       scheduledNewWordIds,
       normalSessionAnswerSequence: toNonNegativeInteger(value.normalSessionAnswerSequence),
+      learningMetrics: normalizeLearningMetrics(value.learningMetrics),
     };
   }
 
@@ -257,6 +354,13 @@
     const result = createEmptyBookData();
     result.newWordQueue = normalizeStringIds(value.newWordQueue);
     result.smartNewWordQueue = smartLearningOrder.normalizeQueueState(value.smartNewWordQueue);
+    if (sourceVersion >= 10 && value.dailyReviews && typeof value.dailyReviews === "object" && !Array.isArray(value.dailyReviews)) {
+      Object.entries(value.dailyReviews).forEach(([dateKey, record]) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+        const normalized = normalizeDailyReviewRecord(record);
+        if (normalized) result.dailyReviews[dateKey] = normalized;
+      });
+    }
 
     if (sourceVersion >= 5 && value.newWordLearning && typeof value.newWordLearning === "object" && !Array.isArray(value.newWordLearning)) {
       Object.entries(value.newWordLearning).forEach(([wordId, record]) => {
@@ -466,6 +570,8 @@
     ensureBook(bookId);
     const normalizedGoal = normalizeGoal(goal);
     getMutableData().preferences.dailyNewWordGoals[bookId] = normalizedGoal;
+    const todayReview = getMutableData().books[bookId].dailyReviews[getLocalDateKey()];
+    if (todayReview && normalizedGoal !== todayReview.dailyTarget) todayReview.stale = true;
     persist();
     return normalizedGoal;
   }
@@ -683,6 +789,44 @@
     if (!updated.firstLearnDate) updated.firstLearnDate = dateKey;
     Object.assign(progress, normalizeWordProgress(updated));
 
+    const learningMetrics = daily.learningMetrics;
+    const isChoicePhase = sessionMode === "normal" && (
+      learningPhase === newWordLearning.LEARNING_PHASES.INTRO
+      || learningPhase === newWordLearning.LEARNING_PHASES.CHOICE_RETRY
+    );
+    const isReinforcementPhase = sessionMode === "normal"
+      && learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT;
+    if ((isChoicePhase || isReinforcementPhase) && !learningMetrics.words[wordId]) {
+      learningMetrics.words[wordId] = {
+        choiceWrongCount: 0,
+        choiceRetryCount: 0,
+        reinforcementWrongCount: 0,
+        reinforcementPartialCount: 0,
+        eventuallyPassed: false,
+      };
+    }
+    const wordMetrics = learningMetrics.words[wordId] || null;
+    if (isChoicePhase) {
+      const choiceMode = normalizeStudyMode(safeContext.studyMode);
+      learningMetrics.choiceModes[choiceMode].answerCount += 1;
+      learningMetrics.choiceModes[choiceMode][correct ? "correctCount" : "wrongCount"] += 1;
+    }
+    if (sessionMode === "normal" && learningPhase === newWordLearning.LEARNING_PHASES.INTRO) {
+      learningMetrics.firstChoice[correct ? "correct" : "wrong"] += 1;
+      if (!correct && wordMetrics) wordMetrics.choiceWrongCount += 1;
+    }
+    if (sessionMode === "normal" && learningPhase === newWordLearning.LEARNING_PHASES.CHOICE_RETRY) {
+      learningMetrics.choiceRetryCount += 1;
+      if (wordMetrics) wordMetrics.choiceRetryCount += 1;
+      if (!correct && wordMetrics) wordMetrics.choiceWrongCount += 1;
+    }
+    if (sessionMode === "normal" && learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT) {
+      learningMetrics.reinforcement[judgement] += 1;
+      if (judgement === "wrong" && wordMetrics) wordMetrics.reinforcementWrongCount += 1;
+      if (judgement === "partial" && wordMetrics) wordMetrics.reinforcementPartialCount += 1;
+      if (judgement === "correct" && wordMetrics) wordMetrics.eventuallyPassed = true;
+    }
+
     daily.answerCount += 1;
     if (!daily.modeStats[studyMode]) {
       daily.modeStats[studyMode] = { answerCount: 0, correctCount: 0, partialCount: 0, wrongCount: 0 };
@@ -751,6 +895,27 @@
   function getDailyStats(bookId, dateKey = getLocalDateKey()) {
     const stored = ensureBook(bookId).daily[dateKey];
     return normalizeDailyStats(stored || EMPTY_DAILY_STATS);
+  }
+
+  function getDailyReviewRecord(bookId, dateKey = getLocalDateKey()) {
+    const record = ensureBook(bookId).dailyReviews[dateKey];
+    return record ? deepClone(record) : null;
+  }
+
+  function saveDailyReviewRecord(bookId, dateKey, record, now = Date.now()) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null;
+    const normalized = normalizeDailyReviewRecord({
+      generatedAt: new Date(now).toISOString(),
+      dailyTarget: record?.dailyTarget,
+      completedNewWords: record?.completedNewWords,
+      stale: false,
+      review: record?.review,
+      usage: record?.usage,
+    });
+    if (!normalized) return null;
+    ensureBook(bookId).dailyReviews[dateKey] = normalized;
+    persist();
+    return deepClone(normalized);
   }
 
   function getNewWordLearningState(bookId, wordId) {
@@ -993,6 +1158,8 @@
     removeWrongWord,
     setWrongBookState,
     getDailyStats,
+    getDailyReviewRecord,
+    saveDailyReviewRecord,
     getNewWordLearningState,
     getPendingReinforcements,
     getPendingReinforcementSummary,

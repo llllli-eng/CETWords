@@ -18,6 +18,7 @@ const {
   newWordLearning,
   aiJudge,
   smartLearningOrder,
+  dailyReviewService,
 } = window.CETWords;
 
 const appState = {
@@ -33,6 +34,7 @@ const appState = {
     overrides: new Map(),
     error: null,
   },
+  dailyReview: { generating: false, session: null },
   books: {
     cet4: {
       id: "cet4",
@@ -201,6 +203,22 @@ const elements = {
   resetAllDialogMessage: document.querySelector("#reset-all-dialog-message"),
   resetAllCancel: document.querySelector("#reset-all-cancel"),
   resetAllConfirm: document.querySelector("#reset-all-confirm"),
+  dailyReviewPanel: document.querySelector("#daily-review-panel"),
+  dailyReviewCompleted: document.querySelector("#daily-review-completed"),
+  dailyReviewTotalAnswers: document.querySelector("#daily-review-total-answers"),
+  dailyReviewChoiceAccuracy: document.querySelector("#daily-review-choice-accuracy"),
+  dailyReviewChoiceRetries: document.querySelector("#daily-review-choice-retries"),
+  dailyReviewReinforcementRate: document.querySelector("#daily-review-reinforcement-rate"),
+  dailyReviewRepeatErrors: document.querySelector("#daily-review-repeat-errors"),
+  dailyReviewWeakList: document.querySelector("#daily-review-weak-list"),
+  dailyReviewStatus: document.querySelector("#daily-review-status"),
+  dailyReviewGenerate: document.querySelector("#daily-review-generate"),
+  dailyReviewResult: document.querySelector("#daily-review-result"),
+  dailyReviewSummary: document.querySelector("#daily-review-summary"),
+  dailyReviewStrengths: document.querySelector("#daily-review-strengths"),
+  dailyReviewWeaknesses: document.querySelector("#daily-review-weaknesses"),
+  dailyReviewFocus: document.querySelector("#daily-review-focus"),
+  dailyReviewAdvice: document.querySelector("#daily-review-advice"),
   toast: document.querySelector("#toast"),
 };
 
@@ -673,6 +691,137 @@ function handleAiFallback(type) {
   storage.recordAiJudgement({ source: "manual-fallback", fallbackType: type });
 }
 
+function buildTodayLocalReview(bookId) {
+  const book = appState.books[bookId];
+  const dateKey = storage.getLocalDateKey();
+  return dailyReviewService.buildLocalReview({
+    bookId,
+    dailyTarget: storage.getDailyNewWordGoal(bookId),
+    daily: { ...storage.getDailyStats(bookId, dateKey), dateKey },
+    words: book.words,
+    getProgress: (wordId) => storage.getWordProgress(bookId, wordId),
+  });
+}
+
+function replaceReviewList(element, items, emptyText) {
+  const values = Array.isArray(items) && items.length ? items : [emptyText];
+  element.replaceChildren(...values.map((value) => createElement("li", "", value)));
+}
+
+function renderAiDailyReview(review) {
+  elements.dailyReviewSummary.textContent = review.summary;
+  replaceReviewList(elements.dailyReviewStrengths, review.strengths, "今天暂无足够数据可总结。 ");
+  replaceReviewList(elements.dailyReviewWeaknesses, review.weaknesses, "今天未发现明确的薄弱模式。 ");
+  replaceReviewList(elements.dailyReviewAdvice, review.tomorrowAdvice, "按系统安排继续完成明日学习。 ");
+  elements.dailyReviewFocus.replaceChildren(...review.focusWords.map((entry) => {
+    const card = createElement("article", "daily-review-focus__item");
+    card.append(
+      createElement("strong", "", entry.word),
+      createElement("p", "", entry.reason),
+      createElement("span", "", entry.suggestion),
+    );
+    return card;
+  }));
+  elements.dailyReviewFocus.hidden = review.focusWords.length === 0;
+  elements.dailyReviewResult.hidden = false;
+}
+
+function getDailyReviewErrorMessage(error) {
+  const code = error?.message || "";
+  if (code === "AI_NOT_CONFIGURED") return "AI 尚未配置；本地统计和薄弱词仍可正常查看。请先在设置中启用 AI。";
+  if (code === "AI_TIMEOUT") return "AI 复盘请求超时；本地统计没有受到影响，可以稍后重试。";
+  if (code === "AI_INVALID_RESPONSE") return "AI 返回格式异常；本地统计没有受到影响，可以稍后重试。";
+  return "AI 复盘暂时不可用；本地统计没有受到影响，可以稍后重试。";
+}
+
+function renderDailyReviewPanel(session, { error = null } = {}) {
+  const isEligibleSession = session?.sessionMode === "normal";
+  const localReview = isEligibleSession ? buildTodayLocalReview(session.book.id) : null;
+  const isVisible = Boolean(localReview?.canGenerate);
+  elements.dailyReviewPanel.hidden = !isVisible;
+  if (!isVisible) return;
+
+  const stats = localReview.statistics;
+  elements.dailyReviewCompleted.textContent = `${stats.completedNewWords} / ${stats.dailyTarget}`;
+  elements.dailyReviewTotalAnswers.textContent = formatNumber(stats.totalAnswers);
+  elements.dailyReviewChoiceAccuracy.textContent = `${stats.firstChoiceAccuracy}%`;
+  elements.dailyReviewChoiceRetries.textContent = formatNumber(stats.choiceRetryCount);
+  elements.dailyReviewReinforcementRate.textContent = `${stats.reinforcementPassRate}%`;
+  elements.dailyReviewRepeatErrors.textContent = formatNumber(stats.repeatedErrorWords);
+  elements.dailyReviewWeakList.replaceChildren(...(
+    localReview.weakWords.length
+      ? localReview.weakWords.map((entry) => {
+        const item = createElement("li", "daily-review-weak-item");
+        const riskClass = entry.dailyRiskScore >= 80
+          ? "is-critical"
+          : entry.dailyRiskScore >= 60
+            ? "is-high"
+            : entry.dailyRiskScore >= 40 ? "is-medium" : "is-low";
+        const badge = createElement("span", `daily-review-risk ${riskClass}`, `风险 ${entry.dailyRiskScore}`);
+        item.append(
+          createElement("strong", "", entry.word),
+          createElement("span", "daily-review-weak-item__meaning", entry.coreMeaning),
+          badge,
+        );
+        return item;
+      })
+      : [createElement("li", "daily-review-weak-item is-empty", "今天暂无明显薄弱词。")]
+  ));
+
+  const dateKey = storage.getLocalDateKey();
+  const cached = storage.getDailyReviewRecord(session.book.id, dateKey);
+  const isStale = Boolean(cached && (cached.stale || cached.dailyTarget !== stats.dailyTarget));
+  const isCurrent = Boolean(cached && !isStale);
+  elements.dailyReviewResult.hidden = true;
+  if (isCurrent) renderAiDailyReview(cached.review);
+  else if (isStale) renderAiDailyReview(cached.review);
+
+  elements.dailyReviewGenerate.hidden = isCurrent;
+  elements.dailyReviewGenerate.disabled = appState.dailyReview.generating;
+  elements.dailyReviewGenerate.querySelector("span:first-child").textContent = appState.dailyReview.generating
+    ? "正在生成复盘…"
+    : isStale ? "重新生成今日复盘" : "生成 AI 今日复盘";
+  if (error) elements.dailyReviewStatus.textContent = getDailyReviewErrorMessage(error);
+  else if (isCurrent) elements.dailyReviewStatus.textContent = "今日 AI 复盘已生成，并已保存在这台设备中。";
+  else if (isStale) elements.dailyReviewStatus.textContent = "学习目标已调整，上方旧复盘已过期；请重新生成当前目标的复盘。";
+  else elements.dailyReviewStatus.textContent = "复盘只会发送上方聚合统计与最多 10 个薄弱词，不包含答题原文或完整词库。";
+}
+
+async function generateDailyReview() {
+  const session = appState.dailyReview.session;
+  if (!session || appState.dailyReview.generating) return;
+  const localReview = buildTodayLocalReview(session.book.id);
+  if (!localReview.canGenerate) return;
+  appState.dailyReview.generating = true;
+  renderDailyReviewPanel(session);
+  let caughtError = null;
+  try {
+    const settings = storage.getAiJudgeSettings();
+    if (!settings.enabled) throw new Error("AI_NOT_CONFIGURED");
+    const result = await dailyReviewService.requestDailyReview({
+      payload: dailyReviewService.buildRequestPayload(localReview),
+      proxyUrl: settings.proxyUrl,
+      token: storage.getAiProxyToken(),
+    });
+    storage.saveDailyReviewRecord(session.book.id, localReview.date, {
+      dailyTarget: localReview.statistics.dailyTarget,
+      completedNewWords: localReview.statistics.completedNewWords,
+      review: result.review,
+      usage: result.usage,
+    });
+  } catch (error) {
+    caughtError = error;
+  } finally {
+    appState.dailyReview.generating = false;
+    renderDailyReviewPanel(session, { error: caughtError });
+  }
+}
+
+function handleStudyComplete(session) {
+  appState.dailyReview.session = session;
+  renderDailyReviewPanel(session);
+}
+
 const studyController = new StudyController({
   onExit: handleStudyExit,
   onAnswer: handleAnswer,
@@ -685,7 +834,10 @@ const studyController = new StudyController({
   isAiReinforcementEnabled: isAiReinforcementConfigured,
   onAiJudgeMeaning: handleAiJudgeMeaning,
   onAiFallback: handleAiFallback,
+  onComplete: handleStudyComplete,
 });
+
+elements.dailyReviewGenerate.addEventListener("click", generateDailyReview);
 
 function formatStudyTime(timestamp) {
   if (!timestamp) return "尚未学习";

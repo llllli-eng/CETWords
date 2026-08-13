@@ -387,7 +387,7 @@ test("v8 migration defaults learning order to smart and assumes pending gate pas
   };
   const { app } = loadApp({ initialStorage: { "cetwords-user-data-v1": JSON.stringify(old) } });
   const data = app.storage.loadUserData();
-  assert.equal(data.version, 9);
+  assert.equal(data.version, 10);
   assert.equal(data.preferences.learningOrder, "smart");
   assert.equal(data.books.cet4.newWordLearning.legacy.choiceGatePassed, true);
   assert.equal(data.books.cet4.newWordLearning.legacy.phase, learning.LEARNING_PHASES.AI_REINFORCEMENT);

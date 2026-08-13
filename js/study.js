@@ -32,6 +32,7 @@
       isAiReinforcementEnabled,
       onAiJudgeMeaning,
       onAiFallback,
+      onComplete,
     }) {
       this.onExit = onExit;
       this.onAnswer = onAnswer;
@@ -44,6 +45,7 @@
       this.isAiReinforcementEnabled = isAiReinforcementEnabled;
       this.onAiJudgeMeaning = onAiJudgeMeaning;
       this.onAiFallback = onAiFallback;
+      this.onComplete = onComplete;
       this.sessions = new Map();
       this.activeSession = null;
       this.isActive = false;
@@ -873,6 +875,7 @@
       this.elements.resultAccuracy.textContent = `${accuracy}%`;
       this.elements.restartButton.querySelector("span:first-child").textContent =
         session.sessionMode === "normal" ? "再学一组" : "再来一组";
+      this.onComplete?.(session);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 

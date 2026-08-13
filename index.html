@@ -18,6 +18,7 @@
     <script src="js/word-utils.js" defer></script>
     <script src="js/study-modes.js" defer></script>
     <script src="js/ai-judge.js" defer></script>
+    <script src="js/daily-review-service.js" defer></script>
     <script src="js/speech.js" defer></script>
     <script src="js/word-library.js" defer></script>
     <script src="js/statistics-service.js" defer></script>
@@ -441,6 +442,61 @@
                 <strong id="result-accuracy">83%</strong>
               </div>
             </div>
+
+            <section class="daily-review-panel" id="daily-review-panel" aria-labelledby="daily-review-title" hidden>
+              <div class="daily-review-panel__heading">
+                <div>
+                  <p class="section-kicker">AI DAILY REVIEW</p>
+                  <h2 id="daily-review-title">今日学习复盘</h2>
+                </div>
+                <span class="daily-review-badge">完成任务后可生成</span>
+              </div>
+
+              <div class="daily-review-metrics" aria-label="今日本地学习统计">
+                <div><span>新词完成</span><strong id="daily-review-completed">0 / 0</strong></div>
+                <div><span>总答题</span><strong id="daily-review-total-answers">0</strong></div>
+                <div><span>初选正确率</span><strong id="daily-review-choice-accuracy">0%</strong></div>
+                <div><span>四选一重试</span><strong id="daily-review-choice-retries">0</strong></div>
+                <div><span>巩固通过率</span><strong id="daily-review-reinforcement-rate">0%</strong></div>
+                <div><span>重复出错词</span><strong id="daily-review-repeat-errors">0</strong></div>
+              </div>
+
+              <div class="daily-review-local">
+                <h3>本地识别的薄弱词</h3>
+                <ol class="daily-review-weak-list" id="daily-review-weak-list"></ol>
+              </div>
+
+              <p class="daily-review-status" id="daily-review-status" role="status"></p>
+              <button class="primary-button daily-review-generate" id="daily-review-generate" type="button">
+                <span>生成 AI 今日复盘</span>
+                <span class="button-arrow" aria-hidden="true">→</span>
+              </button>
+
+              <div class="daily-review-result" id="daily-review-result" hidden>
+                <section>
+                  <h3>今日表现概览</h3>
+                  <p id="daily-review-summary"></p>
+                </section>
+                <div class="daily-review-result__columns">
+                  <section>
+                    <h3>做得好的地方</h3>
+                    <ul id="daily-review-strengths"></ul>
+                  </section>
+                  <section>
+                    <h3>需要加强的地方</h3>
+                    <ul id="daily-review-weaknesses"></ul>
+                  </section>
+                </div>
+                <section>
+                  <h3>重点单词</h3>
+                  <div class="daily-review-focus" id="daily-review-focus"></div>
+                </section>
+                <section>
+                  <h3>明日建议</h3>
+                  <ul id="daily-review-advice"></ul>
+                </section>
+              </div>
+            </section>
 
             <div class="result-actions">
               <button class="secondary-button" id="result-home-button" type="button">返回首页</button>

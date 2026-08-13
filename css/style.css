@@ -2503,6 +2503,221 @@ a:focus-visible {
   font-size: 22px;
 }
 
+.daily-review-panel {
+  max-width: 720px;
+  margin: 36px auto 0;
+  padding: 26px;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--line));
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
+  text-align: left;
+}
+
+.daily-review-panel__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.daily-review-panel__heading h2 {
+  margin: 3px 0 0;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.daily-review-badge {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.daily-review-metrics {
+  display: grid;
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 10px;
+}
+
+.daily-review-metrics > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.daily-review-metrics span {
+  color: var(--text-faint);
+  font-size: 10px;
+}
+
+.daily-review-metrics strong {
+  color: var(--text);
+  font-size: 17px;
+}
+
+.daily-review-local,
+.daily-review-result > section,
+.daily-review-result__columns > section {
+  margin-top: 23px;
+}
+
+.daily-review-panel h3 {
+  margin: 0 0 11px;
+  font-size: 13px;
+}
+
+.daily-review-weak-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.daily-review-weak-item {
+  display: grid;
+  min-width: 0;
+  align-items: center;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.daily-review-weak-item strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+}
+
+.daily-review-weak-item__meaning {
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-review-weak-item.is-empty {
+  color: var(--text-soft);
+  font-size: 11px;
+  grid-column: 1 / -1;
+}
+
+.daily-review-risk {
+  padding: 4px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.daily-review-risk.is-critical {
+  background: color-mix(in srgb, #d5483f 14%, var(--surface));
+  color: #bd342d;
+}
+
+.daily-review-risk.is-high {
+  background: color-mix(in srgb, #e67e22 15%, var(--surface));
+  color: #b95d0d;
+}
+
+.daily-review-risk.is-medium {
+  background: color-mix(in srgb, #d5a900 16%, var(--surface));
+  color: #8c7000;
+}
+
+.daily-review-risk.is-low {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.daily-review-status {
+  margin: 18px 0 0;
+  color: var(--text-soft);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.daily-review-generate {
+  width: 100%;
+  margin-top: 13px;
+}
+
+.daily-review-generate:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+}
+
+.daily-review-result {
+  margin-top: 24px;
+  padding-top: 3px;
+  border-top: 1px solid var(--line);
+}
+
+.daily-review-result p,
+.daily-review-result li,
+.daily-review-focus__item span {
+  color: var(--text-soft);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.daily-review-result p {
+  margin: 0;
+}
+
+.daily-review-result ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.daily-review-result__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.daily-review-focus {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.daily-review-focus__item {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.daily-review-focus__item strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+}
+
+.daily-review-focus__item p {
+  margin-top: 7px;
+}
+
+.daily-review-focus__item span {
+  display: block;
+  margin-top: 5px;
+  color: var(--primary-dark);
+}
+
 .result-actions {
   display: grid;
   max-width: 470px;
@@ -2736,6 +2951,27 @@ kbd {
   }
 
   .result-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-review-panel {
+    padding: 20px 15px;
+    border-radius: 20px;
+  }
+
+  .daily-review-panel__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .daily-review-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .daily-review-weak-list,
+  .daily-review-result__columns,
+  .daily-review-focus {
     grid-template-columns: 1fr;
   }
 
