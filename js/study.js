@@ -7,6 +7,7 @@
     speakEnglish,
     reviewScheduler,
     newWordLearning,
+    reviewRecovery,
     aiJudge,
   } = app;
   const OPTION_LABELS = ["A", "B", "C", "D"];
@@ -49,6 +50,7 @@
       this.sessions = new Map();
       this.activeSession = null;
       this.isActive = false;
+      this.isComposingMeaning = false;
 
       this.elements = {
         root: document.querySelector("#study-view"),
@@ -120,7 +122,14 @@
       this.elements.modeSwitch.addEventListener("click", () => this.switchStudyMode());
       this.elements.meaningForm.addEventListener("submit", (event) => {
         event.preventDefault();
+        if (this.isComposingMeaning) return;
         this.submitMeaningAnswer();
+      });
+      this.elements.meaningInput.addEventListener("compositionstart", () => {
+        this.isComposingMeaning = true;
+      });
+      this.elements.meaningInput.addEventListener("compositionend", () => {
+        this.isComposingMeaning = false;
       });
       this.elements.manualCorrect.addEventListener("click", () => this.applyManualJudgement("correct"));
       this.elements.manualWrong.addEventListener("click", () => this.applyManualJudgement("wrong"));
@@ -141,6 +150,7 @@
           learningPhase: item.learningPhase || newWordLearning.LEARNING_PHASES.STANDARD_REVIEW,
           forcedStudyMode: item.forcedStudyMode || null,
           learningState: item.learningState || null,
+          recoveryState: item.recoveryState || null,
           studyMode: null,
           prompt: null,
           options: null,
@@ -158,6 +168,7 @@
         wrongCount: 0,
         partialCount: 0,
         normalSessionAnswerSequence: Number(book.normalSessionAnswerSequence) || 0,
+        studySessionId: book.studySessionId || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
         recentWordIds: [],
         lastPresentedWordId: null,
         waitingForReinforcement: false,
@@ -212,7 +223,7 @@
 
     selectCurrentQuestion() {
       const session = this.activeSession;
-      if (!session || session.sessionMode !== "normal") return Boolean(this.getCurrentQuestion());
+      if (!session || !["normal", "review"].includes(session.sessionMode)) return Boolean(this.getCurrentQuestion());
       const remaining = session.questions.slice(session.currentIndex);
       const relativeIndex = newWordLearning.selectNextItemIndex({
         items: remaining,
@@ -221,6 +232,7 @@
         now: Date.now(),
         pendingCount: session.book.pendingReinforcementCount || 0,
         recentWordIds: session.recentWordIds,
+        studySessionId: session.studySessionId,
       });
       if (relativeIndex < 0) return false;
       const selectedIndex = session.currentIndex + relativeIndex;
@@ -244,7 +256,11 @@
     isAiSubjectiveQuestion(question) {
       return Boolean(
         question
-        && question.learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT,
+        && (
+          question.learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT
+          || question.learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE
+          || question.learningPhase === reviewRecovery.RECOVERY_PHASE
+        ),
       );
     }
 
@@ -254,10 +270,16 @@
       while (session && question && !question.options) {
         if (this.isAiSubjectiveQuestion(question)) {
           question.studyMode = "ai-meaning";
+          const isFormalReview = question.learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE;
+          const isRecovery = question.learningPhase === reviewRecovery.RECOVERY_PHASE;
           question.prompt = {
             primary: question.word.word,
             secondary: question.word.phonetic || "",
-            instruction: "请写出你记得的中文意思",
+            instruction: isFormalReview
+              ? `Level ${reviewScheduler.getMasteryLevel(this.getWordProgress(session.book.id, question.word.word))} · 请主动写出中文释义`
+              : isRecovery
+                ? `纠错巩固 · Level ${reviewScheduler.getMasteryLevel(this.getWordProgress(session.book.id, question.word.word))}`
+                : "请写出你记得的中文意思",
             canSpeak: true,
           };
           question.options = [];
@@ -285,8 +307,12 @@
       const session = this.activeSession;
       if (!session) return;
       if (!this.selectCurrentQuestion()) {
+        const hasRecovery = session.questions.slice(session.currentIndex)
+          .some((item) => item.learningPhase === reviewRecovery.RECOVERY_PHASE);
         session.waitingForReinforcement = true;
-        this.onMessage("巩固正在形成记忆间隔，稍后继续效果更好");
+        this.onMessage(hasRecovery
+          ? "纠错正在形成随机记忆间隔，状态已保存，下次可继续"
+          : "巩固正在形成记忆间隔，稍后继续效果更好");
         this.completeSession();
         return;
       }
@@ -301,11 +327,17 @@
       this.elements.resultScreen.hidden = true;
       this.elements.questionNumber.textContent = `第 ${session.currentIndex + 1} / ${session.questions.length} 词`;
       const isAiSubjective = question.studyMode === "ai-meaning";
-      this.elements.questionMode.textContent = isAiSubjective ? "AI 释义巩固" : getStudyModeLabel(question.studyMode);
+      this.elements.questionMode.textContent = isAiSubjective
+        ? question.learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE
+          ? "主动释义复习"
+          : question.learningPhase === reviewRecovery.RECOVERY_PHASE ? "Recovery 纠错" : "AI 释义巩固"
+        : getStudyModeLabel(question.studyMode);
       const phaseLabels = {
         [newWordLearning.LEARNING_PHASES.INTRO]: "初学",
         [newWordLearning.LEARNING_PHASES.CHOICE_RETRY]: "四选一重试",
         [newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT]: "释义巩固",
+        [reviewRecovery.FORMAL_REVIEW_PHASE]: `Level ${reviewScheduler.getMasteryLevel(this.getWordProgress(session.book.id, question.word.word))} · 到期复习`,
+        [reviewRecovery.RECOVERY_PHASE]: `纠错巩固 · Level ${reviewScheduler.getMasteryLevel(this.getWordProgress(session.book.id, question.word.word))}`,
         [newWordLearning.LEARNING_PHASES.STANDARD_REVIEW]: question.taskType === "review" ? "到期复习" : "主动练习",
       };
       this.elements.learningPhase.textContent = phaseLabels[question.learningPhase] || "常规学习";
@@ -337,7 +369,9 @@
     renderModeControls(question = this.getCurrentQuestion()) {
       if (!question) return;
       if (question.studyMode === "ai-meaning") {
-        this.elements.modeBadge.textContent = "AI 释义巩固";
+        this.elements.modeBadge.textContent = question.learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE
+          ? "主动释义复习"
+          : question.learningPhase === reviewRecovery.RECOVERY_PHASE ? "Recovery 纠错" : "AI 释义巩固";
         this.elements.modeSwitch.hidden = true;
         return;
       }
@@ -411,6 +445,13 @@
         this.elements.progressCaption.textContent = "当日巩固";
         this.elements.progressText.textContent = `${session.book.completedToday} / ${session.book.dailyGoal}`;
         this.setProgressBar(session.book.completedToday, session.book.dailyGoal);
+        return;
+      }
+
+      if (question?.learningPhase === reviewRecovery.RECOVERY_PHASE) {
+        this.elements.progressCaption.textContent = "纠错巩固";
+        this.elements.progressText.textContent = `${answered} / ${session.questions.length}`;
+        this.setProgressBar(answered, session.questions.length);
         return;
       }
 
@@ -488,11 +529,25 @@
       this.elements.meaningInput.value = question.userAnswer || "";
       this.elements.meaningInput.disabled = question.selectedIndex !== null || question.aiPending;
       this.elements.meaningSubmit.disabled = question.selectedIndex !== null || question.aiPending;
-      this.elements.meaningSubmit.textContent = question.aiPending ? "AI 判断中…" : "提交答案";
+      this.elements.meaningSubmit.innerHTML = question.aiPending
+        ? "AI 判断中…"
+        : '提交答案 <span class="meaning-submit-shortcut">Ctrl + Enter</span>';
       this.elements.meaningStatus.textContent = "";
       this.elements.meaningStatus.classList.remove("is-error");
       if (question.selectedIndex === null && !question.aiPending) {
-        window.setTimeout(() => this.elements.meaningInput.focus(), 0);
+        window.setTimeout(() => {
+          const activeElement = document.activeElement;
+          const isStudyNavigation = activeElement === this.elements.nextButton
+            || activeElement === this.elements.meaningSubmit
+            || activeElement?.classList?.contains("answer-option");
+          if (
+            activeElement === document.body
+            || activeElement === this.elements.meaningInput
+            || isStudyNavigation
+          ) {
+            this.elements.meaningInput.focus();
+          }
+        }, 0);
       }
     }
 
@@ -514,6 +569,7 @@
         sessionMode: session.sessionMode,
         taskType: question.taskType,
         learningPhase: question.learningPhase,
+        studySessionId: session.studySessionId,
       });
       question.answerResult = result;
       session.normalSessionAnswerSequence = result.answerSequence;
@@ -592,6 +648,7 @@
         sessionMode: session.sessionMode,
         taskType: question.taskType,
         learningPhase: question.learningPhase,
+        studySessionId: session.studySessionId,
       });
       question.answerResult = result;
       session.normalSessionAnswerSequence = result.answerSequence;
@@ -600,6 +657,7 @@
         ?? session.book.pendingReinforcementCount;
       session.book.reviewCompletedToday = result.daily.reviewWords;
       this.syncReinforcementQueue(question, result);
+      this.syncRecoveryQueue(question, result);
       this.renderAnswerArea(question);
       this.renderProgress();
       this.renderFeedback(question);
@@ -707,6 +765,38 @@
       });
     }
 
+    syncRecoveryQueue(question, result) {
+      const session = this.activeSession;
+      if (!session) return;
+      const currentIndex = session.currentIndex;
+      for (let index = session.questions.length - 1; index > currentIndex; index -= 1) {
+        if (
+          session.questions[index].word.word === question.word.word
+          && session.questions[index].learningPhase === reviewRecovery.RECOVERY_PHASE
+        ) session.questions.splice(index, 1);
+      }
+      if (!result.recoveryState?.active || result.recoveryState.pendingNextSession) return;
+      const gap = Math.max(0, result.recoveryState.eligibleAfterQuestionIndex - result.answerSequence);
+      const insertionIndex = newWordLearning.getInsertionIndex(currentIndex, session.questions.length, gap);
+      session.questions.splice(insertionIndex, 0, {
+        word: question.word,
+        taskType: "recovery",
+        learningPhase: reviewRecovery.RECOVERY_PHASE,
+        recoveryState: result.recoveryState,
+        studyMode: null,
+        prompt: null,
+        options: null,
+        selectedIndex: null,
+        answerResult: null,
+        userAnswer: "",
+        judgement: null,
+        judgementSource: "",
+        judgementFeedback: "",
+        aiPending: false,
+        wasPresented: false,
+      });
+    }
+
     renderFeedback(question) {
       if (question.studyMode === "ai-meaning") {
         this.renderSubjectiveFeedback(question);
@@ -765,7 +855,18 @@
       const isPartial = judgement === "partial";
       const progress = question.answerResult?.progress;
       const nextReview = progress ? reviewScheduler.formatReviewTime(progress.nextReviewTime) : "待安排";
-      const labels = {
+      const isFormalReview = question.learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE;
+      const isRecovery = question.learningPhase === reviewRecovery.RECOVERY_PHASE;
+      const level = progress ? reviewScheduler.getMasteryLevel(progress) : 0;
+      const labels = isFormalReview ? {
+        correct: { icon: "✓", title: "正式复习通过", text: `熟练度提升至 Level ${level} · 下次复习：${nextReview}` },
+        partial: { icon: "≈", title: "意思接近，进入纠错", text: `熟练度保持 Level ${level}；稍后会在随机窗口后再次主动回忆。` },
+        wrong: { icon: "×", title: "正式复习未通过", text: `熟练度调整至 Level ${level}；稍后进入 Recovery 纠错。` },
+      } : isRecovery ? {
+        correct: { icon: "✓", title: "纠错完成", text: `熟练度保持 Level ${level} · 下次正式复习：${nextReview}` },
+        partial: { icon: "≈", title: "仍需纠错", text: `熟练度保持 Level ${level}；达到下一随机窗口后会再次出现。` },
+        wrong: { icon: "×", title: "继续纠错", text: `熟练度保持 Level ${level}；本次不会再次降级。` },
+      } : {
         correct: {
           icon: "✓",
           title: "巩固通过",
@@ -891,9 +992,27 @@
     }
 
     handleKeyboard(event) {
-      if (!this.isActive || event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (!this.isActive || event.repeat || event.altKey) return;
       const question = this.getCurrentQuestion();
       if (!question) return;
+
+      if (
+        question.studyMode === "ai-meaning"
+        && event.key === "Enter"
+        && (event.ctrlKey || event.metaKey)
+      ) {
+        if (
+          event.isComposing
+          || this.isComposingMeaning
+          || question.aiPending
+          || question.selectedIndex !== null
+        ) return;
+        event.preventDefault();
+        this.submitMeaningAnswer();
+        return;
+      }
+
+      if (event.ctrlKey || event.metaKey) return;
 
       if (question.studyMode === "ai-meaning" && question.selectedIndex === null) return;
 

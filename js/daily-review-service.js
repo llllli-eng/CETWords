@@ -32,6 +32,11 @@
     const historicalAnswers = correctCount + wrongCount;
     const historicalErrorScore = historicalAnswers ? Math.min(10, (wrongCount / historicalAnswers) * 10) : 0;
     const correctedDiscount = metrics.eventuallyPassed ? 10 : 0;
+    const formalReviewScore = toCount(metrics.formalReviewWrongCount) * 25
+      + toCount(metrics.formalReviewPartialCount) * 12;
+    const recoveryScore = Math.min(24, toCount(metrics.recoveryErrorCount) * 8);
+    const recoveryPendingScore = metrics.recoveryPending ? 15 : 0;
+    const recoveryCorrectedDiscount = metrics.recoveryFinalResult === "correct" ? 5 : 0;
     return Math.round(clamp(
       choiceWrongScore
       + choiceRetryScore
@@ -39,7 +44,11 @@
       + reinforcementPartialScore
       + repeatedErrorScore
       + historicalErrorScore
-      - correctedDiscount,
+      + formalReviewScore
+      + recoveryScore
+      + recoveryPendingScore
+      - correctedDiscount
+      - recoveryCorrectedDiscount,
       0,
       100,
     ));
@@ -64,7 +73,16 @@
     const choiceRetryCount = toCount(metrics.choiceRetryCount);
     const reinforcementWrongCount = toCount(metrics.reinforcementWrongCount);
     const reinforcementPartialCount = toCount(metrics.reinforcementPartialCount);
-    const errorEvents = choiceWrongCount + reinforcementWrongCount + reinforcementPartialCount;
+    const formalReviewPartialCount = toCount(metrics.formalReviewPartialCount);
+    const formalReviewWrongCount = toCount(metrics.formalReviewWrongCount);
+    const recoveryAttempts = toCount(metrics.recoveryAttempts);
+    const recoveryErrorCount = toCount(metrics.recoveryPartialCount) + toCount(metrics.recoveryWrongCount);
+    const errorEvents = choiceWrongCount
+      + reinforcementWrongCount
+      + reinforcementPartialCount
+      + formalReviewPartialCount
+      + formalReviewWrongCount
+      + recoveryErrorCount;
     return {
       word: wordId,
       coreMeaning: String(word?.coreMeaning || word?.shortMeaning || word?.meaning || "").slice(0, 180),
@@ -73,10 +91,23 @@
       choiceRetryCount,
       reinforcementWrongCount,
       reinforcementPartialCount,
+      formalReviewResult: ["correct", "partial", "wrong"].includes(metrics.formalReviewResult)
+        ? metrics.formalReviewResult
+        : null,
+      recoveryAttempts,
+      recoveryFinalResult: ["correct", "partial", "wrong"].includes(metrics.recoveryFinalResult)
+        ? metrics.recoveryFinalResult
+        : null,
+      recoveryPending: Boolean(metrics.recoveryPending),
       eventuallyPassed: Boolean(metrics.eventuallyPassed),
       repeatedError: errorEvents >= 2,
       historicalErrorRate: calculateAccuracy(toCount(progress?.wrongCount), toCount(progress?.correctCount) + toCount(progress?.wrongCount)),
-      dailyRiskScore: calculateDailyRiskScore(metrics, progress),
+      dailyRiskScore: calculateDailyRiskScore({
+        ...metrics,
+        formalReviewPartialCount,
+        formalReviewWrongCount,
+        recoveryErrorCount,
+      }, progress),
     };
   }
 
@@ -84,6 +115,8 @@
     const metrics = daily?.learningMetrics || {};
     const firstChoice = metrics.firstChoice || {};
     const reinforcement = metrics.reinforcement || {};
+    const formalReview = metrics.formalReview || {};
+    const recovery = metrics.recovery || {};
     const firstChoiceTotal = toCount(firstChoice.correct) + toCount(firstChoice.wrong);
     const reinforcementTotal = toCount(reinforcement.correct) + toCount(reinforcement.partial) + toCount(reinforcement.wrong);
     const wordMap = new Map(words.map((word) => [word.word, word]));
@@ -98,8 +131,10 @@
         || left.word.localeCompare(right.word))
       .slice(0, MAX_WEAK_WORDS);
     const correctedWords = summaries
-      .filter((entry) => entry.eventuallyPassed && (
+      .filter((entry) => (entry.eventuallyPassed || entry.recoveryFinalResult === "correct") && (
         entry.choiceWrongCount + entry.reinforcementWrongCount + entry.reinforcementPartialCount > 0
+        || entry.formalReviewResult === "partial"
+        || entry.formalReviewResult === "wrong"
       ))
       .sort((left, right) => right.dailyRiskScore - left.dailyRiskScore || left.word.localeCompare(right.word))
       .slice(0, MAX_CORRECTED_WORDS);
@@ -121,6 +156,19 @@
         reinforcementPartial: toCount(reinforcement.partial),
         reinforcementWrong: toCount(reinforcement.wrong),
         reinforcementPassRate: calculateAccuracy(reinforcement.correct, reinforcementTotal),
+        formalReviewStats: {
+          correct: toCount(formalReview.correct),
+          partial: toCount(formalReview.partial),
+          wrong: toCount(formalReview.wrong),
+        },
+        recoveryStats: {
+          entered: toCount(recovery.entered),
+          attempts: toCount(recovery.attempts),
+          correct: toCount(recovery.correct),
+          partial: toCount(recovery.partial),
+          wrong: toCount(recovery.wrong),
+          pendingCount: toCount(recovery.pendingCount),
+        },
         enToZh: {
           answers: toCount(metrics?.choiceModes?.["en-to-zh"]?.answerCount),
           correct: toCount(metrics?.choiceModes?.["en-to-zh"]?.correctCount),

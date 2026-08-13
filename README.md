@@ -1,6 +1,17 @@
 # 拾词 · 四六级背单词
 
-当前本地数据版本：`10`。第 14 阶段新增任务完成后的 AI 每日学习复盘；本地先计算客观指标和薄弱词，用户主动点击后才通过 Worker 请求 DeepSeek，总结结果按日期缓存在本机。
+当前本地数据版本：`11`。第 15 阶段把 L1～L5 正式长期复习统一为主动释义，并加入持久化随机 Recovery、跨会话恢复和 Ctrl + Enter 快捷提交。
+
+## 第 15 阶段结果
+
+- L1～L5 到期正式复习不再生成四选一：`correct` 升一级（最高 L5），`partial` 保持等级，`wrong` 只降两级一次（最低 L0）；后两者进入独立 Recovery。
+- Recovery 不重复改变 Level；每词每会话最多尝试 3 次，仍未通过则持久化为跨会话待纠错。正确后按当前 Level 的原间隔安排下一次正式复习。
+- Recovery 第 1/2/3 次分别随机等待 3～6/5～9/7～12 个有效题和 45～90/60～120/90～180 秒；随机值生成一次后保存，不依赖长计时器。
+- 新词首次四选一直接通过后，主动释义随机等待 10～18 题和 2～4 分钟；经重试通过后随机等待 6～12 题和 90～180 秒。候选不足时分别保留 5 题或 90 秒、3 题或 60 秒的兜底间隔。
+- 统一候选优先级为：到期正式复习、跨会话 Recovery、eligible Recovery、四选一重试、eligible 新词释义巩固、新词初学、fallback pending；`recentWordIds` 继续避免同词连续出现。
+- 所有主动释义复用本地保守判断与现有 DeepSeek 边界，并支持防重复、输入法组合态保护的 Ctrl + Enter；桌面端守护式自动聚焦，手机端隐藏快捷键提示。
+- 每日复盘新增 `formalReviewStats`、`recoveryStats` 和对应薄弱词结构字段，不保存用户原始中文答案。风险分继续只服务复盘展示，不参与 SRS。
+- v10 → v11 无损迁移，只新增 `reviewRecovery`；备份导入支持 v1～v11。
 
 ## 第 14 阶段结果
 
@@ -72,7 +83,7 @@
 - 本地学习记录、错词本、收藏、统计、完整词库浏览、搜索筛选、备份恢复。
 - 可选 DeepSeek V4 Flash 中文释义巩固；前端不保存 DeepSeek API Key。
 
-第 14 阶段没有修改正式词库正文、Level 0～5 算法、长期复习间隔、真题频率、智能/neutral 队列或存储键。
+第 15 阶段没有修改正式词库正文、Level 0～5 基础时间间隔、真题频率、智能/neutral 新词队列或存储键。
 
 ## 本地运行
 
@@ -99,7 +110,7 @@ python scripts/build-vocabulary.py --source-dir <json-sentence目录>
 ## 本地数据与备份
 
 - 存储键保持 `cetwords-user-data-v1`。
-- 数据版本为 `version: 10`，支持导入并迁移 `version: 1` 至 `version: 10`。
+- 数据版本为 `version: 11`，支持导入并迁移 `version: 1` 至 `version: 11`。
 - 迁移保留正确/错误/partial 次数、熟练度、首次学习日期、下次复习时间、收藏、错词、每日统计、新词队列、当日巩固状态、AI 设置、`vocabularyScope` 和 `studyMode`。
 - 完整词库正文不会写入 `localStorage` 或学习备份。
 - 个人代理 Token 使用独立本地键保存，不进入学习备份；DeepSeek API Key 只存在 Cloudflare Worker Secret 中。
@@ -119,9 +130,10 @@ js/study-modes.js                      双学习模式题目生成
 js/ai-judge.js                         本地判定与 Worker 请求
 js/smart-learning-order.js            真题分层混抽、同档随机与只读词频加载
 js/new-word-learning.js               四选一门槛与当日释义巩固状态机
+js/review-recovery.js                 正式复习 Recovery 随机窗口与会话状态机
 js/daily-review-service.js             本地复盘统计、薄弱词筛选与请求白名单
-js/storage.js                          本地数据 v10 迁移与持久化
+js/storage.js                          本地数据 v11 迁移与持久化
 worker/src/index.js                    DeepSeek 多义词判题与每日复盘代理
 ```
 
-AI Worker 的本地与正式配置见 [AI 配置文档](docs/AI_SETUP.md)。第 14 阶段新增了 Worker 接口，推送静态站点后还需在 `worker` 目录执行 `pnpm deploy`；不要提交 `.dev.vars` 或任何 API Key。
+AI Worker 的本地与正式配置见 [AI 配置文档](docs/AI_SETUP.md)。第 15 阶段扩展了每日复盘输入校验，推送静态站点后还需在 `worker` 目录执行 `pnpm deploy`；不要提交 `.dev.vars` 或任何 API Key。

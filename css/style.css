@@ -2146,6 +2146,14 @@ a:focus-visible {
   color: var(--coral);
 }
 
+.meaning-submit-shortcut {
+  margin-left: 9px;
+  padding-left: 9px;
+  border-left: 1px solid rgba(255, 255, 255, 0.38);
+  font-size: 10px;
+  opacity: 0.82;
+}
+
 .meaning-submit-button {
   width: 100%;
 }
@@ -2952,6 +2960,10 @@ kbd {
 
   .result-actions {
     grid-template-columns: 1fr;
+  }
+
+  .meaning-submit-shortcut {
+    display: none;
   }
 
   .daily-review-panel {

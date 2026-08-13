@@ -108,6 +108,39 @@
     return result;
   }
 
+  function handleFormalPartial(progress, options = {}) {
+    const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
+    const result = createProgressCopy(progress, now);
+    result.partialCount = toNonNegativeInteger(progress?.partialCount) + 1;
+    result.consecutiveCorrect = 0;
+    result.reviewCount += 1;
+    result.lastReviewTime = now;
+    result.nextReviewTime = null;
+    return result;
+  }
+
+  function handleRecovery(progress, judgement, options = {}) {
+    const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
+    const result = createProgressCopy(progress, now);
+    const normalized = judgement === "correct" ? "correct" : judgement === "partial" ? "partial" : "wrong";
+    if (normalized === "correct") {
+      result.correctCount += 1;
+      result.consecutiveCorrect += 1;
+      result.nextReviewTime = getNextReviewTime(result.masteryLevel, now);
+    } else if (normalized === "partial") {
+      result.partialCount = toNonNegativeInteger(progress?.partialCount) + 1;
+      result.consecutiveCorrect = 0;
+      result.nextReviewTime = null;
+    } else {
+      result.wrongCount += 1;
+      result.consecutiveCorrect = 0;
+      result.inWrongBook = true;
+      result.lastWrongTime = now;
+      result.nextReviewTime = null;
+    }
+    return result;
+  }
+
   function calculateReviewPriority(progress, now = Date.now()) {
     const safeNow = Number.isFinite(Number(now)) ? Number(now) : Date.now();
     const nextReviewTime = Number(progress?.nextReviewTime) || safeNow;
@@ -168,6 +201,8 @@
     getNextReviewTime,
     handleCorrect,
     handleWrong,
+    handleFormalPartial,
+    handleRecovery,
     calculateReviewPriority,
     isDueForReview,
     getDueWords,

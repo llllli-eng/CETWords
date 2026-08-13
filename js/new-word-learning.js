@@ -1,11 +1,11 @@
 (function registerNewWordLearning(app) {
-  const { reviewScheduler } = app;
+  const { reviewScheduler, reviewRecovery } = app;
 
   const REINFORCEMENT_GAP = 7;
   const REINFORCEMENT_RETRY_GAP = 5;
   const MIN_REINFORCEMENT_QUESTION_GAP = 3;
   const MIN_REINFORCEMENT_DELAY_MS = 60 * 1000;
-  const MAX_REINFORCEMENT_QUESTION_GAP = 10;
+  const MAX_REINFORCEMENT_QUESTION_GAP = 18;
   const MAX_REINFORCEMENT_DELAY_MS = 8 * 60 * 1000;
   const MAX_PENDING_REINFORCEMENT = 10;
   const FALLBACK_MIN_QUESTION_GAP = 2;
@@ -14,9 +14,8 @@
   const SMART_REINFORCEMENT_RULES = Object.freeze({
     choiceWrongFirst: Object.freeze({ questionGap: 5, minDelayMs: 90 * 1000, reason: "choice-first-wrong" }),
     choiceWrongRepeated: Object.freeze({ questionGap: 4, minDelayMs: 75 * 1000, reason: "choice-repeated-wrong" }),
-    choiceCorrectEnToZh: Object.freeze({ questionGap: 6, minDelayMs: 3 * 60 * 1000, reason: "choice-passed-en-to-zh" }),
-    choiceCorrectZhToEn: Object.freeze({ questionGap: 8, minDelayMs: 4 * 60 * 1000, reason: "choice-passed-zh-to-en" }),
-    choiceCorrectAfterRetry: Object.freeze({ questionGap: 4, minDelayMs: 90 * 1000, reason: "choice-retry-passed" }),
+    choiceCorrectDirect: Object.freeze({ questionMin: 10, questionMax: 18, delayMinMs: 2 * 60 * 1000, delayMaxMs: 4 * 60 * 1000, fallbackQuestionGap: 5, fallbackDelayMs: 90 * 1000, reason: "choice-passed-direct" }),
+    choiceCorrectAfterRetry: Object.freeze({ questionMin: 6, questionMax: 12, delayMinMs: 90 * 1000, delayMaxMs: 3 * 60 * 1000, fallbackQuestionGap: 3, fallbackDelayMs: 60 * 1000, reason: "choice-retry-passed" }),
     aiPartial: Object.freeze({ questionGap: 4, minDelayMs: 2 * 60 * 1000, reason: "ai-partial" }),
     aiWrong: Object.freeze({ questionGap: 3, minDelayMs: 90 * 1000, reason: "ai-wrong" }),
   });
@@ -70,7 +69,12 @@
       : getReinforcementMode(normalized.introStudyMode);
   }
 
-  function selectScheduleRule({ phase, correct, judgement, studyMode, choiceWrongCount = 0, choiceAttempts = 0 }) {
+  function randomInteger(minimum, maximum, random = Math.random) {
+    const value = Math.min(0.999999999, Math.max(0, Number(random()) || 0));
+    return minimum + Math.floor(value * (maximum - minimum + 1));
+  }
+
+  function selectScheduleRule({ phase, correct, judgement, choiceWrongCount = 0, choiceAttempts = 0 }) {
     if (phase === LEARNING_PHASES.INTRO || phase === LEARNING_PHASES.CHOICE_RETRY) {
       if (!correct) {
         return toNonNegativeInteger(choiceWrongCount) > 0
@@ -80,9 +84,7 @@
       if (phase === LEARNING_PHASES.CHOICE_RETRY || toNonNegativeInteger(choiceAttempts) > 1) {
         return SMART_REINFORCEMENT_RULES.choiceCorrectAfterRetry;
       }
-      return normalizeStudyMode(studyMode) === "zh-to-en"
-        ? SMART_REINFORCEMENT_RULES.choiceCorrectZhToEn
-        : SMART_REINFORCEMENT_RULES.choiceCorrectEnToZh;
+      return SMART_REINFORCEMENT_RULES.choiceCorrectDirect;
     }
     return judgement === "partial" ? SMART_REINFORCEMENT_RULES.aiPartial : SMART_REINFORCEMENT_RULES.aiWrong;
   }
@@ -96,10 +98,19 @@
     choiceAttempts = 0,
     currentSequence = 0,
     now = Date.now(),
+    random = Math.random,
   }) {
     const rule = selectScheduleRule({ phase, correct, judgement, studyMode, choiceWrongCount, choiceAttempts });
-    const questionGap = Math.round(clamp(rule.questionGap, MIN_REINFORCEMENT_QUESTION_GAP, MAX_REINFORCEMENT_QUESTION_GAP));
-    const minDelayMs = Math.round(clamp(rule.minDelayMs, MIN_REINFORCEMENT_DELAY_MS, MAX_REINFORCEMENT_DELAY_MS));
+    const questionGap = Math.round(clamp(
+      rule.questionMin === undefined ? rule.questionGap : randomInteger(rule.questionMin, rule.questionMax, random),
+      MIN_REINFORCEMENT_QUESTION_GAP,
+      MAX_REINFORCEMENT_QUESTION_GAP,
+    ));
+    const minDelayMs = Math.round(clamp(
+      rule.delayMinMs === undefined ? rule.minDelayMs : randomInteger(rule.delayMinMs, rule.delayMaxMs, random),
+      MIN_REINFORCEMENT_DELAY_MS,
+      MAX_REINFORCEMENT_DELAY_MS,
+    ));
     const scheduledAtSequence = toNonNegativeInteger(currentSequence);
     const scheduledAtTime = normalizeTimestamp(now) || Date.now();
     return {
@@ -109,6 +120,8 @@
       scheduledAtTime,
       eligibleAfterSequence: scheduledAtSequence + questionGap,
       eligibleAfterTime: scheduledAtTime + minDelayMs,
+      fallbackQuestionGap: toNonNegativeInteger(rule.fallbackQuestionGap || FALLBACK_MIN_QUESTION_GAP),
+      fallbackDelayMs: toNonNegativeInteger(rule.fallbackDelayMs || MIN_REINFORCEMENT_DELAY_MS),
       reason: rule.reason,
     };
   }
@@ -180,6 +193,12 @@
       scheduledAtTime,
       eligibleAfterSequence: legacySequence,
       eligibleAfterTime,
+      fallbackQuestionGap: stage === LEARNING_STAGES.PENDING
+        ? toNonNegativeInteger(value.fallbackQuestionGap || FALLBACK_MIN_QUESTION_GAP)
+        : 0,
+      fallbackDelayMs: stage === LEARNING_STAGES.PENDING
+        ? toNonNegativeInteger(value.fallbackDelayMs || MIN_REINFORCEMENT_DELAY_MS)
+        : 0,
       reinforcementEligibleAfter: legacySequence,
       scheduleReason: isLegacyPending
         ? "legacy-v8-choice-gate-assumed-passed"
@@ -202,12 +221,14 @@
     record.scheduledAtTime = schedule.scheduledAtTime;
     record.eligibleAfterSequence = schedule.eligibleAfterSequence;
     record.eligibleAfterTime = schedule.eligibleAfterTime;
+    record.fallbackQuestionGap = schedule.fallbackQuestionGap;
+    record.fallbackDelayMs = schedule.fallbackDelayMs;
     record.reinforcementEligibleAfter = schedule.eligibleAfterSequence;
     record.scheduleReason = schedule.reason;
     return record;
   }
 
-  function createPendingRecord({ introStudyMode, introCorrect, now, dateKey, sequence }) {
+  function createPendingRecord({ introStudyMode, introCorrect, now, dateKey, sequence, random = Math.random }) {
     const correct = Boolean(introCorrect);
     const schedule = calculateReinforcementSchedule({
       phase: LEARNING_PHASES.INTRO,
@@ -217,6 +238,7 @@
       choiceWrongCount: 0,
       currentSequence: sequence,
       now,
+      random,
     });
     const record = normalizeLearningRecord({
       stage: LEARNING_STAGES.PENDING,
@@ -236,7 +258,7 @@
     return applySchedule(record, schedule);
   }
 
-  function markChoiceResult(record, correct, { now, sequence }) {
+  function markChoiceResult(record, correct, { now, sequence, random = Math.random }) {
     const result = normalizeLearningRecord(record);
     result.stage = LEARNING_STAGES.PENDING;
     result.choiceAttempts += 1;
@@ -260,12 +282,13 @@
       choiceWrongCount: correct ? result.choiceWrongCount : Math.max(1, result.choiceWrongCount - 1),
       currentSequence: sequence,
       now,
+      random,
     });
     applySchedule(result, schedule);
     return normalizeLearningRecord(result);
   }
 
-  function markAiResult(record, judgement, { now, dateKey, sequence }) {
+  function markAiResult(record, judgement, { now, dateKey, sequence, random = Math.random }) {
     const result = normalizeLearningRecord(record);
     const normalizedJudgement = judgement === true || judgement === "correct"
       ? "correct"
@@ -292,6 +315,7 @@
       studyMode: result.introStudyMode,
       currentSequence: sequence,
       now,
+      random,
     });
     applySchedule(result, schedule);
     return normalizeLearningRecord(result);
@@ -400,7 +424,7 @@
     if (isCrossDayPending(normalized, currentDateKey)) return true;
     const answeredSinceSchedule = toNonNegativeInteger(currentSequence) - normalized.scheduledAtSequence;
     const waitedMs = now - (normalized.scheduledAtTime || normalized.introducedAt || now);
-    return answeredSinceSchedule >= FALLBACK_MIN_QUESTION_GAP || waitedMs >= MIN_REINFORCEMENT_DELAY_MS;
+    return answeredSinceSchedule >= normalized.fallbackQuestionGap || waitedMs >= normalized.fallbackDelayMs;
   }
 
   function getRiskScore(record) {
@@ -420,24 +444,26 @@
   }
 
   function getPendingPriority(item, context) {
-    if (isCrossDayPending(item.learningState, context.dateKey)) return 1;
-    if (isEligible(item.learningState, context.currentSequence, context.dateKey, context.now)) {
-      return isChoiceRetry(item.learningState) ? 2 : 3;
+    if (isCrossDayPending(item.learningState, context.dateKey)) {
+      return isChoiceRetry(item.learningState) ? 3 : 4;
     }
-    if (isFallbackEligible(item.learningState, context.currentSequence, context.dateKey, context.now)) return 5;
+    if (isEligible(item.learningState, context.currentSequence, context.dateKey, context.now)) {
+      return isChoiceRetry(item.learningState) ? 3 : 4;
+    }
+    if (isFallbackEligible(item.learningState, context.currentSequence, context.dateKey, context.now)) return 6;
     return Number.POSITIVE_INFINITY;
   }
 
-  function buildNormalQueue({ dueItems = [], pendingItems = [], introItems = [], currentSequence = 0, dateKey, now = Date.now() }) {
+  function buildNormalQueue({ dueItems = [], recoveryItems = [], pendingItems = [], introItems = [], currentSequence = 0, dateKey, now = Date.now() }) {
     const context = { currentSequence, dateKey, now };
     const sortedPending = [...pendingItems].sort((left, right) => {
       const priorityDifference = getPendingPriority(left, context) - getPendingPriority(right, context);
       return priorityDifference || comparePendingItems(left, right);
     });
-    const available = sortedPending.filter((item) => Number.isFinite(getPendingPriority(item, context)) && getPendingPriority(item, context) < 5);
-    const fallback = sortedPending.filter((item) => getPendingPriority(item, context) === 5);
+    const available = sortedPending.filter((item) => Number.isFinite(getPendingPriority(item, context)) && getPendingPriority(item, context) < 6);
+    const fallback = sortedPending.filter((item) => getPendingPriority(item, context) === 6);
     const waiting = sortedPending.filter((item) => !Number.isFinite(getPendingPriority(item, context)));
-    return [...dueItems, ...available, ...introItems, ...fallback, ...waiting];
+    return [...dueItems, ...recoveryItems, ...available, ...introItems, ...fallback, ...waiting];
   }
 
   function getInsertionIndex(currentIndex, questionCount, gap) {
@@ -448,26 +474,33 @@
 
   function getItemPriority(item, context) {
     if (item.taskType === "review") return 0;
+    if (item.taskType === "recovery") {
+      return reviewRecovery.getPriority(item.recoveryState, {
+        sessionId: context.studySessionId,
+        sequence: context.currentSequence,
+        now: context.now,
+      });
+    }
     if (item.learningState && isPending(item.learningState)) return getPendingPriority(item, context);
     if (item.learningPhase === LEARNING_PHASES.INTRO) {
-      return context.pendingCount >= MAX_PENDING_REINFORCEMENT ? Number.POSITIVE_INFINITY : 4;
+      return context.pendingCount >= MAX_PENDING_REINFORCEMENT ? Number.POSITIVE_INFINITY : 5;
     }
-    return 4;
+    return 5;
   }
 
   function getItemWordId(item) {
     return item.word?.word || item.wordId || item.id || "";
   }
 
-  function selectNextItemIndex({ items, currentSequence = 0, dateKey, now = Date.now(), pendingCount = 0, recentWordIds = [] }) {
-    const context = { currentSequence, dateKey, now, pendingCount };
+  function selectNextItemIndex({ items, currentSequence = 0, dateKey, now = Date.now(), pendingCount = 0, recentWordIds = [], studySessionId = "" }) {
+    const context = { currentSequence, dateKey, now, pendingCount, studySessionId };
     const candidates = items
       .map((item, index) => ({ item, index, priority: getItemPriority(item, context) }))
       .filter((candidate) => Number.isFinite(candidate.priority));
     if (!candidates.length) return -1;
     const bestPriority = Math.min(...candidates.map((candidate) => candidate.priority));
     const best = candidates.filter((candidate) => candidate.priority === bestPriority);
-    if ([1, 2, 3, 5].includes(bestPriority)) best.sort((left, right) => comparePendingItems(left.item, right.item));
+    if ([3, 4, 6].includes(bestPriority)) best.sort((left, right) => comparePendingItems(left.item, right.item));
     const recent = new Set(recentWordIds.slice(-3));
     return (best.find((candidate) => !recent.has(getItemWordId(candidate.item))) || best[0]).index;
   }
@@ -501,6 +534,7 @@
     getReinforcementMode,
     getPendingStudyMode,
     calculateReinforcementSchedule,
+    randomInteger,
     createPendingRecord,
     markChoiceResult,
     markAiResult,

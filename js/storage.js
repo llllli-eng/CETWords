@@ -1,12 +1,12 @@
 /**
- * 拾词 · 本地学习数据服务 v10
+ * 拾词 · 本地学习数据服务 v11
  * 保持原有 localStorage key，只保存用户状态，不复制词库正文。
  */
 
 (function registerStorageService(app) {
-  const { reviewScheduler, newWordLearning, smartLearningOrder } = app;
+  const { reviewScheduler, reviewRecovery, newWordLearning, smartLearningOrder } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
-  const DATA_VERSION = 10;
+  const DATA_VERSION = 11;
   const AI_PROXY_TOKEN_KEY = "shi-ci-ai-proxy-token";
   const DEFAULT_STUDY_MODE = "en-to-zh";
   const DEFAULT_LEARNING_ORDER = "smart";
@@ -47,6 +47,8 @@
       firstChoice: { correct: 0, wrong: 0 },
       choiceRetryCount: 0,
       reinforcement: { correct: 0, partial: 0, wrong: 0 },
+      formalReview: { correct: 0, partial: 0, wrong: 0 },
+      recovery: { entered: 0, attempts: 0, correct: 0, partial: 0, wrong: 0, pendingCount: 0 },
       choiceModes: {
         "en-to-zh": { answerCount: 0, correctCount: 0, wrongCount: 0 },
         "zh-to-en": { answerCount: 0, correctCount: 0, wrongCount: 0 },
@@ -91,6 +93,7 @@
       newWordQueue: [],
       smartNewWordQueue: smartLearningOrder.normalizeQueueState(null),
       newWordLearning: {},
+      reviewRecovery: {},
       dailyReviews: {},
     };
   }
@@ -195,6 +198,8 @@
     const value = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     const firstChoice = value.firstChoice && typeof value.firstChoice === "object" ? value.firstChoice : {};
     const reinforcement = value.reinforcement && typeof value.reinforcement === "object" ? value.reinforcement : {};
+    const formalReview = value.formalReview && typeof value.formalReview === "object" ? value.formalReview : {};
+    const recovery = value.recovery && typeof value.recovery === "object" ? value.recovery : {};
     const choiceModes = value.choiceModes && typeof value.choiceModes === "object" ? value.choiceModes : {};
     const words = {};
     if (value.words && typeof value.words === "object" && !Array.isArray(value.words)) {
@@ -206,6 +211,18 @@
           reinforcementWrongCount: toNonNegativeInteger(entry.reinforcementWrongCount),
           reinforcementPartialCount: toNonNegativeInteger(entry.reinforcementPartialCount),
           eventuallyPassed: Boolean(entry.eventuallyPassed),
+          formalReviewResult: ["correct", "partial", "wrong"].includes(entry.formalReviewResult)
+            ? entry.formalReviewResult
+            : null,
+          formalReviewPartialCount: toNonNegativeInteger(entry.formalReviewPartialCount),
+          formalReviewWrongCount: toNonNegativeInteger(entry.formalReviewWrongCount),
+          recoveryAttempts: toNonNegativeInteger(entry.recoveryAttempts),
+          recoveryPartialCount: toNonNegativeInteger(entry.recoveryPartialCount),
+          recoveryWrongCount: toNonNegativeInteger(entry.recoveryWrongCount),
+          recoveryFinalResult: ["correct", "partial", "wrong"].includes(entry.recoveryFinalResult)
+            ? entry.recoveryFinalResult
+            : null,
+          recoveryPending: Boolean(entry.recoveryPending),
         };
       });
     }
@@ -219,6 +236,19 @@
         correct: toNonNegativeInteger(reinforcement.correct),
         partial: toNonNegativeInteger(reinforcement.partial),
         wrong: toNonNegativeInteger(reinforcement.wrong),
+      },
+      formalReview: {
+        correct: toNonNegativeInteger(formalReview.correct),
+        partial: toNonNegativeInteger(formalReview.partial),
+        wrong: toNonNegativeInteger(formalReview.wrong),
+      },
+      recovery: {
+        entered: toNonNegativeInteger(recovery.entered),
+        attempts: toNonNegativeInteger(recovery.attempts),
+        correct: toNonNegativeInteger(recovery.correct),
+        partial: toNonNegativeInteger(recovery.partial),
+        wrong: toNonNegativeInteger(recovery.wrong),
+        pendingCount: toNonNegativeInteger(recovery.pendingCount),
       },
       choiceModes: {
         "en-to-zh": {
@@ -354,6 +384,13 @@
     const result = createEmptyBookData();
     result.newWordQueue = normalizeStringIds(value.newWordQueue);
     result.smartNewWordQueue = smartLearningOrder.normalizeQueueState(value.smartNewWordQueue);
+    if (sourceVersion >= 11 && value.reviewRecovery && typeof value.reviewRecovery === "object" && !Array.isArray(value.reviewRecovery)) {
+      Object.entries(value.reviewRecovery).forEach(([wordId, record]) => {
+        if (typeof wordId !== "string" || !wordId.trim()) return;
+        const normalized = reviewRecovery.normalizeRecord(record);
+        if (normalized?.active) result.reviewRecovery[wordId] = normalized;
+      });
+    }
     if (sourceVersion >= 10 && value.dailyReviews && typeof value.dailyReviews === "object" && !Array.isArray(value.dailyReviews)) {
       Object.entries(value.dailyReviews).forEach(([dateKey, record]) => {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
@@ -707,13 +744,21 @@
     const studyMode = normalizeStudyMode(safeContext.studyMode);
     const sessionMode = safeContext.sessionMode
       || (taskType === "review" ? "review" : "normal");
-    const phaseValues = Object.values(newWordLearning.LEARNING_PHASES);
+    const phaseValues = [
+      ...Object.values(newWordLearning.LEARNING_PHASES),
+      reviewRecovery.FORMAL_REVIEW_PHASE,
+      reviewRecovery.RECOVERY_PHASE,
+    ];
     let learningPhase = phaseValues.includes(safeContext.learningPhase)
       ? safeContext.learningPhase
       : (!wasLearned && taskType === "new" && sessionMode === "normal"
         ? newWordLearning.LEARNING_PHASES.INTRO
         : newWordLearning.LEARNING_PHASES.STANDARD_REVIEW);
-    if (sessionMode !== "normal") learningPhase = newWordLearning.LEARNING_PHASES.STANDARD_REVIEW;
+    if (
+      sessionMode !== "normal"
+      && learningPhase !== reviewRecovery.FORMAL_REVIEW_PHASE
+      && learningPhase !== reviewRecovery.RECOVERY_PHASE
+    ) learningPhase = newWordLearning.LEARNING_PHASES.STANDARD_REVIEW;
 
     const existingLearningState = book.newWordLearning[wordId]
       ? newWordLearning.normalizeLearningRecord(book.newWordLearning[wordId])
@@ -738,14 +783,20 @@
       && !newWordLearning.isAiReinforcement(existingLearningState)
     ) learningPhase = newWordLearning.LEARNING_PHASES.STANDARD_REVIEW;
 
-    if (sessionMode === "normal") daily.normalSessionAnswerSequence += 1;
+    if (sessionMode === "normal" || sessionMode === "review") daily.normalSessionAnswerSequence += 1;
     const answerSequence = daily.normalSessionAnswerSequence;
-    const isFormalReview = learningPhase === newWordLearning.LEARNING_PHASES.STANDARD_REVIEW
+    const isFormalReview = learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE
       && wasLearned
       && taskType === "review";
+    const isRecovery = learningPhase === reviewRecovery.RECOVERY_PHASE
+      && wasLearned
+      && Boolean(book.reviewRecovery[wordId]?.active);
 
     let updated;
     let learningState = existingLearningState;
+    let recoveryState = book.reviewRecovery[wordId]
+      ? reviewRecovery.normalizeRecord(book.reviewRecovery[wordId])
+      : null;
     if (learningPhase === newWordLearning.LEARNING_PHASES.INTRO && !wasLearned) {
       updated = newWordLearning.handleIntro(progress, correct, { now: timestamp });
       learningState = newWordLearning.createPendingRecord({
@@ -754,6 +805,7 @@
         now: timestamp,
         dateKey,
         sequence: answerSequence,
+        random: safeContext.random || Math.random,
       });
       book.newWordLearning[wordId] = learningState;
       newWordLearning.debugSchedule(wordId, learningState);
@@ -763,6 +815,7 @@
         now: timestamp,
         dateKey,
         sequence: answerSequence,
+        random: safeContext.random || Math.random,
       });
       book.newWordLearning[wordId] = learningState;
       newWordLearning.debugSchedule(wordId, learningState);
@@ -774,10 +827,45 @@
         now: timestamp,
         dateKey,
         sequence: answerSequence,
+        random: safeContext.random || Math.random,
       });
       book.newWordLearning[wordId] = learningState;
       if (correct) addUniqueId(daily.completedNewWordIds, wordId);
       else newWordLearning.debugSchedule(wordId, learningState);
+    } else if (isFormalReview) {
+      if (judgement === "correct") {
+        updated = reviewScheduler.handleCorrect(progress, true, { now: timestamp, isNew: false });
+        delete book.reviewRecovery[wordId];
+        recoveryState = null;
+      } else {
+        updated = judgement === "partial"
+          ? reviewScheduler.handleFormalPartial(progress, { now: timestamp })
+          : reviewScheduler.handleWrong(progress, true, { now: timestamp, isNew: false });
+        updated.nextReviewTime = null;
+        recoveryState = reviewRecovery.createRecovery({
+          sourceReviewResult: judgement,
+          currentLevel: updated.masteryLevel,
+          sessionId: safeContext.studySessionId,
+          sequence: answerSequence,
+          now: timestamp,
+          random: safeContext.random || Math.random,
+        });
+        book.reviewRecovery[wordId] = recoveryState;
+      }
+    } else if (isRecovery) {
+      updated = reviewScheduler.handleRecovery(progress, judgement, { now: timestamp });
+      recoveryState = reviewRecovery.markRecoveryResult(recoveryState, judgement, {
+        sessionId: safeContext.studySessionId,
+        sequence: answerSequence,
+        now: timestamp,
+        random: safeContext.random || Math.random,
+      });
+      if (recoveryState?.active) {
+        updated.nextReviewTime = null;
+        book.reviewRecovery[wordId] = recoveryState;
+      } else {
+        delete book.reviewRecovery[wordId];
+      }
     } else if (isPendingReinforcement) {
       updated = newWordLearning.handlePendingPractice(progress, correct, { now: timestamp });
     } else {
@@ -796,13 +884,21 @@
     );
     const isReinforcementPhase = sessionMode === "normal"
       && learningPhase === newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT;
-    if ((isChoicePhase || isReinforcementPhase) && !learningMetrics.words[wordId]) {
+    if ((isChoicePhase || isReinforcementPhase || isFormalReview || isRecovery) && !learningMetrics.words[wordId]) {
       learningMetrics.words[wordId] = {
         choiceWrongCount: 0,
         choiceRetryCount: 0,
         reinforcementWrongCount: 0,
         reinforcementPartialCount: 0,
         eventuallyPassed: false,
+        formalReviewResult: null,
+        formalReviewPartialCount: 0,
+        formalReviewWrongCount: 0,
+        recoveryAttempts: 0,
+        recoveryPartialCount: 0,
+        recoveryWrongCount: 0,
+        recoveryFinalResult: null,
+        recoveryPending: false,
       };
     }
     const wordMetrics = learningMetrics.words[wordId] || null;
@@ -826,6 +922,29 @@
       if (judgement === "partial" && wordMetrics) wordMetrics.reinforcementPartialCount += 1;
       if (judgement === "correct" && wordMetrics) wordMetrics.eventuallyPassed = true;
     }
+    if (isFormalReview) {
+      learningMetrics.formalReview[judgement] += 1;
+      if (wordMetrics) {
+        wordMetrics.formalReviewResult = judgement;
+        if (judgement === "partial") wordMetrics.formalReviewPartialCount += 1;
+        if (judgement === "wrong") wordMetrics.formalReviewWrongCount += 1;
+        wordMetrics.recoveryPending = judgement !== "correct";
+      }
+      if (judgement !== "correct") learningMetrics.recovery.entered += 1;
+    }
+    if (isRecovery) {
+      learningMetrics.recovery.attempts += 1;
+      learningMetrics.recovery[judgement] += 1;
+      if (wordMetrics) {
+        wordMetrics.recoveryAttempts += 1;
+        if (judgement === "partial") wordMetrics.recoveryPartialCount += 1;
+        if (judgement === "wrong") wordMetrics.recoveryWrongCount += 1;
+        wordMetrics.recoveryFinalResult = judgement;
+        wordMetrics.recoveryPending = Boolean(recoveryState?.active);
+      }
+    }
+    learningMetrics.recovery.pendingCount = Object.values(book.reviewRecovery)
+      .filter((record) => record?.active && record.pendingNextSession).length;
 
     daily.answerCount += 1;
     if (!daily.modeStats[studyMode]) {
@@ -866,6 +985,7 @@
       learningPhase,
       judgement,
       learningState: learningState ? newWordLearning.normalizeLearningRecord(learningState) : null,
+      recoveryState: recoveryState ? reviewRecovery.normalizeRecord(recoveryState) : null,
       answerSequence,
       wasDue,
     };
@@ -921,6 +1041,58 @@
   function getNewWordLearningState(bookId, wordId) {
     const record = ensureBook(bookId).newWordLearning[wordId];
     return record ? newWordLearning.normalizeLearningRecord(record) : null;
+  }
+
+  function getReviewRecoveryState(bookId, wordId) {
+    const record = ensureBook(bookId).reviewRecovery[wordId];
+    return record ? reviewRecovery.normalizeRecord(record) : null;
+  }
+
+  function beginReviewRecoverySession(bookId, sessionId, validWordIds) {
+    const book = ensureBook(bookId);
+    const allowed = Array.isArray(validWordIds) ? new Set(validWordIds) : null;
+    let changed = false;
+    Object.entries(book.reviewRecovery).forEach(([wordId, record]) => {
+      if (
+        (!allowed || allowed.has(wordId))
+        && record?.active
+        && record.lastSessionId !== String(sessionId || "")
+      ) {
+        book.reviewRecovery[wordId] = reviewRecovery.beginSession(record, sessionId);
+        changed = true;
+      }
+    });
+    if (changed) persist();
+    return changed;
+  }
+
+  function getReviewRecoveries(bookId, validWordIds, context = {}) {
+    const book = ensureBook(bookId);
+    const allowed = Array.isArray(validWordIds) ? new Set(validWordIds) : null;
+    return Object.entries(book.reviewRecovery)
+      .filter(([wordId, record]) => (!allowed || allowed.has(wordId)) && record?.active)
+      .map(([wordId, record]) => {
+        const recoveryState = reviewRecovery.normalizeRecord(record);
+        return {
+          wordId,
+          recoveryState,
+          progress: normalizeWordProgress(book.words[wordId] || EMPTY_WORD_PROGRESS),
+          priority: reviewRecovery.getPriority(recoveryState, context),
+        };
+      })
+      .sort((left, right) => left.priority - right.priority
+        || Number(right.recoveryState.pendingNextSession) - Number(left.recoveryState.pendingNextSession)
+        || (left.recoveryState.createdAt || 0) - (right.recoveryState.createdAt || 0));
+  }
+
+  function getReviewRecoverySummary(bookId, validWordIds, context = {}) {
+    const entries = getReviewRecoveries(bookId, validWordIds, context);
+    return {
+      count: entries.length,
+      pendingCount: entries.filter((entry) => entry.recoveryState.pendingNextSession).length,
+      eligibleCount: entries.filter((entry) => Number.isFinite(entry.priority)).length,
+      entries,
+    };
   }
 
   function getPendingReinforcements(bookId, validWordIds, now = Date.now()) {
@@ -1052,7 +1224,7 @@
     const book = ensureBook(bookId);
     const allowed = Array.isArray(validWordIds) ? new Set(validWordIds) : null;
     const records = Object.entries(book.words)
-      .filter(([wordId]) => !allowed || allowed.has(wordId))
+      .filter(([wordId]) => (!allowed || allowed.has(wordId)) && !book.reviewRecovery[wordId]?.active)
       .map(([wordId, progress]) => ({ wordId, progress: normalizeWordProgress(progress) }));
     return reviewScheduler.getDueWords(records, now);
   }
@@ -1161,6 +1333,10 @@
     getDailyReviewRecord,
     saveDailyReviewRecord,
     getNewWordLearningState,
+    getReviewRecoveryState,
+    beginReviewRecoverySession,
+    getReviewRecoveries,
+    getReviewRecoverySummary,
     getPendingReinforcements,
     getPendingReinforcementSummary,
     getOrCreateDailyNewWordIds,

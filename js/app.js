@@ -16,6 +16,7 @@ const {
   STUDY_MODES,
   getStudyModeLabel,
   newWordLearning,
+  reviewRecovery,
   aiJudge,
   smartLearningOrder,
   dailyReviewService,
@@ -368,11 +369,13 @@ function setTaskHint(icon, text) {
   elements.taskHint.replaceChildren(iconNode, document.createTextNode(` ${text}`));
 }
 
-function updateTaskHint(todayNew, pendingCount, book, reviewSummary) {
+function updateTaskHint(todayNew, pendingCount, recoveryCount, book, reviewSummary) {
   const newRemaining = Math.max(0, book.dailyGoal - todayNew);
 
   if (reviewSummary.dueCount > 0) {
     setTaskHint("↺", `先复习 ${reviewSummary.dueCount} 个到期单词，再学习新词`);
+  } else if (recoveryCount > 0) {
+    setTaskHint("◇", `有 ${recoveryCount} 个旧词等待纠错巩固，不影响今日新词完成`);
   } else if (pendingCount > 0) {
     setTaskHint("◇", `还有 ${pendingCount} 个新词等待当日巩固`);
   } else if (newRemaining > 0) {
@@ -401,6 +404,11 @@ function updateDashboard(bookId = appState.activeBookId) {
   const fullSummary = getFullBookSummary(book);
   const reviewSummary = storage.getDailyReviewSummary(book.id, allWordIds);
   const pendingSummary = storage.getPendingReinforcementSummary(book.id, allWordIds);
+  const recoverySummary = storage.getReviewRecoverySummary(book.id, allWordIds, {
+    sessionId: "dashboard",
+    sequence: summary.today.normalSessionAnswerSequence,
+    now: Date.now(),
+  });
   const todayNew = getScopedCompletedNewWordCount(book, summary.today);
   const todayReview = summary.today.reviewWords;
   const taskTotal = book.dailyGoal + reviewSummary.total;
@@ -422,7 +430,7 @@ function updateDashboard(bookId = appState.activeBookId) {
   elements.reviewTotal.textContent = reviewSummary.total;
   elements.reviewProgressBar.style.width = `${getPercent(todayReview, reviewSummary.total)}%`;
   elements.dueReviewCount.textContent = formatNumber(reviewSummary.dueCount);
-  updateTaskHint(todayNew, pendingSummary.count, book, reviewSummary);
+  updateTaskHint(todayNew, pendingSummary.count, recoverySummary.count, book, reviewSummary);
 
   elements.overallPercent.textContent = formatProgressPercent(overallPercent);
   elements.overallScopeLabel.textContent = `${getScopeLabel(book)} · ${formatNumber(summary.total)} 词`;
@@ -437,6 +445,7 @@ function updateDashboard(bookId = appState.activeBookId) {
   const hasUnlearned = summary.remaining > 0;
   const buttonLabel = elements.continueButton.querySelector("span:first-child");
   if (reviewSummary.dueCount > 0) buttonLabel.textContent = "先复习，再学新词";
+  else if (recoverySummary.count > 0) buttonLabel.textContent = "继续纠错巩固";
   else if (pendingSummary.count > 0) buttonLabel.textContent = "继续巩固";
   else if (todayNew < book.dailyGoal) buttonLabel.textContent = "继续学习";
   else if (hasUnlearned) buttonLabel.textContent = "再学 10 个新词";
@@ -479,13 +488,39 @@ function getModeStudyPlan(book, sessionMode) {
     completedNewWords: getScopedCompletedNewWordCount(book, rawDaily),
   };
   const reviewSummary = storage.getDailyReviewSummary(book.id, allWordIds);
+  const studySessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  storage.beginReviewRecoverySession(book.id, studySessionId, allWordIds);
+  const wordMap = new Map(book.words.map((word) => [word.word, word]));
+  const recoveryEntries = storage.getReviewRecoveries(book.id, allWordIds, {
+    sessionId: studySessionId,
+    sequence: daily.normalSessionAnswerSequence,
+    now: Date.now(),
+  });
+  const recoveryItems = recoveryEntries.map((entry) => {
+    const word = wordMap.get(entry.wordId);
+    return word ? {
+      word,
+      taskType: "recovery",
+      learningPhase: reviewRecovery.RECOVERY_PHASE,
+      recoveryState: entry.recoveryState,
+      recoveryPriority: entry.priority,
+    } : null;
+  }).filter(Boolean);
 
   if (sessionMode === "review") {
     return {
-      studyItems: mapEntriesToItems(book, reviewSummary.dueWords).map((item) => ({ ...item, taskType: "review" })),
+      studyItems: [
+        ...mapEntriesToItems(book, reviewSummary.dueWords).map((item) => ({
+          ...item,
+          taskType: "review",
+          learningPhase: reviewRecovery.FORMAL_REVIEW_PHASE,
+        })),
+        ...recoveryItems,
+      ],
       isExtra: false,
       reviewSummary,
       daily,
+      studySessionId,
     };
   }
 
@@ -500,8 +535,7 @@ function getModeStudyPlan(book, sessionMode) {
   }
 
   const dueItems = mapEntriesToItems(book, reviewSummary.dueWords)
-    .map((item) => ({ ...item, taskType: "review" }));
-  const wordMap = new Map(book.words.map((word) => [word.word, word]));
+    .map((item) => ({ ...item, taskType: "review", learningPhase: reviewRecovery.FORMAL_REVIEW_PHASE }));
   const pendingEntries = storage.getPendingReinforcements(book.id, allWordIds);
   const pendingItems = pendingEntries
     .map((entry) => {
@@ -567,6 +601,7 @@ function getModeStudyPlan(book, sessionMode) {
 
   const studyItems = newWordLearning.buildNormalQueue({
     dueItems,
+    recoveryItems,
     pendingItems,
     introItems: newItems,
     currentSequence: daily.normalSessionAnswerSequence,
@@ -579,6 +614,7 @@ function getModeStudyPlan(book, sessionMode) {
     isExtra,
     reviewSummary,
     daily,
+    studySessionId,
   };
 }
 
@@ -617,6 +653,7 @@ function showStudy(sessionMode = "normal", { forceNew = false } = {}) {
         getAllBookWordIds(book),
       ).count,
       normalSessionAnswerSequence: plan.daily.normalSessionAnswerSequence,
+      studySessionId: plan.studySessionId,
       reviewCompletedToday: plan.daily.reviewWords,
       reviewTarget: plan.reviewSummary.total,
       sessionMode,
@@ -646,6 +683,7 @@ function handleAnswer({
   sessionMode,
   taskType,
   learningPhase,
+  studySessionId,
 }) {
   const result = storage.updateWordProgress(bookId, wordId, correct, {
     judgement,
@@ -655,6 +693,7 @@ function handleAnswer({
     sessionMode,
     taskType,
     learningPhase,
+    studySessionId,
   });
   const book = appState.books[bookId];
   if (book) {
@@ -694,10 +733,16 @@ function handleAiFallback(type) {
 function buildTodayLocalReview(bookId) {
   const book = appState.books[bookId];
   const dateKey = storage.getLocalDateKey();
+  const daily = storage.getDailyStats(bookId, dateKey);
+  daily.learningMetrics.recovery.pendingCount = storage.getReviewRecoverySummary(
+    bookId,
+    getAllBookWordIds(book),
+    { sessionId: "daily-review", sequence: daily.normalSessionAnswerSequence, now: Date.now() },
+  ).pendingCount;
   return dailyReviewService.buildLocalReview({
     bookId,
     dailyTarget: storage.getDailyNewWordGoal(bookId),
-    daily: { ...storage.getDailyStats(bookId, dateKey), dateKey },
+    daily: { ...daily, dateKey },
     words: book.words,
     getProgress: (wordId) => storage.getWordProgress(bookId, wordId),
   });

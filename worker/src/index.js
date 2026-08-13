@@ -172,7 +172,8 @@ function validateDailyWord(raw, field) {
   const allowed = new Set([
     "word", "coreMeaning", "commonMeanings", "choiceWrongCount", "choiceRetryCount",
     "reinforcementWrongCount", "reinforcementPartialCount", "eventuallyPassed", "repeatedError",
-    "historicalErrorRate", "dailyRiskScore",
+    "historicalErrorRate", "dailyRiskScore", "formalReviewResult", "recoveryAttempts",
+    "recoveryFinalResult", "recoveryPending",
   ]);
   if (Object.keys(raw).some((key) => !allowed.has(key))) return { error: `${field} 包含不允许的字段` };
   const word = validateString(raw.word, `${field}.word`, 100);
@@ -184,10 +185,10 @@ function validateDailyWord(raw, field) {
     if (typeof meaning !== "string" || meaning.length > 120) return { error: `${field}.commonMeanings 格式不正确` };
     if (meaning.trim()) commonMeanings.push(meaning.trim());
   }
-  const countFields = ["choiceWrongCount", "choiceRetryCount", "reinforcementWrongCount", "reinforcementPartialCount", "historicalErrorRate", "dailyRiskScore"];
+  const countFields = ["choiceWrongCount", "choiceRetryCount", "reinforcementWrongCount", "reinforcementPartialCount", "historicalErrorRate", "dailyRiskScore", "recoveryAttempts"];
   const counts = {};
   for (const key of countFields) {
-    const checked = validateCount(raw[key], `${field}.${key}`, key.endsWith("Rate") || key.endsWith("Score") ? 100 : 1000);
+    const checked = validateCount(raw[key] ?? 0, `${field}.${key}`, key.endsWith("Rate") || key.endsWith("Score") ? 100 : 1000);
     if (checked.error) return checked;
     counts[key] = checked.value;
   }
@@ -199,6 +200,14 @@ function validateDailyWord(raw, field) {
       ...counts,
       eventuallyPassed: Boolean(raw.eventuallyPassed),
       repeatedError: Boolean(raw.repeatedError),
+      formalReviewResult: ["correct", "partial", "wrong"].includes(raw.formalReviewResult)
+        ? raw.formalReviewResult
+        : null,
+      recoveryAttempts: counts.recoveryAttempts,
+      recoveryFinalResult: ["correct", "partial", "wrong"].includes(raw.recoveryFinalResult)
+        ? raw.recoveryFinalResult
+        : null,
+      recoveryPending: Boolean(raw.recoveryPending),
     },
   };
 }
@@ -213,14 +222,28 @@ function validateDailyReviewPayload(raw) {
   const statisticFields = new Set([
     "dailyTarget", "completedNewWords", "totalAnswers", "firstChoiceCorrect", "firstChoiceWrong",
     "firstChoiceAccuracy", "choiceRetryCount", "reinforcementCorrect", "reinforcementPartial",
-    "reinforcementWrong", "reinforcementPassRate", "enToZh", "zhToEn", "repeatedErrorWords", "correctedWords",
+    "reinforcementWrong", "reinforcementPassRate", "formalReviewStats", "recoveryStats", "enToZh", "zhToEn", "repeatedErrorWords", "correctedWords",
   ]);
   if (Object.keys(raw.statistics).some((key) => !statisticFields.has(key))) return { error: "statistics 包含不允许的字段" };
   const statistics = {};
-  for (const key of [...statisticFields].filter((item) => !["enToZh", "zhToEn"].includes(item))) {
+  for (const key of [...statisticFields].filter((item) => !["enToZh", "zhToEn", "formalReviewStats", "recoveryStats"].includes(item))) {
     const checked = validateCount(raw.statistics[key], `statistics.${key}`, key.endsWith("Accuracy") || key.endsWith("Rate") ? 100 : 100000);
     if (checked.error) return checked;
     statistics[key] = checked.value;
+  }
+  for (const [group, keys] of [
+    ["formalReviewStats", ["correct", "partial", "wrong"]],
+    ["recoveryStats", ["entered", "attempts", "correct", "partial", "wrong", "pendingCount"]],
+  ]) {
+    const value = raw.statistics[group] ?? Object.fromEntries(keys.map((key) => [key, 0]));
+    if (!value || typeof value !== "object" || Array.isArray(value)) return { error: `statistics.${group} 格式不正确` };
+    if (Object.keys(value).some((key) => !keys.includes(key))) return { error: `statistics.${group} 包含不允许的字段` };
+    statistics[group] = {};
+    for (const key of keys) {
+      const checked = validateCount(value[key], `statistics.${group}.${key}`, 100000);
+      if (checked.error) return checked;
+      statistics[group][key] = checked.value;
+    }
   }
   for (const mode of ["enToZh", "zhToEn"]) {
     const value = raw.statistics[mode];
