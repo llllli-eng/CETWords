@@ -1,12 +1,12 @@
 /**
- * 拾词 · 本地学习数据服务 v12
+ * 拾词 · 本地学习数据服务 v13
  * 保持原有 localStorage key，只保存用户状态，不复制词库正文。
  */
 
 (function registerStorageService(app) {
   const { reviewScheduler, reviewRecovery, newWordLearning, smartLearningOrder, dailyGroupService } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
-  const DATA_VERSION = 12;
+  const DATA_VERSION = 13;
   const AI_PROXY_TOKEN_KEY = "shi-ci-ai-proxy-token";
   const DEFAULT_STUDY_MODE = "en-to-zh";
   const DEFAULT_LEARNING_ORDER = "smart";
@@ -26,6 +26,9 @@
     lastWrongTime: null,
     lastReviewTime: null,
     nextReviewTime: null,
+    nextReviewDate: null,
+    lastLongTermAnchorAt: null,
+    earliestReviewAt: null,
     firstLearnDate: null,
   };
 
@@ -353,7 +356,41 @@
       : learned
         ? Math.min(3, consecutiveCorrect)
         : 0;
+    const lastStudyTime = normalizeTimestamp(value.lastStudyTime);
+    const lastReviewTime = normalizeTimestamp(value.lastReviewTime);
     const savedNextReview = normalizeTimestamp(value.nextReviewTime);
+    const legacyNextReview = savedNextReview || (sourceVersion < 5 && learned ? migrationNow : null);
+    const storedLongTermAnchor = normalizeTimestamp(value.lastLongTermAnchorAt);
+    const recentLegacyAnchor = [
+      storedLongTermAnchor,
+      normalizeTimestamp(value.recoveryCompletedAt),
+      normalizeTimestamp(value.lastReviewAt),
+      lastReviewTime,
+      normalizeTimestamp(value.lastLearnedAt),
+      normalizeTimestamp(value.lastStudyAt),
+      lastStudyTime,
+    ].filter(Boolean).sort((left, right) => right - left)[0] || null;
+    const nextReviewDate = learned && masteryLevel > 0
+      ? (sourceVersion >= 13
+        ? reviewScheduler.normalizeLocalDateKey(value.nextReviewDate)
+          || (legacyNextReview ? reviewScheduler.getLocalDateKey(legacyNextReview) : null)
+        : legacyNextReview ? reviewScheduler.getLocalDateKey(legacyNextReview) : null)
+      : null;
+    const inferredLegacyL1Anchor = sourceVersion < 13 && masteryLevel === 1 && legacyNextReview
+      ? legacyNextReview - reviewScheduler.REVIEW_INTERVALS[1]
+      : null;
+    const lastLongTermAnchorAt = learned && masteryLevel > 0 && nextReviewDate
+      ? (sourceVersion >= 13
+        ? storedLongTermAnchor
+        : recentLegacyAnchor || inferredLegacyL1Anchor)
+      : null;
+    const savedEarliestReviewAt = sourceVersion >= 13
+      ? normalizeTimestamp(value.earliestReviewAt)
+      : null;
+    const earliestReviewAt = learned && masteryLevel === 1 && nextReviewDate
+      ? (savedEarliestReviewAt
+        || (lastLongTermAnchorAt ? lastLongTermAnchorAt + reviewScheduler.L1_MINIMUM_DELAY : null))
+      : null;
 
     return {
       learned,
@@ -365,12 +402,13 @@
       reviewCount: toNonNegativeInteger(value.reviewCount),
       favorite: Boolean(value.favorite),
       inWrongBook: Boolean(value.inWrongBook),
-      lastStudyTime: normalizeTimestamp(value.lastStudyTime),
+      lastStudyTime,
       lastWrongTime: normalizeTimestamp(value.lastWrongTime),
-      lastReviewTime: normalizeTimestamp(value.lastReviewTime),
-      nextReviewTime: learned
-        ? (savedNextReview || (sourceVersion < 5 ? migrationNow : null))
-        : null,
+      lastReviewTime,
+      nextReviewTime: learned && masteryLevel === 0 ? legacyNextReview : null,
+      nextReviewDate,
+      lastLongTermAnchorAt,
+      earliestReviewAt,
       firstLearnDate:
         typeof value.firstLearnDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.firstLearnDate)
           ? value.firstLearnDate
@@ -1018,7 +1056,7 @@
         updated = judgement === "partial"
           ? reviewScheduler.handleFormalPartial(progress, { now: timestamp })
           : reviewScheduler.handleWrong(progress, true, { now: timestamp, isNew: false });
-        updated.nextReviewTime = null;
+        updated = reviewScheduler.clearReviewSchedule(updated);
         recoveryState = reviewRecovery.createRecovery({
           sourceReviewResult: judgement,
           currentLevel: updated.masteryLevel,
@@ -1038,7 +1076,7 @@
         random: safeContext.random || Math.random,
       });
       if (recoveryState?.active) {
-        updated.nextReviewTime = null;
+        updated = reviewScheduler.clearReviewSchedule(updated);
         book.reviewRecovery[wordId] = recoveryState;
       } else {
         delete book.reviewRecovery[wordId];

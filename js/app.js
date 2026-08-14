@@ -1163,7 +1163,7 @@ function createCollectionCard(word, progress, mode) {
     createElement(
       "p",
       "collection-word-card__review-time",
-      `下次复习：${reviewScheduler.formatReviewTime(progress.nextReviewTime)}`,
+      `下次复习：${reviewScheduler.formatReviewSchedule(progress)}`,
     ),
   );
 
@@ -1305,7 +1305,7 @@ function createWordListCard(record) {
       "p",
       "word-list-card__review-time",
       progress.learned
-        ? `下次复习：${reviewScheduler.formatReviewTime(progress.nextReviewTime)}`
+        ? `下次复习：${reviewScheduler.formatReviewSchedule(progress)}`
         : "尚未学习",
     ),
   );
@@ -1440,7 +1440,7 @@ function renderWordDetail() {
   elements.wordDetailFirstDate.textContent = formatCalendarDate(progress.firstLearnDate);
   elements.wordDetailLastDate.textContent = formatStudyTime(progress.lastStudyTime);
   elements.wordDetailNextDate.textContent = progress.learned
-    ? reviewScheduler.formatReviewTime(progress.nextReviewTime)
+    ? reviewScheduler.formatReviewSchedule(progress)
     : "待安排";
   const priority = smartLearningOrder.getLearningPriority(
     word.word,

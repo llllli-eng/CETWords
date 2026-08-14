@@ -339,6 +339,9 @@
       reviewCount: toNonNegativeInteger(progress?.reviewCount),
       lastStudyTime: now,
       nextReviewTime: null,
+      nextReviewDate: null,
+      lastLongTermAnchorAt: null,
+      earliestReviewAt: null,
     };
   }
 
@@ -366,7 +369,7 @@
       result.correctCount += 1;
       result.consecutiveCorrect += 1;
       result.masteryLevel = 1;
-      result.nextReviewTime = reviewScheduler.getNextReviewTime(1, now);
+      Object.assign(result, reviewScheduler.getNextReviewSchedule(1, now));
     } else {
       result.wrongCount += 1;
       result.consecutiveCorrect = 0;

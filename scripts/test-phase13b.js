@@ -354,7 +354,9 @@ test("gate 15: AI correct completes and grants Level 1", () => {
   const progress = learning.handleReinforcement({ ...blankProgress(), learned: true }, true, { now });
   assert.equal(next.stage, learning.LEARNING_STAGES.COMPLETED);
   assert.equal(progress.masteryLevel, 1);
-  assert.ok(progress.nextReviewTime > now);
+  assert.equal(progress.nextReviewDate, scheduler.addLocalCalendarDays(now, 1));
+  assert.equal(progress.earliestReviewAt, now + scheduler.L1_MINIMUM_DELAY);
+  assert.equal(progress.nextReviewTime, null);
 });
 
 test("gate 16: AI result cannot bypass an unpassed choice gate", () => {
@@ -387,13 +389,14 @@ test("v8 migration defaults learning order to smart and assumes pending gate pas
   };
   const { app } = loadApp({ initialStorage: { "cetwords-user-data-v1": JSON.stringify(old) } });
   const data = app.storage.loadUserData();
-  assert.equal(data.version, 12);
+  assert.equal(data.version, 13);
   assert.equal(data.preferences.learningOrder, "smart");
   assert.equal(data.books.cet4.newWordLearning.legacy.choiceGatePassed, true);
   assert.equal(data.books.cet4.newWordLearning.legacy.phase, learning.LEARNING_PHASES.AI_REINFORCEMENT);
   assert.equal(data.books.cet4.words.legacy.correctCount, 3);
   assert.equal(data.books.cet4.words.legacy.masteryLevel, 2);
-  assert.equal(data.books.cet4.words.legacy.nextReviewTime, now + 123456);
+  assert.equal(data.books.cet4.words.legacy.nextReviewDate, scheduler.getLocalDateKey(now + 123456));
+  assert.equal(data.books.cet4.words.legacy.nextReviewTime, null);
   assert.deepEqual(Array.from(data.books.cet4.newWordQueue), ["queue-id"]);
   assert.equal(data.currentBook, "cet6");
 });
@@ -526,8 +529,9 @@ test("review priority is based only on personal weakness and respects caps", () 
 });
 
 test("review queue places the weaker due word first without frequency input", () => {
-  const stronger = { learned: true, masteryLevel: 4, correctCount: 20, wrongCount: 1, nextReviewTime: now - 60_000, lastWrongTime: now - 20 * 24 * 60 * 60 * 1000 };
-  const weaker = { learned: true, masteryLevel: 1, correctCount: 2, wrongCount: 8, nextReviewTime: now - 60_000, lastWrongTime: now - 60_000 };
+  const today = scheduler.getLocalDateKey(now);
+  const stronger = { learned: true, masteryLevel: 4, correctCount: 20, wrongCount: 1, nextReviewDate: today, earliestReviewAt: null, lastWrongTime: now - 20 * 24 * 60 * 60 * 1000 };
+  const weaker = { learned: true, masteryLevel: 1, correctCount: 2, wrongCount: 8, nextReviewDate: today, earliestReviewAt: now - 1, lastWrongTime: now - 60_000 };
   assert.equal(scheduler.getDueWords([{ wordId: "strong", progress: stronger }, { wordId: "weak", progress: weaker }], now)[0].wordId, "weak");
 });
 

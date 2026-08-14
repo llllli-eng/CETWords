@@ -284,7 +284,7 @@ if (!WORKER_ONLY) {
 
   await test("request payload never includes raw Chinese answers or history", () => {
     const text = JSON.stringify(service.buildRequestPayload(buildReviewFixture(service, 30)));
-    for (const forbidden of ["userAnswer", "rawAnswer", "answerHistory", "allWords", "examText", "nextReviewTime"]) {
+    for (const forbidden of ["userAnswer", "rawAnswer", "answerHistory", "allWords", "examText", "nextReviewTime", "nextReviewDate", "lastLongTermAnchorAt", "earliestReviewAt"]) {
       assert.equal(text.includes(forbidden), false);
     }
   });
@@ -345,10 +345,12 @@ if (!WORKER_ONLY) {
     const after = storage.getWordProgress("cet4", "invariant-word");
     assert.equal(after.masteryLevel, before.masteryLevel);
     assert.equal(after.nextReviewTime, before.nextReviewTime);
+    assert.equal(after.nextReviewDate, before.nextReviewDate);
+    assert.equal(after.earliestReviewAt, before.earliestReviewAt);
     assert.equal(after.inWrongBook, before.inWrongBook);
   });
 
-  await test("v9 remains lossless through v12 with empty review, recovery and group maps", () => {
+  await test("v9 remains lossless through v13 with empty review, recovery and group maps", () => {
     const today = "2026-08-13";
     const v9 = {
       version: 9, currentBook: "cet6",
@@ -359,19 +361,20 @@ if (!WORKER_ONLY) {
       },
     };
     const migrated = loadApp({ "cetwords-user-data-v1": JSON.stringify(v9) }).app.storage.loadUserData();
-    assert.equal(migrated.version, 12);
+    assert.equal(migrated.version, 13);
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyReviews)), {});
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.reviewRecovery)), {});
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyGroupPlans)), {});
     assert.equal(migrated.books.cet4.words.keep.masteryLevel, 4);
-    assert.equal(migrated.books.cet4.words.keep.nextReviewTime, 1893456000000);
+    assert.equal(migrated.books.cet4.words.keep.nextReviewDate, app.reviewScheduler.getLocalDateKey(1893456000000));
+    assert.equal(migrated.books.cet4.words.keep.nextReviewTime, null);
     assert.equal(migrated.books.cet4.daily[today].answerCount, 10);
     assert.equal(migrated.preferences.learningOrder, "random");
   });
 
-  await test("v1-v12 remain accepted backup versions", () => {
+  await test("v1-v13 remain accepted backup versions", () => {
     const source = fs.readFileSync(path.join(ROOT, "js/backup-service.js"), "utf8");
-    assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\]/);
+    assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13\]/);
   });
 
   await test("a representative maximum payload stays within the 800-2500 token target", () => {

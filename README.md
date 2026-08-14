@@ -1,6 +1,15 @@
 # 拾词 · 四六级背单词
 
-当前本地数据版本：`12`。第 16 阶段新增 AI 每日新词分组、当前组引入边界、组完成页和可恢复的组间休息。
+当前本地数据版本：`13`。第 16.1 阶段把长期 SRS 改为浏览器本地自然日窗口，同时保留 L0 与所有短期随机窗口的精确时间语义。
+
+## 第 16.1 阶段结果
+
+- L1～L5 分别按本地日期安排到下一个、第 3、第 7、第 15、第 30 个自然日；L5 正确后仍为 L5，并重新安排 30 天。
+- L1 同时要求跨入目标自然日且距 `lastLongTermAnchorAt` 至少 6 小时；L2～L5 从目标日 00:00 起即可到期，不再等待原学习时刻。
+- L0 仍使用精确的 10 分钟 `nextReviewTime`。new-word reinforcement、choice retry 与 Recovery 的题数/时间随机窗口和 Level 状态机均未改动。
+- 长期状态使用 `nextReviewDate`、`lastLongTermAnchorAt`、`earliestReviewAt`；日期通过本地年月日与 `Date#setDate` 日历加法生成，不使用 UTC 日期切片或固定毫秒日数。
+- v12 → v13 保留旧 `nextReviewTime` 的本地目标日期；旧 L1 优先采用最近的真实学习/复习时间，缺失时才用旧目标时间减 24 小时推断锚点。
+- 备份导入支持 v1～v13；`dailyGroupPlans`、Recovery、每日复盘、smart/random/neutral、收藏和错词状态继续保留。
 
 ## 第 16 阶段结果
 
@@ -125,8 +134,8 @@ python scripts/build-vocabulary.py --source-dir <json-sentence目录>
 ## 本地数据与备份
 
 - 存储键保持 `cetwords-user-data-v1`。
-- 数据版本为 `version: 12`，支持导入并迁移 `version: 1` 至 `version: 12`。
-- 迁移保留正确/错误/partial 次数、熟练度、首次学习日期、下次复习时间、收藏、错词、每日统计、新词队列、当日巩固状态、AI 设置、`vocabularyScope` 和 `studyMode`。
+- 数据版本为 `version: 13`，支持导入并迁移 `version: 1` 至 `version: 13`。
+- 迁移保留正确/错误/partial 次数、熟练度、首次学习日期、长期自然日复习字段、L0 精确复习时间、收藏、错词、每日统计、新词队列、当日巩固状态、AI 设置、`vocabularyScope` 和 `studyMode`。
 - 完整词库正文不会写入 `localStorage` 或学习备份。
 - 个人代理 Token 使用独立本地键保存，不进入学习备份；DeepSeek API Key 只存在 Cloudflare Worker Secret 中。
 
@@ -148,7 +157,7 @@ js/new-word-learning.js               四选一门槛与当日释义巩固状态
 js/review-recovery.js                 正式复习 Recovery 随机窗口与会话状态机
 js/daily-review-service.js             本地复盘统计、薄弱词筛选与请求白名单
 js/daily-group-service.js              每日分组校验、fallback、边界与 Worker 请求
-js/storage.js                          本地数据 v12 迁移与持久化
+js/storage.js                          本地数据 v13 迁移与持久化
 worker/src/index.js                    DeepSeek 多义词判题与每日复盘代理
 ```
 

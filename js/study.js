@@ -871,7 +871,7 @@
       const isCorrect = selectedOption.isCorrect;
       const progress = question.answerResult?.progress;
       const mastery = progress ? reviewScheduler.getMasteryLevel(progress) : 0;
-      const nextReview = progress ? reviewScheduler.formatReviewTime(progress.nextReviewTime) : "待安排";
+      const nextReview = progress ? reviewScheduler.formatReviewSchedule(progress) : "待安排";
       const isProtectedPractice = isCorrect && question.taskType === "practice";
       const isPendingPractice = question.answerResult?.learningState
         && newWordLearning.isPending(question.answerResult.learningState)
@@ -919,7 +919,7 @@
       const isCorrect = judgement === "correct";
       const isPartial = judgement === "partial";
       const progress = question.answerResult?.progress;
-      const nextReview = progress ? reviewScheduler.formatReviewTime(progress.nextReviewTime) : "待安排";
+      const nextReview = progress ? reviewScheduler.formatReviewSchedule(progress) : "待安排";
       const isFormalReview = question.learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE;
       const isRecovery = question.learningPhase === reviewRecovery.RECOVERY_PHASE;
       const level = progress ? reviewScheduler.getMasteryLevel(progress) : 0;

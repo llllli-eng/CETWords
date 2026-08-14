@@ -165,8 +165,8 @@ await test("mobile result mode remains compact and shortcut-free", () => {
   assert.doesNotMatch(cssSource, /\.study-card\.is-active-recall-result[^}]*width:\s*\d{4}px/);
 });
 
-await test("Phase 15.1 result behavior remains intact after the v12 grouping upgrade", () => {
-  assert.match(fs.readFileSync(path.join(ROOT, "js/storage.js"), "utf8"), /const DATA_VERSION = 12/);
+await test("Phase 15.1 result behavior remains intact after the v13 calendar-day upgrade", () => {
+  assert.match(fs.readFileSync(path.join(ROOT, "js/storage.js"), "utf8"), /const DATA_VERSION = 13/);
   const changedWorker = fs.readFileSync(path.join(ROOT, "worker/src/index.js"), "utf8");
   assert.equal(changedWorker.includes("activeRecallResult"), false);
 });

@@ -50,6 +50,9 @@ function learnedProgress(level, options = {}) {
     masteryLevel: level, reviewCount: 3, favorite: Boolean(options.favorite),
     inWrongBook: Boolean(options.inWrongBook), lastStudyTime: now - 1000,
     lastReviewTime: now - 86_400_000, nextReviewTime: now - 1,
+    nextReviewDate: reviewScheduler.getLocalDateKey(now),
+    lastLongTermAnchorAt: now - 86_400_000,
+    earliestReviewAt: level === 1 ? now - 1 : null,
     firstLearnDate: "2026-08-01",
   };
 }
@@ -134,7 +137,8 @@ await test("recovery correct exits and schedules by the current Level", () => {
   const passedRecovery = recover("cet4", "recovery-pass", "correct", now + 1000, "s2");
   assert.equal(passedRecovery.progress.masteryLevel, 2);
   assert.equal(passedRecovery.recoveryState.active, false);
-  assert.equal(passedRecovery.progress.nextReviewTime, reviewScheduler.getNextReviewTime(2, now + 1000));
+  assert.equal(passedRecovery.progress.nextReviewDate, reviewScheduler.addLocalCalendarDays(now + 1000, 3));
+  assert.equal(passedRecovery.progress.nextReviewTime, null);
   assert.equal(storage.getReviewRecoveryState("cet4", "recovery-pass"), null);
 });
 
@@ -462,7 +466,7 @@ await test("partial and wrong feedback reveals the standard meaning after judgem
   assert.match(source, /renderSubjectiveFeedback/);
 });
 
-await test("v10 migrates losslessly through v12 with reviewRecovery and group maps", () => {
+await test("v10 migrates losslessly through v13 with reviewRecovery and group maps", () => {
   const v10 = {
     version: 10, currentBook: "cet4",
     preferences: { dailyNewWordGoals: { cet4: 30, cet6: 50 }, vocabularyScope: { cet4: "core", cet6: "all" }, studyMode: "zh-to-en", learningOrder: "random", aiJudge: { enabled: true, proxyUrl: "https://worker.example" } },
@@ -472,7 +476,7 @@ await test("v10 migrates losslessly through v12 with reviewRecovery and group ma
     },
   };
   const migrated = loadApp({ "cetwords-user-data-v1": JSON.stringify(v10) }).app.storage.loadUserData();
-  assert.equal(migrated.version, 12);
+  assert.equal(migrated.version, 13);
   assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.reviewRecovery)), {});
   assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyGroupPlans)), {});
   assert.equal(migrated.books.cet4.words.keep.masteryLevel, 4);
@@ -481,14 +485,14 @@ await test("v10 migrates losslessly through v12 with reviewRecovery and group ma
   assert.equal(migrated.preferences.learningOrder, "random");
 });
 
-await test("v1-v12 backup compatibility is declared", () => {
+await test("v1-v13 backup compatibility is declared", () => {
   const source = fs.readFileSync(path.join(ROOT, "js/backup-service.js"), "utf8");
-  assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\]/);
+  assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13\]/);
 });
 
-await test("storage version is exactly v12 while the localStorage key stays unchanged", () => {
+await test("storage version is exactly v13 while the localStorage key stays unchanged", () => {
   const source = fs.readFileSync(path.join(ROOT, "js/storage.js"), "utf8");
-  assert.match(source, /const DATA_VERSION = 12/);
+  assert.match(source, /const DATA_VERSION = 13/);
   assert.match(source, /const STORAGE_KEY = "cetwords-user-data-v1"/);
 });
 

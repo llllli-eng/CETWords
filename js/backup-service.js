@@ -86,14 +86,14 @@
     if (parsed.app === APP_NAME && Number(parsed.exportVersion) === EXPORT_VERSION) {
       data = parsed.data;
       metadata = { app: parsed.app, exportVersion: parsed.exportVersion, exportTime: parsed.exportTime || null };
-    } else if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(Number(parsed.version))) {
+    } else if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(Number(parsed.version))) {
       data = parsed;
       metadata = { app: APP_NAME, exportVersion: 0, exportTime: null, legacy: true };
     } else {
       return { valid: false, error: "这不是可识别的拾词备份文件" };
     }
 
-    if (!isPlainObject(data) || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(Number(data.version))) {
+    if (!isPlainObject(data) || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(Number(data.version))) {
       return { valid: false, error: "备份数据版本无法识别" };
     }
     if (!isPlainObject(data.books) || !isPlainObject(data.books.cet4) || !isPlainObject(data.books.cet6)) {
