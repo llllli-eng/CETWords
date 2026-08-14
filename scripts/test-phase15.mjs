@@ -35,7 +35,7 @@ function loadApp(initialStorage = {}) {
   const context = vm.createContext({ window, console, URL, Map, Set, Date, Math, Intl, AbortController, setTimeout, clearTimeout });
   [
     "js/review-scheduler.js", "js/smart-learning-order.js", "js/review-recovery.js",
-    "js/new-word-learning.js", "js/storage.js", "js/daily-review-service.js",
+    "js/new-word-learning.js", "js/daily-group-service.js", "js/storage.js", "js/daily-review-service.js",
   ].forEach((file) => vm.runInContext(fs.readFileSync(path.join(ROOT, file), "utf8"), context, { filename: file }));
   return { app: window.CETWords, localStorage };
 }
@@ -462,7 +462,7 @@ await test("partial and wrong feedback reveals the standard meaning after judgem
   assert.match(source, /renderSubjectiveFeedback/);
 });
 
-await test("v10 migrates losslessly to v11 with reviewRecovery map", () => {
+await test("v10 migrates losslessly through v12 with reviewRecovery and group maps", () => {
   const v10 = {
     version: 10, currentBook: "cet4",
     preferences: { dailyNewWordGoals: { cet4: 30, cet6: 50 }, vocabularyScope: { cet4: "core", cet6: "all" }, studyMode: "zh-to-en", learningOrder: "random", aiJudge: { enabled: true, proxyUrl: "https://worker.example" } },
@@ -472,22 +472,23 @@ await test("v10 migrates losslessly to v11 with reviewRecovery map", () => {
     },
   };
   const migrated = loadApp({ "cetwords-user-data-v1": JSON.stringify(v10) }).app.storage.loadUserData();
-  assert.equal(migrated.version, 11);
+  assert.equal(migrated.version, 12);
   assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.reviewRecovery)), {});
+  assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyGroupPlans)), {});
   assert.equal(migrated.books.cet4.words.keep.masteryLevel, 4);
   assert.equal(migrated.books.cet4.words.keep.favorite, true);
   assert.equal(migrated.books.cet4.dailyReviews["2026-08-12"].review.summary, "保留");
   assert.equal(migrated.preferences.learningOrder, "random");
 });
 
-await test("v1-v11 backup compatibility is declared", () => {
+await test("v1-v12 backup compatibility is declared", () => {
   const source = fs.readFileSync(path.join(ROOT, "js/backup-service.js"), "utf8");
-  assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11\]/);
+  assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\]/);
 });
 
-await test("storage version is exactly v11 while the localStorage key stays unchanged", () => {
+await test("storage version is exactly v12 while the localStorage key stays unchanged", () => {
   const source = fs.readFileSync(path.join(ROOT, "js/storage.js"), "utf8");
-  assert.match(source, /const DATA_VERSION = 11/);
+  assert.match(source, /const DATA_VERSION = 12/);
   assert.match(source, /const STORAGE_KEY = "cetwords-user-data-v1"/);
 });
 

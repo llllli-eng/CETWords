@@ -1,16 +1,16 @@
 /**
- * 拾词 · 本地学习数据服务 v11
+ * 拾词 · 本地学习数据服务 v12
  * 保持原有 localStorage key，只保存用户状态，不复制词库正文。
  */
 
 (function registerStorageService(app) {
-  const { reviewScheduler, reviewRecovery, newWordLearning, smartLearningOrder } = app;
+  const { reviewScheduler, reviewRecovery, newWordLearning, smartLearningOrder, dailyGroupService } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
-  const DATA_VERSION = 11;
+  const DATA_VERSION = 12;
   const AI_PROXY_TOKEN_KEY = "shi-ci-ai-proxy-token";
   const DEFAULT_STUDY_MODE = "en-to-zh";
   const DEFAULT_LEARNING_ORDER = "smart";
-  const DAILY_GOAL_OPTIONS = Object.freeze([10, 20, 30, 50, 80, 100]);
+  const DAILY_GOAL_OPTIONS = Object.freeze([10, 20, 30, 40, 50, 80, 100]);
 
   const EMPTY_WORD_PROGRESS = {
     learned: false,
@@ -95,6 +95,7 @@
       newWordLearning: {},
       reviewRecovery: {},
       dailyReviews: {},
+      dailyGroupPlans: {},
     };
   }
 
@@ -306,6 +307,37 @@
     };
   }
 
+  function normalizeDailyGroupPlan(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const target = toNonNegativeInteger(raw.dailyTarget);
+    const validation = dailyGroupService.validateGroupPlan({
+      groupSizes: raw.groupSizes,
+      breakMinutes: raw.breakMinutes,
+      reason: raw.reason,
+    }, target);
+    if (!target || !validation.valid) return null;
+    return {
+      dailyTarget: target,
+      ...validation.value,
+      source: raw.source === "ai" ? "ai" : "local",
+      createdAt: normalizeTimestamp(raw.createdAt) || Date.now(),
+      startedAt: normalizeTimestamp(raw.startedAt),
+      activeGroupIndex: Math.min(
+        Math.max(0, toNonNegativeInteger(raw.activeGroupIndex)),
+        validation.value.groupSizes.length - 1,
+      ),
+      completedGroupCount: Math.min(
+        toNonNegativeInteger(raw.completedGroupCount),
+        validation.value.groupSizes.length,
+      ),
+      breakStartedAt: normalizeTimestamp(raw.breakStartedAt),
+      usage: {
+        promptTokens: toNonNegativeInteger(raw.usage?.promptTokens),
+        completionTokens: toNonNegativeInteger(raw.usage?.completionTokens),
+      },
+    };
+  }
+
   function normalizeIsoTime(value) {
     if (typeof value !== "string") return null;
     return Number.isFinite(Date.parse(value)) ? value : null;
@@ -396,6 +428,13 @@
         if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
         const normalized = normalizeDailyReviewRecord(record);
         if (normalized) result.dailyReviews[dateKey] = normalized;
+      });
+    }
+    if (sourceVersion >= 12 && value.dailyGroupPlans && typeof value.dailyGroupPlans === "object" && !Array.isArray(value.dailyGroupPlans)) {
+      Object.entries(value.dailyGroupPlans).forEach(([dateKey, record]) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+        const normalized = normalizeDailyGroupPlan(record);
+        if (normalized) result.dailyGroupPlans[dateKey] = normalized;
       });
     }
 
@@ -598,9 +637,20 @@
     return persist();
   }
 
-  function getDailyNewWordGoal(bookId) {
+  function getConfiguredDailyNewWordGoal(bookId) {
     ensureBook(bookId);
     return normalizeGoal(getMutableData().preferences.dailyNewWordGoals[bookId]);
+  }
+
+  function getDailyNewWordGoal(bookId, timestamp = Date.now()) {
+    ensureBook(bookId);
+    const configured = getConfiguredDailyNewWordGoal(bookId);
+    const dateKey = getLocalDateKey(timestamp);
+    const plan = getMutableData().books[bookId].dailyGroupPlans[dateKey];
+    const daily = getMutableData().books[bookId].daily[dateKey];
+    const startedCount = normalizeStringIds(daily?.newWordIds).length;
+    if (plan && startedCount > 0 && configured < plan.dailyTarget) return plan.dailyTarget;
+    return configured;
   }
 
   function setDailyNewWordGoal(bookId, goal) {
@@ -611,6 +661,133 @@
     if (todayReview && normalizedGoal !== todayReview.dailyTarget) todayReview.stale = true;
     persist();
     return normalizedGoal;
+  }
+
+  function getDailyGroupPlan(bookId, dateKey = getLocalDateKey()) {
+    const plan = ensureBook(bookId).dailyGroupPlans[dateKey];
+    return plan ? deepClone(plan) : null;
+  }
+
+  function saveDailyGroupPlan(bookId, dateKey, record, now = Date.now()) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null;
+    const normalized = normalizeDailyGroupPlan({ ...record, createdAt: record?.createdAt || now });
+    if (!normalized) return null;
+    ensureBook(bookId).dailyGroupPlans[dateKey] = normalized;
+    persist();
+    return deepClone(normalized);
+  }
+
+  function removeDailyGroupPlan(bookId, dateKey = getLocalDateKey()) {
+    const book = ensureBook(bookId);
+    if (!book.dailyGroupPlans[dateKey]) return false;
+    delete book.dailyGroupPlans[dateKey];
+    persist();
+    return true;
+  }
+
+  function updateDailyGroupProgress(bookId, dateKey = getLocalDateKey()) {
+    const book = ensureBook(bookId);
+    const plan = book.dailyGroupPlans[dateKey];
+    if (!plan) return null;
+    const daily = ensureDailyStats(bookId, dateKey);
+    const progress = dailyGroupService.getGroupProgress(
+      plan,
+      daily.scheduledNewWordIds,
+      daily.completedNewWordIds,
+      daily.newWordIds,
+    );
+    if (!progress) return null;
+    plan.completedGroupCount = progress.completedGroupCount;
+    if (progress.completedGroupCount >= plan.groupSizes.length) {
+      plan.activeGroupIndex = Math.max(0, plan.groupSizes.length - 1);
+      plan.breakStartedAt = null;
+    }
+    persist();
+    return { plan: deepClone(plan), progress };
+  }
+
+  function startDailyGroupBreak(bookId, dateKey = getLocalDateKey(), now = Date.now()) {
+    const plan = ensureBook(bookId).dailyGroupPlans[dateKey];
+    if (!plan) return null;
+    plan.breakStartedAt = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    persist();
+    return deepClone(plan);
+  }
+
+  function markDailyGroupStarted(bookId, dateKey = getLocalDateKey(), now = Date.now()) {
+    const plan = ensureBook(bookId).dailyGroupPlans[dateKey];
+    if (!plan) return null;
+    if (!plan.startedAt) plan.startedAt = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    persist();
+    return deepClone(plan);
+  }
+
+  function advanceDailyGroup(bookId, dateKey = getLocalDateKey()) {
+    const book = ensureBook(bookId);
+    const plan = book.dailyGroupPlans[dateKey];
+    if (!plan) return null;
+    const progress = dailyGroupService.getGroupProgress(
+      plan,
+      ensureDailyStats(bookId, dateKey).scheduledNewWordIds,
+      ensureDailyStats(bookId, dateKey).completedNewWordIds,
+      ensureDailyStats(bookId, dateKey).newWordIds,
+    );
+    if (!progress?.activeGroup?.complete || progress.allComplete) return deepClone(plan);
+    plan.activeGroupIndex = Math.min(plan.activeGroupIndex + 1, plan.groupSizes.length - 1);
+    plan.completedGroupCount = Math.max(plan.completedGroupCount, plan.activeGroupIndex);
+    plan.breakStartedAt = null;
+    persist();
+    return deepClone(plan);
+  }
+
+  function adjustDailyGroupPlanTarget(bookId, newTarget, dateKey = getLocalDateKey()) {
+    const book = ensureBook(bookId);
+    const plan = book.dailyGroupPlans[dateKey];
+    if (!plan) return { action: "none", plan: null };
+    const target = normalizeGoal(newTarget);
+    const daily = ensureDailyStats(bookId, dateKey);
+    if (daily.newWordIds.length === 0 && !plan.startedAt) {
+      delete book.dailyGroupPlans[dateKey];
+      persist();
+      return { action: "regenerate", plan: null };
+    }
+    if (target === plan.dailyTarget) return { action: "unchanged", plan: deepClone(plan) };
+    const progress = dailyGroupService.getGroupProgress(plan, daily.scheduledNewWordIds, daily.completedNewWordIds, daily.newWordIds);
+    const protectedGroupCount = Math.min(plan.groupSizes.length, (progress?.activeGroupIndex || 0) + 1);
+    const protectedSizes = plan.groupSizes.slice(0, protectedGroupCount);
+    const protectedTarget = protectedSizes.reduce((total, size) => total + size, 0);
+    if (target < protectedTarget || target < daily.newWordIds.length) {
+      return {
+        action: "deferred",
+        plan: deepClone(plan),
+        protectedTarget,
+        introducedCount: daily.newWordIds.length,
+      };
+    }
+    if (target > plan.dailyTarget) {
+      plan.groupSizes.push(...dailyGroupService.createFallbackGroupSizes(target - plan.dailyTarget));
+      plan.dailyTarget = target;
+      plan.breakStartedAt = null;
+      plan.source = "local";
+      plan.reason = "已保留原有分组，新增目标使用本地稳定分组追加。";
+      persist();
+      return { action: "extended", plan: deepClone(plan) };
+    }
+    const remaining = target - protectedTarget;
+    plan.dailyTarget = target;
+    plan.groupSizes = [
+      ...protectedSizes,
+      ...dailyGroupService.createFallbackGroupSizes(remaining),
+    ];
+    plan.activeGroupIndex = Math.min(plan.activeGroupIndex, plan.groupSizes.length - 1);
+    plan.completedGroupCount = Math.min(plan.completedGroupCount, plan.groupSizes.length);
+    plan.breakStartedAt = null;
+    plan.source = "local";
+    plan.reason = target > protectedTarget
+      ? "已保留完成组和当前组，新增目标使用本地稳定分组追加。"
+      : "已保留完成组和当前组，并安全移除尚未开始的后续组。";
+    persist();
+    return { action: "reduced", plan: deepClone(plan) };
   }
 
   function getVocabularyScope(bookId) {
@@ -1308,7 +1485,16 @@
     getPreference,
     setPreference,
     getDailyNewWordGoal,
+    getConfiguredDailyNewWordGoal,
     setDailyNewWordGoal,
+    getDailyGroupPlan,
+    saveDailyGroupPlan,
+    removeDailyGroupPlan,
+    updateDailyGroupProgress,
+    startDailyGroupBreak,
+    markDailyGroupStarted,
+    advanceDailyGroup,
+    adjustDailyGroupPlanTarget,
     getVocabularyScope,
     setVocabularyScope,
     getStudyMode,

@@ -16,6 +16,7 @@
     <script src="js/review-recovery.js" defer></script>
     <script src="js/new-word-learning.js" defer></script>
     <script src="js/active-recall-result.js" defer></script>
+    <script src="js/daily-group-service.js" defer></script>
     <script src="js/storage.js" defer></script>
     <script src="js/word-utils.js" defer></script>
     <script src="js/study-modes.js" defer></script>
@@ -129,6 +130,17 @@
                 <p class="task-hint"><span aria-hidden="true">✦</span> 准备今日学习任务</p>
               </div>
             </div>
+
+            <section class="daily-group-overview" id="daily-group-overview" aria-label="今日新词分组">
+              <div class="daily-group-overview__heading">
+                <div>
+                  <strong id="daily-group-summary">进入学习后生成今日分组</strong>
+                  <span id="daily-group-source">约 10 个新词一组，AI 不可用也能开始</span>
+                </div>
+                <button class="text-button" id="daily-group-regenerate" type="button" hidden>重新生成分组建议</button>
+              </div>
+              <div class="daily-group-chips" id="daily-group-chips" hidden></div>
+            </section>
 
             <button class="primary-button" id="continue-button" type="button">
               <span>继续学习</span>
@@ -508,6 +520,39 @@
               </button>
             </div>
           </section>
+
+          <section class="result-card group-complete-card" id="group-complete-screen" aria-labelledby="group-complete-title" hidden>
+            <span class="result-symbol" aria-hidden="true">☕</span>
+            <p class="section-kicker">GROUP COMPLETE</p>
+            <h1 id="group-complete-title">第一组完成</h1>
+            <div class="group-complete-progress">
+              <strong id="group-complete-total">10 / 40</strong>
+              <span id="group-complete-percent">今日完成 25%</span>
+            </div>
+            <div class="group-complete-stats">
+              <div><span>新词完成</span><strong id="group-complete-new">10</strong></div>
+              <div><span>主动回忆</span><strong id="group-complete-recall">10</strong></div>
+              <div><span>纠错通过</span><strong id="group-complete-corrected">0</strong></div>
+            </div>
+            <p class="group-break-suggestion" id="group-break-suggestion">建议休息 5 分钟</p>
+            <div class="group-complete-actions">
+              <button class="primary-button" id="group-start-break" type="button">开始休息</button>
+              <button class="secondary-button" id="group-continue" type="button">直接开始下一组</button>
+              <button class="text-button" id="group-stop-today" type="button">今天先到这里</button>
+            </div>
+          </section>
+
+          <section class="result-card group-break-card" id="group-break-screen" aria-labelledby="group-break-title" hidden>
+            <span class="result-symbol" aria-hidden="true">☕</span>
+            <p class="section-kicker">REST & RESET</p>
+            <strong class="group-break-timer" id="group-break-timer">05:00</strong>
+            <h1 id="group-break-title">休息一下</h1>
+            <p class="group-break-message" id="group-break-message">喝口水、看看远处</p>
+            <div class="group-complete-actions">
+              <button class="primary-button" id="group-break-continue" type="button">提前开始下一组</button>
+              <button class="text-button" id="group-break-stop" type="button">今天先到这里</button>
+            </div>
+          </section>
         </main>
 
         <footer class="study-shortcuts">
@@ -740,6 +785,7 @@
               <button type="button" data-daily-goal="10" aria-pressed="false">10</button>
               <button type="button" data-daily-goal="20" aria-pressed="false">20</button>
               <button class="is-selected" type="button" data-daily-goal="30" aria-pressed="true">30</button>
+              <button type="button" data-daily-goal="40" aria-pressed="false">40</button>
               <button type="button" data-daily-goal="50" aria-pressed="false">50</button>
               <button type="button" data-daily-goal="80" aria-pressed="false">80</button>
               <button type="button" data-daily-goal="100" aria-pressed="false">100</button>

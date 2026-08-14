@@ -2,12 +2,20 @@ const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_MEANINGS = 12;
 const MAX_DAILY_REVIEW_BODY_BYTES = 24 * 1024;
+const MAX_DAILY_GROUP_BODY_BYTES = 8 * 1024;
 const MAX_DAILY_WEAK_WORDS = 10;
 const MAX_DAILY_CORRECTED_WORDS = 5;
 const REQUEST_TIMEOUT_MS = 12 * 1000;
 const VALID_RESULTS = new Set(["correct", "partial", "wrong"]);
 const ALLOWED_FIELDS = new Set(["word", "coreMeaning", "meanings", "meaningsByPos", "userAnswer"]);
 const DAILY_REVIEW_FIELDS = new Set(["date", "level", "statistics", "weakWords", "correctedWords"]);
+const DAILY_GROUP_FIELDS = new Set([
+  "dailyTarget", "todayDueReviewCount", "todayRecoveryPendingCount",
+  "todayPendingReinforcementCount", "todayChoiceRetryCount", "yesterdayStudied",
+  "yesterdayDailyTarget", "yesterdayCompletedNewWords", "yesterdayTaskCompleted",
+  "yesterdayTotalAnswers", "yesterdayActiveRecallPerformance", "recentCompletionRate",
+  "recentAverageAnswers",
+]);
 
 const SYSTEM_PROMPT = `你是大学英语四六级单词中文释义判题器。
 
@@ -42,6 +50,22 @@ const DAILY_REVIEW_SYSTEM_PROMPT = `你是大学英语四六级每日学习复�
 
 JSON 格式：
 {"summary":"","strengths":[""],"weaknesses":[""],"focusWords":[{"word":"","reason":"","suggestion":""}],"tomorrowAdvice":[""]}`;
+
+const DAILY_GROUP_SYSTEM_PROMPT = `你是大学英语四六级每日新词分组助手。
+
+你只根据输入的少量聚合统计，为已经确定的 dailyTarget 建议分组大小和组间休息时间。
+
+要求：
+1. groupSizes 所有值为正整数，且总和必须严格等于 dailyTarget。
+2. dailyTarget >= 5 时，每组 5～15 个；目标小于 5 时使用一个小组。
+3. breakMinutes 必须为 2～10 的整数。
+4. 不修改每日总量、单词顺序、smart/random、SRS、Recovery、mastery 或任何复习时间。
+5. 复习积压多、昨天未完成时倾向较小组；正常负担约 8～12 个；不要过度碎片化。
+6. reason 使用简短中文，不超过 180 字。
+7. 只输出合法 JSON，不输出 Markdown 或额外文字。
+
+JSON 格式：
+{"groupSizes":[10,10,10],"breakMinutes":5,"reason":""}`;
 
 function getAllowedOrigins(env) {
   return new Set(String(env.ALLOWED_ORIGINS || "")
@@ -274,6 +298,69 @@ function validateDailyReviewPayload(raw) {
   return { value: { date: raw.date, level: raw.level, statistics, weakWords, correctedWords } };
 }
 
+function validateDailyGroupPayload(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "请求体必须是 JSON 对象" };
+  const unexpected = Object.keys(raw).find((key) => !DAILY_GROUP_FIELDS.has(key));
+  if (unexpected) return { error: `不允许的字段：${unexpected}` };
+  const target = validateCount(raw.dailyTarget, "dailyTarget", 1000);
+  if (target.error || target.value < 1) return { error: "dailyTarget 格式不正确" };
+  const result = { dailyTarget: target.value };
+  const countFields = [
+    "todayDueReviewCount", "todayRecoveryPendingCount", "todayPendingReinforcementCount",
+    "todayChoiceRetryCount", "yesterdayDailyTarget", "yesterdayCompletedNewWords",
+    "yesterdayTotalAnswers", "recentAverageAnswers",
+  ];
+  for (const key of countFields) {
+    const checked = validateCount(raw[key] ?? 0, key, 100000);
+    if (checked.error) return checked;
+    result[key] = checked.value;
+  }
+  for (const key of ["recentCompletionRate", "yesterdayActiveRecallPerformance"]) {
+    if (raw[key] === undefined || raw[key] === null) continue;
+    const checked = validateCount(raw[key], key, 100);
+    if (checked.error) return checked;
+    result[key] = checked.value;
+  }
+  result.yesterdayStudied = Boolean(raw.yesterdayStudied);
+  result.yesterdayTaskCompleted = Boolean(raw.yesterdayTaskCompleted);
+  return { value: result };
+}
+
+function createFallbackGroupSizes(dailyTarget) {
+  if (dailyTarget < 5) return [dailyTarget];
+  const count = Math.max(1, Math.ceil(dailyTarget / 10));
+  const base = Math.floor(dailyTarget / count);
+  const remainder = dailyTarget % count;
+  return Array.from({ length: count }, (_, index) => base + (index < remainder ? 1 : 0));
+}
+
+function createFallbackDailyGroupPlan(dailyTarget) {
+  return {
+    groupSizes: createFallbackGroupSizes(dailyTarget),
+    breakMinutes: 5,
+    reason: "AI 分组暂不可用，已使用约 10 个新词一组的本地方案。",
+  };
+}
+
+function normalizeDailyGroupModelResult(content, dailyTarget) {
+  if (typeof content !== "string" || !content.trim()) return null;
+  let parsed;
+  try { parsed = JSON.parse(content); } catch { return null; }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+  const allowed = new Set(["groupSizes", "breakMinutes", "reason"]);
+  if (Object.keys(parsed).some((key) => !allowed.has(key))) return null;
+  if (!Array.isArray(parsed.groupSizes) || !parsed.groupSizes.length) return null;
+  const groupSizes = parsed.groupSizes.map(Number);
+  if (groupSizes.some((size) => !Number.isInteger(size) || size <= 0)) return null;
+  if (dailyTarget >= 5 && groupSizes.some((size) => size < 5 || size > 15)) return null;
+  if (dailyTarget < 5 && (groupSizes.length !== 1 || groupSizes[0] !== dailyTarget)) return null;
+  if (groupSizes.reduce((total, size) => total + size, 0) !== dailyTarget) return null;
+  const breakMinutes = Number(parsed.breakMinutes);
+  const reason = typeof parsed.reason === "string" ? parsed.reason.trim() : "";
+  if (!Number.isInteger(breakMinutes) || breakMinutes < 2 || breakMinutes > 10 || !reason || reason.length > 180) return null;
+  return { groupSizes, breakMinutes, reason };
+}
+
 function normalizeModelResult(content) {
   if (typeof content !== "string" || !content.trim()) return null;
   let parsed;
@@ -349,12 +436,30 @@ function buildDailyReviewDeepSeekBody(payload) {
   };
 }
 
+function buildDailyGroupDeepSeekBody(payload) {
+  return {
+    model: "deepseek-v4-flash",
+    messages: [
+      { role: "system", content: DAILY_GROUP_SYSTEM_PROMPT },
+      { role: "user", content: `请只输出合法 JSON，根据以下本地聚合统计生成今日新词分组：\n${JSON.stringify(payload)}` },
+    ],
+    thinking: { type: "disabled" },
+    response_format: { type: "json_object" },
+    stream: false,
+    temperature: 0.2,
+    max_tokens: 400,
+  };
+}
+
 async function callDeepSeek(payload, env, fetchImpl, options = {}) {
   const bodyBuilder = options.bodyBuilder || buildDeepSeekBody;
   const resultNormalizer = options.resultNormalizer || normalizeModelResult;
+  const maximumAttempts = Number.isInteger(options.maxAttempts)
+    ? Math.max(1, options.maxAttempts)
+    : 2;
   let promptTokens = 0;
   let completionTokens = 0;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     let response;
@@ -419,7 +524,7 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     if (request.method !== "GET") return errorResponse(request, 405, "METHOD_NOT_ALLOWED", "请求方法不允许");
     return jsonResponse(request, { ok: true, service: "shi-ci-ai", model: "deepseek-v4-flash" });
   }
-  if (url.pathname !== "/api/judge-meaning" && url.pathname !== "/api/daily-review") {
+  if (!["/api/judge-meaning", "/api/daily-review", "/api/daily-group-plan"].includes(url.pathname)) {
     return errorResponse(request, 404, "NOT_FOUND", "接口不存在");
   }
   if (request.method !== "POST") {
@@ -431,7 +536,9 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     return errorResponse(request, 415, "UNSUPPORTED_MEDIA_TYPE", "只接受 application/json");
   }
   const declaredLength = Number(request.headers.get("Content-Length"));
-  const maximumBodyBytes = url.pathname === "/api/daily-review" ? MAX_DAILY_REVIEW_BODY_BYTES : MAX_BODY_BYTES;
+  const maximumBodyBytes = url.pathname === "/api/daily-review"
+    ? MAX_DAILY_REVIEW_BODY_BYTES
+    : url.pathname === "/api/daily-group-plan" ? MAX_DAILY_GROUP_BODY_BYTES : MAX_BODY_BYTES;
   if (Number.isFinite(declaredLength) && declaredLength > maximumBodyBytes) {
     return errorResponse(request, 413, "PAYLOAD_TOO_LARGE", "请求体过大");
   }
@@ -447,16 +554,32 @@ async function handleRequest(request, env, fetchImpl = fetch) {
   }
   const validation = url.pathname === "/api/daily-review"
     ? validateDailyReviewPayload(rawPayload)
-    : validatePayload(rawPayload);
+    : url.pathname === "/api/daily-group-plan"
+      ? validateDailyGroupPayload(rawPayload)
+      : validatePayload(rawPayload);
   if (validation.error) return errorResponse(request, 400, "INVALID_INPUT", validation.error);
 
   try {
-    const result = url.pathname === "/api/daily-review"
-      ? await callDeepSeek(validation.value, env, fetchImpl, {
+    let result;
+    if (url.pathname === "/api/daily-review") {
+      result = await callDeepSeek(validation.value, env, fetchImpl, {
         bodyBuilder: buildDailyReviewDeepSeekBody,
         resultNormalizer: normalizeDailyReviewModelResult,
-      })
-      : await callDeepSeek(validation.value, env, fetchImpl);
+      });
+    } else if (url.pathname === "/api/daily-group-plan") {
+      try {
+        result = await callDeepSeek(validation.value, env, fetchImpl, {
+          bodyBuilder: buildDailyGroupDeepSeekBody,
+          resultNormalizer: (content) => normalizeDailyGroupModelResult(content, validation.value.dailyTarget),
+          maxAttempts: 1,
+        });
+        result.source = "ai";
+      } catch {
+        result = { ...createFallbackDailyGroupPlan(validation.value.dailyTarget), source: "local", fallback: true, usage: { promptTokens: 0, completionTokens: 0 } };
+      }
+    } else {
+      result = await callDeepSeek(validation.value, env, fetchImpl);
+    }
     if (url.pathname === "/api/daily-review") {
       const allowedFocusWords = new Set(validation.value.weakWords.map((entry) => entry.word));
       result.focusWords = result.focusWords.filter((entry) => allowedFocusWords.has(entry.word));
@@ -477,11 +600,15 @@ async function handleRequest(request, env, fetchImpl = fetch) {
 }
 
 export {
+  buildDailyGroupDeepSeekBody,
   buildDailyReviewDeepSeekBody,
   buildDeepSeekBody,
+  createFallbackDailyGroupPlan,
   handleRequest,
+  normalizeDailyGroupModelResult,
   normalizeDailyReviewModelResult,
   normalizeModelResult,
+  validateDailyGroupPayload,
   validateDailyReviewPayload,
   validatePayload,
 };

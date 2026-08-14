@@ -1,13 +1,21 @@
 # 拾词 · 四六级背单词
 
-当前本地数据版本：`11`。第 15 阶段把 L1～L5 正式长期复习统一为主动释义，并加入持久化随机 Recovery、跨会话恢复和 Ctrl + Enter 快捷提交。
+当前本地数据版本：`12`。第 16 阶段新增 AI 每日新词分组、当前组引入边界、组完成页和可恢复的组间休息。
+
+## 第 16 阶段结果
+
+- 每天首次进入今日学习时，AI 只接收当日目标、复习/Recovery/待巩固数量及昨日少量聚合统计，返回 `groupSizes`、`breakMinutes` 和简短原因；失败时立即使用约 10 词一组的均匀本地方案。
+- 分组只切分已经持久化的 `scheduledNewWordIds`，不重排 smart/random/neutral 队列；当前组未全部进入 L1 前，下一组新词不会被引入，旧词到期复习、Recovery、choice retry 和释义巩固继续按原优先级穿插。
+- 一组只有全部新词完成“四选一门槛 → 随机窗口 → 主动释义 correct → L1”才完成。组完成后可休息、直接继续或仅结束本次 session；倒计时不冻结任何复习时间。
+- 目标增加时保留原组并只追加新增容量；已经开始后不安全的目标减少从明天生效。计划、当前组和 `breakStartedAt` 刷新或重开后保持。
+- v11 → v12 无损迁移只新增 `dailyGroupPlans`；备份导入支持 v1～v12。Worker 新增 `POST /api/daily-group-plan`，继续复用现有鉴权、CORS 和 Secrets。
 
 ## 第 15.1 阶段结果
 
 - 新词释义巩固、正式复习和 Recovery 共用一套提交后结果模式：隐藏大输入框和提交按钮，优先显示判定、用户回答、标准核心义与判断说明。
 - 结果渲染完成后通过元素位置和可见比例判断是否需要平滑定位；已经大部分可见时不滚动，同一题的同一次结果最多自动定位一次。
 - AI 判断中继续保留原输入内容和禁用后的答题表单，不提前进入结果模式；AI 失败后的人工兜底流程保持不变。
-- 数据仍为 v11，未修改学习算法、判题接口、Worker、词库或调度规则。
+- 当时数据仍为 v11；第 16 阶段按需求升级到 v12，Phase15.1 结果展示逻辑本身未改变。
 
 ## 第 15 阶段结果
 
@@ -117,7 +125,7 @@ python scripts/build-vocabulary.py --source-dir <json-sentence目录>
 ## 本地数据与备份
 
 - 存储键保持 `cetwords-user-data-v1`。
-- 数据版本为 `version: 11`，支持导入并迁移 `version: 1` 至 `version: 11`。
+- 数据版本为 `version: 12`，支持导入并迁移 `version: 1` 至 `version: 12`。
 - 迁移保留正确/错误/partial 次数、熟练度、首次学习日期、下次复习时间、收藏、错词、每日统计、新词队列、当日巩固状态、AI 设置、`vocabularyScope` 和 `studyMode`。
 - 完整词库正文不会写入 `localStorage` 或学习备份。
 - 个人代理 Token 使用独立本地键保存，不进入学习备份；DeepSeek API Key 只存在 Cloudflare Worker Secret 中。
@@ -139,7 +147,8 @@ js/smart-learning-order.js            真题分层混抽、同档随机与只读
 js/new-word-learning.js               四选一门槛与当日释义巩固状态机
 js/review-recovery.js                 正式复习 Recovery 随机窗口与会话状态机
 js/daily-review-service.js             本地复盘统计、薄弱词筛选与请求白名单
-js/storage.js                          本地数据 v11 迁移与持久化
+js/daily-group-service.js              每日分组校验、fallback、边界与 Worker 请求
+js/storage.js                          本地数据 v12 迁移与持久化
 worker/src/index.js                    DeepSeek 多义词判题与每日复盘代理
 ```
 

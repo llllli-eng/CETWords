@@ -42,6 +42,7 @@ function loadApp(initialStorage = {}) {
     "js/smart-learning-order.js",
     "js/review-recovery.js",
     "js/new-word-learning.js",
+    "js/daily-group-service.js",
     "js/storage.js",
     "js/daily-review-service.js",
   ].forEach((file) => vm.runInContext(fs.readFileSync(path.join(ROOT, file), "utf8"), context, { filename: file }));
@@ -347,7 +348,7 @@ if (!WORKER_ONLY) {
     assert.equal(after.inWrongBook, before.inWrongBook);
   });
 
-  await test("v9 remains lossless through v11 with empty dailyReviews and recovery maps", () => {
+  await test("v9 remains lossless through v12 with empty review, recovery and group maps", () => {
     const today = "2026-08-13";
     const v9 = {
       version: 9, currentBook: "cet6",
@@ -358,18 +359,19 @@ if (!WORKER_ONLY) {
       },
     };
     const migrated = loadApp({ "cetwords-user-data-v1": JSON.stringify(v9) }).app.storage.loadUserData();
-    assert.equal(migrated.version, 11);
+    assert.equal(migrated.version, 12);
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyReviews)), {});
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.reviewRecovery)), {});
+    assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyGroupPlans)), {});
     assert.equal(migrated.books.cet4.words.keep.masteryLevel, 4);
     assert.equal(migrated.books.cet4.words.keep.nextReviewTime, 1893456000000);
     assert.equal(migrated.books.cet4.daily[today].answerCount, 10);
     assert.equal(migrated.preferences.learningOrder, "random");
   });
 
-  await test("v1-v11 remain accepted backup versions", () => {
+  await test("v1-v12 remain accepted backup versions", () => {
     const source = fs.readFileSync(path.join(ROOT, "js/backup-service.js"), "utf8");
-    assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11\]/);
+    assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\]/);
   });
 
   await test("a representative maximum payload stays within the 800-2500 token target", () => {

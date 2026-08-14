@@ -20,6 +20,7 @@ const {
   aiJudge,
   smartLearningOrder,
   dailyReviewService,
+  dailyGroupService,
 } = window.CETWords;
 
 const appState = {
@@ -36,6 +37,7 @@ const appState = {
     error: null,
   },
   dailyReview: { generating: false, session: null },
+  dailyGroup: { generating: false, promise: null },
   books: {
     cet4: {
       id: "cet4",
@@ -75,6 +77,11 @@ const elements = {
   reviewTotal: document.querySelector("#review-total"),
   reviewProgressBar: document.querySelector("#review-progress-bar"),
   taskHint: document.querySelector(".task-hint"),
+  dailyGroupOverview: document.querySelector("#daily-group-overview"),
+  dailyGroupSummary: document.querySelector("#daily-group-summary"),
+  dailyGroupSource: document.querySelector("#daily-group-source"),
+  dailyGroupChips: document.querySelector("#daily-group-chips"),
+  dailyGroupRegenerate: document.querySelector("#daily-group-regenerate"),
   overallPercent: document.querySelector("#overall-percent"),
   overallScopeLabel: document.querySelector("#overall-scope-label"),
   overallProgressBar: document.querySelector("#overall-progress-bar"),
@@ -385,6 +392,133 @@ function updateTaskHint(todayNew, pendingCount, recoveryCount, book, reviewSumma
   }
 }
 
+function getYesterdayDateKey(now = Date.now()) {
+  const date = new Date(now);
+  return storage.getLocalDateKey(new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1).getTime());
+}
+
+function buildDailyGroupInput(book) {
+  const allWordIds = getAllBookWordIds(book);
+  const today = storage.getDailyStats(book.id);
+  const yesterday = storage.getDailyStats(book.id, getYesterdayDateKey());
+  const yesterdayTarget = storage.getDailyGroupPlan(book.id, getYesterdayDateKey())?.dailyTarget
+    || storage.getConfiguredDailyNewWordGoal(book.id);
+  const activeRecall = yesterday.learningMetrics?.reinforcement || {};
+  const activeRecallTotal = (activeRecall.correct || 0) + (activeRecall.partial || 0) + (activeRecall.wrong || 0);
+  return dailyGroupService.buildRequestPayload({
+    dailyTarget: storage.getDailyNewWordGoal(book.id),
+    todayDueReviewCount: storage.getDailyReviewSummary(book.id, allWordIds).dueCount,
+    todayRecoveryPendingCount: storage.getReviewRecoverySummary(book.id, allWordIds, {
+      sessionId: "daily-group",
+      sequence: today.normalSessionAnswerSequence,
+      now: Date.now(),
+    }).count,
+    todayPendingReinforcementCount: storage.getPendingReinforcementSummary(book.id, allWordIds).count,
+    todayChoiceRetryCount: storage.getPendingReinforcements(book.id, allWordIds)
+      .filter((entry) => newWordLearning.isChoiceRetry(entry.learningState)).length,
+    yesterdayStudied: yesterday.answerCount > 0,
+    yesterdayDailyTarget: yesterdayTarget,
+    yesterdayCompletedNewWords: yesterday.completedNewWords,
+    yesterdayTaskCompleted: yesterday.completedNewWords >= yesterdayTarget,
+    yesterdayTotalAnswers: yesterday.answerCount,
+    yesterdayActiveRecallPerformance: activeRecallTotal
+      ? Math.round(((activeRecall.correct || 0) / activeRecallTotal) * 100)
+      : 0,
+  });
+}
+
+function getDailyGroupContext(book) {
+  const plan = storage.getDailyGroupPlan(book.id);
+  if (!plan) return { plan: null, progress: null };
+  const daily = storage.getDailyStats(book.id);
+  return {
+    plan,
+    progress: dailyGroupService.getGroupProgress(
+      plan,
+      daily.scheduledNewWordIds,
+      daily.completedNewWordIds,
+      daily.newWordIds,
+    ),
+  };
+}
+
+function renderDailyGroupOverview(book) {
+  const { plan, progress } = getDailyGroupContext(book);
+  if (!plan || !progress) {
+    elements.dailyGroupSummary.textContent = "进入学习后生成今日分组";
+    elements.dailyGroupSource.textContent = "约 10 个新词一组，AI 不可用也能开始";
+    elements.dailyGroupChips.hidden = true;
+    elements.dailyGroupRegenerate.hidden = true;
+    return;
+  }
+  const isUniform = plan.groupSizes.every((size) => size === plan.groupSizes[0]);
+  elements.dailyGroupSummary.textContent = isUniform
+    ? `今日分为 ${plan.groupSizes.length} 组 × ${plan.groupSizes[0]} 词`
+    : `今日分组：${plan.groupSizes.join(" + ")} 词`;
+  elements.dailyGroupSource.textContent = `${plan.source === "ai" ? "AI 建议" : "本地方案"} · 休息 ${plan.breakMinutes} 分钟 · ${plan.reason}`;
+  elements.dailyGroupChips.replaceChildren(...progress.groups.map((group) => {
+    const chip = createElement("span", group.complete ? "is-complete" : group.index === progress.activeGroupIndex ? "is-active" : "");
+    chip.textContent = `${group.index + 1}组 ${group.completedCount}/${group.size}${group.complete ? " ✓" : ""}`;
+    return chip;
+  }));
+  elements.dailyGroupChips.hidden = false;
+  elements.dailyGroupRegenerate.hidden = Boolean(plan.startedAt)
+    || progress.groups.some((group) => group.introducedCount > 0);
+  elements.dailyGroupRegenerate.disabled = appState.dailyGroup.generating;
+}
+
+async function ensureDailyGroupPlan(book, { regenerate = false } = {}) {
+  const dateKey = storage.getLocalDateKey();
+  const daily = storage.getDailyStats(book.id, dateKey);
+  const existing = storage.getDailyGroupPlan(book.id, dateKey);
+  if (existing && !regenerate) return existing;
+  if (regenerate && (daily.newWordIds.length > 0 || existing?.startedAt)) return existing;
+  if (appState.dailyGroup.promise) return appState.dailyGroup.promise;
+  if (regenerate) storage.removeDailyGroupPlan(book.id, dateKey);
+  appState.dailyGroup.promise = (async () => {
+    const payload = buildDailyGroupInput(book);
+    const settings = storage.getAiJudgeSettings();
+    let rawPlan = dailyGroupService.createFallbackPlan(payload.dailyTarget);
+    let source = "local";
+    let usage = { promptTokens: 0, completionTokens: 0 };
+    appState.dailyGroup.generating = true;
+    renderDailyGroupOverview(book);
+    try {
+      if (!settings.enabled) throw new Error("AI_NOT_CONFIGURED");
+      const result = await dailyGroupService.requestDailyGroupPlan({
+        payload,
+        proxyUrl: settings.proxyUrl,
+        token: storage.getAiProxyToken(),
+      });
+      rawPlan = result.plan;
+      source = result.source;
+      usage = result.usage;
+    } catch {
+      source = "local";
+    } finally {
+      appState.dailyGroup.generating = false;
+    }
+    const saved = storage.saveDailyGroupPlan(book.id, dateKey, {
+      dailyTarget: payload.dailyTarget,
+      ...rawPlan,
+      source,
+      activeGroupIndex: 0,
+      completedGroupCount: 0,
+      breakStartedAt: null,
+      startedAt: null,
+      usage,
+    });
+    if (source === "local") showToast("AI 分组暂不可用，已使用本地分组方案");
+    renderDailyGroupOverview(book);
+    return saved;
+  })();
+  try {
+    return await appState.dailyGroup.promise;
+  } finally {
+    appState.dailyGroup.promise = null;
+  }
+}
+
 function updateDashboard(bookId = appState.activeBookId) {
   const book = appState.books[bookId];
   if (!book) return;
@@ -431,6 +565,7 @@ function updateDashboard(bookId = appState.activeBookId) {
   elements.reviewProgressBar.style.width = `${getPercent(todayReview, reviewSummary.total)}%`;
   elements.dueReviewCount.textContent = formatNumber(reviewSummary.dueCount);
   updateTaskHint(todayNew, pendingSummary.count, recoverySummary.count, book, reviewSummary);
+  renderDailyGroupOverview(book);
 
   elements.overallPercent.textContent = formatProgressPercent(overallPercent);
   elements.overallScopeLabel.textContent = `${getScopeLabel(book)} · ${formatNumber(summary.total)} 词`;
@@ -573,6 +708,15 @@ function getModeStudyPlan(book, sessionMode) {
     introducedNewWords: getScopedIntroducedNewWordCount(book, rawDaily),
     completedNewWords: getScopedCompletedNewWordCount(book, rawDaily),
   };
+  const groupPlan = sessionMode === "normal" ? storage.getDailyGroupPlan(book.id) : null;
+  const groupProgress = groupPlan
+    ? dailyGroupService.getGroupProgress(
+      groupPlan,
+      scheduledNewWordIds,
+      daily.completedNewWordIds,
+      daily.newWordIds,
+    )
+    : null;
   const isExtra = daily.completedNewWords >= book.dailyGoal
     && dueItems.length === 0
     && pendingItems.length === 0;
@@ -591,7 +735,11 @@ function getModeStudyPlan(book, sessionMode) {
       .map((wordId) => wordMap.get(wordId))
       .filter((word) => word && !storage.getWordProgress(book.id, word.word).learned);
   }
+  const allowedIntroIds = groupProgress && !isExtra
+    ? new Set(groupProgress.allowedIntroIds)
+    : null;
   const newItems = unlearnedScheduledWords
+    .filter((word) => !allowedIntroIds || allowedIntroIds.has(word.word))
     .slice(0, pendingItems.length >= newWordLearning.MAX_PENDING_REINFORCEMENT ? 0 : newLimit)
     .map((word) => ({
       word,
@@ -615,17 +763,40 @@ function getModeStudyPlan(book, sessionMode) {
     reviewSummary,
     daily,
     studySessionId,
+    groupPlan,
+    groupProgress,
   };
 }
 
-function showStudy(sessionMode = "normal", { forceNew = false } = {}) {
+async function showStudy(sessionMode = "normal", { forceNew = false, skipGroupPlan = false } = {}) {
   const book = getActiveBook();
   if (!book.words.length) {
     showToast("词库仍在准备中，请稍后再试");
     return;
   }
 
+  const currentDaily = storage.getDailyStats(book.id);
+  if (sessionMode === "normal" && !skipGroupPlan && currentDaily.completedNewWords < book.dailyGoal) {
+    await ensureDailyGroupPlan(book);
+  }
   const plan = getModeStudyPlan(book, sessionMode);
+  if (sessionMode === "normal" && plan.groupProgress?.awaitingNextGroup && !plan.isExtra) {
+    const groupView = {
+      id: book.id,
+      shortName: book.shortName,
+      dailyGoal: book.dailyGoal,
+      completedToday: plan.daily.completedNewWords,
+      sessionMode,
+      groupPlan: plan.groupPlan,
+      groupProgress: plan.groupProgress,
+      daily: plan.daily,
+      returnLabel: "返回首页",
+    };
+    if (plan.groupPlan.breakStartedAt) studyController.showGroupBreak(groupView);
+    else studyController.showGroupComplete(groupView);
+    setVisibleView("study");
+    return;
+  }
   if (!plan.studyItems.length) {
     if (sessionMode === "review") {
       showToast("今天暂时没有需要复习的单词 🎉");
@@ -659,6 +830,8 @@ function showStudy(sessionMode = "normal", { forceNew = false } = {}) {
       sessionMode,
       isExtra: plan.isExtra,
       studyItems: plan.studyItems,
+      groupPlan: plan.groupPlan,
+      groupProgress: plan.groupProgress,
       allWords: book.words,
       returnLabel:
         sessionMode === "wrong" ? "返回错词本" : sessionMode === "favorite" ? "返回收藏" : "返回首页",
@@ -670,6 +843,24 @@ function showStudy(sessionMode = "normal", { forceNew = false } = {}) {
 function handleStudyExit(mode) {
   if (mode === "wrong" || mode === "favorite") showCollection(mode);
   else showHome();
+}
+
+function handleStartGroupBreak(bookId) {
+  return storage.startDailyGroupBreak(bookId);
+}
+
+function handleContinueGroup(bookId) {
+  storage.advanceDailyGroup(bookId);
+  studyController.clearSessions(bookId);
+  showStudy("normal", { forceNew: true, skipGroupPlan: true });
+}
+
+function handleDailyGroupStarted(bookId) {
+  return storage.markDailyGroupStarted(bookId);
+}
+
+function handleStopDailyGroups() {
+  showHome();
 }
 
 function handleAnswer({
@@ -702,6 +893,11 @@ function handleAnswer({
       book.id,
       getAllBookWordIds(book),
     ).count;
+    if (sessionMode === "normal") {
+      const groupState = storage.updateDailyGroupProgress(bookId);
+      result.groupPlan = groupState?.plan || null;
+      result.groupProgress = groupState?.progress || null;
+    }
   }
   return result;
 }
@@ -880,6 +1076,10 @@ const studyController = new StudyController({
   onAiJudgeMeaning: handleAiJudgeMeaning,
   onAiFallback: handleAiFallback,
   onComplete: handleStudyComplete,
+  onStartGroupBreak: handleStartGroupBreak,
+  onContinueGroup: handleContinueGroup,
+  onStopDailyGroups: handleStopDailyGroups,
+  onDailyGroupStarted: handleDailyGroupStarted,
 });
 
 elements.dailyReviewGenerate.addEventListener("click", generateDailyReview);
@@ -1465,12 +1665,15 @@ function confirmResetAll() {
 
 function renderGoalPicker() {
   const book = getActiveBook();
+  const configuredGoal = storage.getConfiguredDailyNewWordGoal(book.id);
   elements.dailyGoalOptions.forEach((option) => {
-    const isSelected = Number(option.dataset.dailyGoal) === book.dailyGoal;
+    const isSelected = Number(option.dataset.dailyGoal) === configuredGoal;
     option.classList.toggle("is-selected", isSelected);
     option.setAttribute("aria-pressed", String(isSelected));
   });
-  elements.dailyGoalDescription.textContent = `${book.shortName} 当前每天学习 ${book.dailyGoal} 个新词。`;
+  elements.dailyGoalDescription.textContent = configuredGoal === book.dailyGoal
+    ? `${book.shortName} 当前每天学习 ${book.dailyGoal} 个新词。`
+    : `${book.shortName} 今天继续原计划 ${book.dailyGoal} 个；新目标 ${configuredGoal} 个将从明天生效。`;
 }
 
 function renderVocabularyScopePicker() {
@@ -1656,6 +1859,10 @@ elements.themeToggle.addEventListener("click", () => {
 });
 
 elements.continueButton.addEventListener("click", () => showStudy("normal", { forceNew: true }));
+elements.dailyGroupRegenerate.addEventListener("click", async () => {
+  const book = getActiveBook();
+  await ensureDailyGroupPlan(book, { regenerate: true });
+});
 elements.homeStudyModeButton.addEventListener("click", () => {
   const nextMode = getStudyMode() === STUDY_MODES.EN_TO_ZH
     ? STUDY_MODES.ZH_TO_EN
@@ -1740,10 +1947,18 @@ elements.aiDisableButton.addEventListener("click", disableAiReinforcement);
 elements.dailyGoalOptions.forEach((option) => {
   option.addEventListener("click", () => {
     const book = getActiveBook();
-    book.dailyGoal = storage.setDailyNewWordGoal(book.id, Number(option.dataset.dailyGoal));
+    const requestedGoal = storage.setDailyNewWordGoal(book.id, Number(option.dataset.dailyGoal));
+    const adjustment = storage.adjustDailyGroupPlanTarget(book.id, requestedGoal);
+    book.dailyGoal = storage.getDailyNewWordGoal(book.id);
     renderGoalPicker();
     updateDashboard();
-    showToast(`${book.shortName} 每日新词目标已改为 ${book.dailyGoal} 个`);
+    if (adjustment.action === "deferred") {
+      showToast("今天已经开始了超过新目标数量的新词，新设置将从明天开始生效");
+    } else if (adjustment.action === "extended") {
+      showToast(`${book.shortName} 今日目标已增加，新增部分已追加到后续分组`);
+    } else {
+      showToast(`${book.shortName} 每日新词目标已改为 ${requestedGoal} 个`);
+    }
   });
 });
 elements.vocabularyScopeOptions.forEach((option) => {
