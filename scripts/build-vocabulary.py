@@ -22,9 +22,10 @@ from typing import Any
 
 
 REPOSITORY_URL = "https://github.com/KyleBing/english-vocabulary"
+REPOSITORY_SOURCE_COMMIT = "8814e02b40f69a2a6e016dbde087010304fcedfc"
 RAW_BASE_URL = (
     "https://raw.githubusercontent.com/KyleBing/english-vocabulary/"
-    "master/json_original/json-sentence"
+    f"{REPOSITORY_SOURCE_COMMIT}/json_original/json-sentence"
 )
 SOURCE_FILES = {
     "cet4": ["CET4_1.json", "CET4_2.json", "CET4_3.json"],
@@ -49,6 +50,9 @@ CORE_MEANING_LIMIT = 56
 MAX_MEANINGS = 6
 MAX_EXAMPLES = 8
 MAX_PHRASES = 20
+CORE_MEANING_OVERRIDE_SCHEMA_VERSION = 1
+CORE_PROPER_NAME_RE = re.compile(r"人名|地名|姓氏|专名")
+CORE_SOURCE_TAG_RE = re.compile(r"<[^>]+>|\[[^\]]+\]")
 
 # A small, auditable exception layer is used only after source aggregation.
 # Entries are backed by the documented source records; the explicit `paper`
@@ -414,6 +418,173 @@ def meanings_by_pos(meanings: list[dict[str, str]]) -> dict[str, list[str]]:
     return grouped
 
 
+def clean_override_text(value: Any) -> str:
+    """Normalize override whitespace without changing deliberate Chinese punctuation."""
+    if value is None:
+        return ""
+    return re.sub(r"\s+", " ", unicodedata.normalize("NFC", str(value))).strip()
+
+
+def load_core_meaning_overrides(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise FileNotFoundError(f"Core meaning override file not found: {path}")
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if raw.get("schemaVersion") != CORE_MEANING_OVERRIDE_SCHEMA_VERSION or not isinstance(raw.get("overrides"), list):
+        raise ValueError("Invalid core meaning override schema")
+
+    by_id: dict[str, dict[str, Any]] = {}
+    by_word: dict[str, dict[str, Any]] = {}
+    declaration_keys: list[str] = []
+    for index, entry in enumerate(raw["overrides"]):
+        if not isinstance(entry, dict):
+            raise ValueError(f"Override {index + 1} must be an object")
+        word_id = clean_text(entry.get("id"))
+        word = normalized_word(entry.get("word"))
+        core_meaning = clean_override_text(entry.get("coreMeaning"))
+        reason = clean_text(entry.get("reason"))
+        risk_type = clean_text(entry.get("riskType"))
+        explanation = clean_override_text(entry.get("explanation"))
+        if not core_meaning or not reason or risk_type not in {"P0", "P1", "P2", "P3", "P4"} or not explanation:
+            raise ValueError(f"Override {index + 1} is missing coreMeaning/reason/riskType/explanation")
+        if bool(word_id) == bool(word):
+            raise ValueError(f"Override {index + 1} must provide exactly one of id or word")
+
+        normalized_meanings: list[dict[str, str]] | None = None
+        if "meanings" in entry:
+            if not isinstance(entry["meanings"], list) or not entry["meanings"]:
+                raise ValueError(f"Override {index + 1} meanings must be a non-empty list")
+            normalized_meanings = []
+            for meaning_index, meaning in enumerate(entry["meanings"]):
+                if not isinstance(meaning, dict):
+                    raise ValueError(f"Override {index + 1} meaning {meaning_index + 1} must be an object")
+                pos = clean_text(meaning.get("pos")) or "其他"
+                text = clean_override_text(meaning.get("meaning"))
+                if not text:
+                    raise ValueError(f"Override {index + 1} meaning {meaning_index + 1} is empty")
+                normalized_meanings.append({"pos": pos, "meaning": text, "partOfSpeech": pos, "translation": text})
+
+        normalized = {
+            "id": word_id or None,
+            "word": word or None,
+            "coreMeaning": core_meaning,
+            "corePos": clean_text(entry.get("corePos")) or "其他",
+            "meanings": normalized_meanings,
+            "reason": reason,
+            "riskType": risk_type,
+            "explanation": explanation,
+        }
+        key = f"id:{word_id}" if word_id else f"word:{word}"
+        target = by_id if word_id else by_word
+        target_key = word_id if word_id else word
+        if target_key in target:
+            raise ValueError(f"Duplicate core meaning override: {key}")
+        target[target_key] = normalized
+        declaration_keys.append(key)
+
+    return {
+        "path": str(path),
+        "byId": by_id,
+        "byWord": by_word,
+        "declarationKeys": declaration_keys,
+    }
+
+
+def apply_core_meaning_override(item: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    old_core_meaning = item["coreMeaning"]
+    new_core_meaning = override["coreMeaning"]
+    meanings = override["meanings"]
+    if meanings is not None:
+        item["meanings"] = [dict(meaning) for meaning in meanings]
+    else:
+        core_parts = [sense_key(part) for part in re.split(r"[；;]+", new_core_meaning) if sense_key(part)]
+        detail_text = sense_key("；".join(meaning["meaning"] for meaning in item["meanings"]))
+        if not all(part in detail_text for part in core_parts):
+            pos = override["corePos"]
+            core_row = {
+                "pos": pos,
+                "meaning": new_core_meaning,
+                "partOfSpeech": pos,
+                "translation": new_core_meaning,
+            }
+            deduped = [core_row]
+            seen = {(pos, sense_key(new_core_meaning))}
+            for meaning in item["meanings"]:
+                key = (meaning["pos"], sense_key(meaning["meaning"]))
+                if key in seen:
+                    continue
+                seen.add(key)
+                deduped.append(meaning)
+                if len(deduped) >= MAX_MEANINGS:
+                    break
+            item["meanings"] = deduped
+
+    grouped = meanings_by_pos(item["meanings"])
+    item["coreMeaning"] = new_core_meaning
+    item["shortMeaning"] = new_core_meaning
+    item["meaningsByPos"] = grouped
+    item["meaning"] = full_meaning_text(grouped)
+    return {
+        "id": item["id"],
+        "word": item["word"],
+        "book": item["book"],
+        "oldCoreMeaning": old_core_meaning,
+        "newCoreMeaning": new_core_meaning,
+        "reason": override["reason"],
+        "riskType": override["riskType"],
+        "explanation": override["explanation"],
+        "declarationKey": f"id:{override['id']}" if override["id"] else f"word:{override['word']}",
+    }
+
+
+def apply_systematic_core_noise_filter(item: dict[str, Any]) -> dict[str, Any] | None:
+    """Remove source labels/proper names from core display while retaining detail."""
+    old_core_meaning = item["coreMeaning"]
+    parts = [part.strip() for part in re.split(r"[；;]+", old_core_meaning) if part.strip()]
+    cleaned_parts: list[str] = []
+    removed_parts: list[str] = []
+    name_context = False
+    tag_removed = False
+    for part in parts:
+        if CORE_PROPER_NAME_RE.search(part):
+            removed_parts.append(part)
+            name_context = True
+            continue
+        if name_context and part.startswith("("):
+            removed_parts.append(part)
+            continue
+        name_context = False
+        cleaned = CORE_SOURCE_TAG_RE.sub("", part).strip(" ,，")
+        if cleaned != part:
+            tag_removed = True
+        if not cleaned:
+            removed_parts.append(part)
+            continue
+        key = sense_key(cleaned)
+        if key and all(sense_key(existing) != key for existing in cleaned_parts):
+            cleaned_parts.append(cleaned)
+    if not cleaned_parts:
+        return None
+    new_core_meaning = "；".join(cleaned_parts[:4])
+    if new_core_meaning == old_core_meaning:
+        return None
+    item["coreMeaning"] = new_core_meaning
+    item["shortMeaning"] = new_core_meaning
+    risk_type = "P1" if removed_parts else "P4"
+    return {
+        "id": item["id"],
+        "word": item["word"],
+        "book": item["book"],
+        "oldCoreMeaning": old_core_meaning,
+        "newCoreMeaning": new_core_meaning,
+        "reason": "systematic_core_noise_filter",
+        "riskType": risk_type,
+        "explanation": "从核心展示中移除人名/地名或来源专业标签；原始义项仍保留在详细释义中。",
+        "removedParts": removed_parts,
+        "sourceTagsRemoved": tag_removed,
+        "declarationKey": None,
+    }
+
+
 def full_meaning_text(grouped: dict[str, list[str]]) -> str:
     return " ".join(f"{pos} {'；'.join(values)}".strip() for pos, values in grouped.items())
 
@@ -524,6 +695,14 @@ def validate_output(words: list[dict[str, Any]], book_id: str) -> dict[str, Any]
             issues.append(f"item {index + 1}: empty meanings")
         if not isinstance(item.get("meaningsByPos"), dict) or not item["meaningsByPos"]:
             issues.append(f"item {index + 1}: empty meaningsByPos")
+        if item.get("shortMeaning") != item.get("coreMeaning"):
+            issues.append(f"item {index + 1}: shortMeaning differs from coreMeaning")
+        if len(item.get("coreMeaning", "")) > CORE_MEANING_LIMIT:
+            issues.append(f"item {index + 1}: coreMeaning exceeds {CORE_MEANING_LIMIT} characters")
+        detail_key = sense_key(CORE_SOURCE_TAG_RE.sub("", item.get("meaning", "")))
+        core_parts = [sense_key(part) for part in re.split(r"[；;]+", item.get("coreMeaning", "")) if sense_key(part)]
+        if any(part not in detail_key for part in core_parts):
+            issues.append(f"item {index + 1}: coreMeaning not covered by detailed meanings")
         if item.get("book") != book_id or not isinstance(item.get("isCore"), bool):
             issues.append(f"item {index + 1}: invalid membership")
         word_key = normalized_word(item.get("word"))
@@ -540,15 +719,30 @@ def validate_output(words: list[dict[str, Any]], book_id: str) -> dict[str, Any]
     return {"valid": not issues, "issues": issues[:100], "checkedEntries": len(words), "book": book_id}
 
 
-def build_book(book_id: str, catalog: dict[str, list[dict[str, Any]]], source_dir: Path, source_counts: dict[str, int]) -> tuple[list[dict[str, Any]], dict[str, Any], list[dict[str, Any]]]:
+def build_book(
+    book_id: str,
+    catalog: dict[str, list[dict[str, Any]]],
+    source_dir: Path,
+    source_counts: dict[str, int],
+    core_meaning_overrides: dict[str, Any],
+) -> tuple[list[dict[str, Any]], dict[str, Any], list[dict[str, Any]]]:
     memberships, membership_stats = build_membership(book_id, catalog, source_dir)
     words: list[dict[str, Any]] = []
     warning_records: list[dict[str, Any]] = []
     meaning_counts: list[int] = []
     cross_source_merged = 0
+    override_applications: list[dict[str, Any]] = []
+    automatic_core_repairs: list[dict[str, Any]] = []
     for membership in memberships:
         records = catalog[membership["key"]]
         item, warnings, source_sense_count = build_word(book_id, membership, records)
+        override = core_meaning_overrides["byId"].get(item["id"]) or core_meaning_overrides["byWord"].get(normalized_word(item["word"]))
+        if override:
+            override_applications.append(apply_core_meaning_override(item, override))
+        else:
+            automatic_repair = apply_systematic_core_noise_filter(item)
+            if automatic_repair:
+                automatic_core_repairs.append(automatic_repair)
         words.append(item)
         meaning_counts.append(len(item["meanings"]))
         if len(item["meaningSourceFiles"]) > 1:
@@ -598,6 +792,8 @@ def build_book(book_id: str, catalog: dict[str, list[dict[str, Any]]], source_di
         "missingExample": sum(not item["example"] for item in words),
         "missingExampleTranslation": sum(not item["translation"] for item in words),
         "longestShortMeaning": max((len(item["shortMeaning"]) for item in words), default=0),
+        "coreMeaningOverridesApplied": override_applications,
+        "automaticCoreNoiseRepairsApplied": automatic_core_repairs,
         "validation": validation,
     }
     return words, report, warning_records
@@ -661,14 +857,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source-dir", type=Path, default=script_dir / "source-data" / "json-sentence")
     parser.add_argument("--output-dir", type=Path, default=script_dir.parent / "data")
     parser.add_argument("--quality-doc", type=Path, default=script_dir.parent / "docs" / "VOCABULARY_QUALITY_REPORT.md")
+    parser.add_argument("--core-meaning-overrides", type=Path, default=script_dir.parent / "data" / "core-meaning-overrides.json")
     parser.add_argument("--download", action="store_true")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    project_root = Path(__file__).resolve().parent.parent
     source_dir = args.source_dir.resolve()
     output_dir = args.output_dir.resolve()
+    override_path = args.core_meaning_overrides.resolve()
+    core_meaning_overrides = load_core_meaning_overrides(override_path)
+    try:
+        override_report_path = override_path.relative_to(project_root).as_posix()
+    except ValueError:
+        override_report_path = str(override_path)
     if args.download:
         download_sources(source_dir)
     missing = [name for name in MEANING_SOURCE_FILES if not (source_dir / name).exists()]
@@ -680,7 +884,12 @@ def main() -> int:
     catalog, source_counts = load_source_catalog(source_dir)
     report: dict[str, Any] = {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
-        "source": {"repository": REPOSITORY_URL, "branch": "master", "directory": "json_original/json-sentence", "files": MEANING_SOURCE_FILES},
+        "source": {
+            "repository": REPOSITORY_URL,
+            "commit": REPOSITORY_SOURCE_COMMIT,
+            "directory": "json_original/json-sentence",
+            "files": MEANING_SOURCE_FILES,
+        },
         "formatVersion": 2,
         "coreMeaningLimit": CORE_MEANING_LIMIT,
         "maxMeanings": MAX_MEANINGS,
@@ -690,7 +899,7 @@ def main() -> int:
     quality_report: dict[str, Any] = {"generatedAt": report["generatedAt"], "formatVersion": 1, "books": {}}
     generated_books: dict[str, list[dict[str, Any]]] = {}
     for book_id in ("cet4", "cet6"):
-        words, book_report, warnings = build_book(book_id, catalog, source_dir, source_counts)
+        words, book_report, warnings = build_book(book_id, catalog, source_dir, source_counts, core_meaning_overrides)
         if not book_report["validation"]["valid"]:
             raise RuntimeError(f"{book_id.upper()} validation failed: {book_report['validation']['issues']}")
         generated_books[book_id] = words
@@ -713,6 +922,31 @@ def main() -> int:
                 report["regressionSamples"].append(sample)
                 print(f"  {book_id.upper()} {word}: core={item['coreMeaning']} | meanings={len(item['meanings'])} | source_records={item['sourceRecordsCount']}")
 
+    applied = [
+        record
+        for book_id in ("cet4", "cet6")
+        for record in report["books"][book_id]["coreMeaningOverridesApplied"]
+    ]
+    used_declarations = {record["declarationKey"] for record in applied}
+    unused_declarations = sorted(set(core_meaning_overrides["declarationKeys"]) - used_declarations)
+    if unused_declarations:
+        raise RuntimeError(f"Unused core meaning overrides: {unused_declarations}")
+    report["coreMeaningOverrides"] = {
+        "schemaVersion": CORE_MEANING_OVERRIDE_SCHEMA_VERSION,
+        "file": override_report_path,
+        "declarations": len(core_meaning_overrides["declarationKeys"]),
+        "applications": len(applied),
+        "unusedDeclarations": unused_declarations,
+    }
+    automatic_repairs = [
+        record
+        for book_id in ("cet4", "cet6")
+        for record in report["books"][book_id]["automaticCoreNoiseRepairsApplied"]
+    ]
+    report["automaticCoreNoiseRepairs"] = {
+        "applications": len(automatic_repairs),
+        "byBook": {book_id: len(report["books"][book_id]["automaticCoreNoiseRepairsApplied"]) for book_id in ("cet4", "cet6")},
+    }
     write_json(output_dir / "vocabulary-report.json", report)
     write_json(output_dir / "vocabulary-quality-report.json", quality_report)
     write_quality_markdown(args.quality_doc.resolve(), report)

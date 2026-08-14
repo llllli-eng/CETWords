@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-12T03:18:15.358663+00:00",
+  "generatedAt": "2026-08-14T03:50:53.426997+00:00",
   "formatVersion": 1,
   "books": {
     "cet4": {
@@ -945,8 +945,8 @@
         {
           "word": "afford",
           "book": "cet4",
-          "coreMeaning": "提供；担负得起……………………；(Afford)人名",
-          "fullMeaning": "v. 提供；担负得起………… n. (Afford)人名",
+          "coreMeaning": "买得起；承担得起；提供",
+          "fullMeaning": "v. 买得起；承担得起；提供；提供；担负得起………… n. (Afford)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -3129,7 +3129,7 @@
         {
           "word": "bless",
           "book": "cet4",
-          "coreMeaning": "祝福；(Bless)人名；(英、意、德、匈)布莱斯",
+          "coreMeaning": "祝福",
           "fullMeaning": "v. 祝福 n. (Bless)人名；(英、意、德、匈)布莱斯",
           "allSourceMeanings": [
             {
@@ -3699,7 +3699,7 @@
         {
           "word": "careless",
           "book": "cet4",
-          "coreMeaning": "粗心的；(Careless)人名；(英)凯尔利斯",
+          "coreMeaning": "粗心的",
           "fullMeaning": "adj. 粗心的 n. (Careless)人名；(英)凯尔利斯",
           "allSourceMeanings": [
             {
@@ -6482,7 +6482,7 @@
         {
           "word": "demand",
           "book": "cet4",
-          "coreMeaning": "要求；需要；[经] 需求",
+          "coreMeaning": "要求；需要；需求",
           "fullMeaning": "v. 要求；需要 n. [经] 需求",
           "allSourceMeanings": [
             {
@@ -7296,7 +7296,7 @@
         {
           "word": "divide",
           "book": "cet4",
-          "coreMeaning": "分开；除；[地理] 分水岭,分水线",
+          "coreMeaning": "分开；除；分水岭,分水线",
           "fullMeaning": "v. 分开；除 n. [地理] 分水岭,分水线",
           "allSourceMeanings": [
             {
@@ -10305,7 +10305,7 @@
         {
           "word": "illegal",
           "book": "cet4",
-          "coreMeaning": "不合法的,非法的；非法移民,非法劳工；[法] 非法的",
+          "coreMeaning": "不合法的,非法的；非法移民,非法劳工；非法的",
           "fullMeaning": "adj. 不合法的,非法的；[法] 非法的 n. 非法移民,非法劳工",
           "allSourceMeanings": [
             {
@@ -11803,7 +11803,7 @@
         {
           "word": "legal",
           "book": "cet4",
-          "coreMeaning": "法律的；合法的；(Legal)人名",
+          "coreMeaning": "法律的；合法的",
           "fullMeaning": "adj. 法律的；合法的 n. (Legal)人名",
           "allSourceMeanings": [
             {
@@ -16792,7 +16792,7 @@
         {
           "word": "resist",
           "book": "cet4",
-          "coreMeaning": "抵抗,抗拒；[助剂] 抗蚀剂；防染剂",
+          "coreMeaning": "抵抗,抗拒；抗蚀剂；防染剂",
           "fullMeaning": "v. 抵抗,抗拒 n. [助剂] 抗蚀剂；防染剂",
           "allSourceMeanings": [
             {
@@ -19071,8 +19071,8 @@
         {
           "word": "suffer",
           "book": "cet4",
-          "coreMeaning": "(Suffer)人名；(意)苏费尔；遭受",
-          "fullMeaning": "n. (Suffer)人名；(意)苏费尔 v. 遭受",
+          "coreMeaning": "遭受；忍受；受苦",
+          "fullMeaning": "v. 遭受；忍受；受苦；遭受 n. (Suffer)人名；(意)苏费尔",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -20077,7 +20077,7 @@
         {
           "word": "tiny",
           "book": "cet4",
-          "coreMeaning": "微小的；(Tiny)人名",
+          "coreMeaning": "微小的",
           "fullMeaning": "adj. 微小的 n. (Tiny)人名",
           "allSourceMeanings": [
             {
@@ -20758,8 +20758,8 @@
         {
           "word": "vital",
           "book": "cet4",
-          "coreMeaning": "重要的；生命的, 有生命力的；(Vital)人名",
-          "fullMeaning": "adj. 重要的；生命的, 有生命力的 n. (Vital)人名",
+          "coreMeaning": "至关重要的；有生命的",
+          "fullMeaning": "adj. 至关重要的；有生命的；重要的；生命的, 有生命力的 n. (Vital)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -20926,7 +20926,7 @@
         {
           "word": "wise",
           "book": "cet4",
-          "coreMeaning": "(Wise)人名；(英)怀斯；明智的",
+          "coreMeaning": "明智的",
           "fullMeaning": "n. (Wise)人名；(英)怀斯 adj. 明智的",
           "allSourceMeanings": [
             {
@@ -23262,7 +23262,7 @@
         {
           "word": "rude",
           "book": "cet4",
-          "coreMeaning": "粗鲁的；(Rude)人名；(英、西、瑞典)鲁德",
+          "coreMeaning": "粗鲁的",
           "fullMeaning": "adj. 粗鲁的 n. (Rude)人名；(英、西、瑞典)鲁德",
           "allSourceMeanings": [
             {
@@ -27215,7 +27215,7 @@
         {
           "word": "govern",
           "book": "cet4",
-          "coreMeaning": "管理；支配；(Govern)人名",
+          "coreMeaning": "管理；支配",
           "fullMeaning": "v. 管理；支配 n. (Govern)人名",
           "allSourceMeanings": [
             {
@@ -27677,7 +27677,7 @@
         {
           "word": "fade",
           "book": "cet4",
-          "coreMeaning": "褪色；逐渐消失；[电影][电视] 淡出",
+          "coreMeaning": "褪色；逐渐消失；淡出",
           "fullMeaning": "v. 褪色；逐渐消失 n. [电影][电视] 淡出",
           "allSourceMeanings": [
             {
@@ -29479,7 +29479,7 @@
         {
           "word": "cater",
           "book": "cet4",
-          "coreMeaning": "迎合；(Cater)人名；(英)凯特",
+          "coreMeaning": "迎合",
           "fullMeaning": "v. 迎合 n. (Cater)人名；(英)凯特",
           "allSourceMeanings": [
             {
@@ -29547,8 +29547,8 @@
         {
           "word": "a",
           "book": "cet4",
-          "coreMeaning": "字母A；第一流的",
-          "fullMeaning": "n. 字母A；第一流的",
+          "coreMeaning": "一个；一（用于单数可数名词前）",
+          "fullMeaning": "art. 一个；一（用于单数可数名词前） n. 字母A；第一流的",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -29653,8 +29653,8 @@
         {
           "word": "able",
           "book": "cet4",
-          "coreMeaning": "有能力的；(Able)人名；(伊朗)阿布勒",
-          "fullMeaning": "adj. 有能力的 n. (Able)人名；(伊朗)阿布勒",
+          "coreMeaning": "有能力的；能干的",
+          "fullMeaning": "adj. 有能力的；能干的；有能力的 n. (Able)人名；(伊朗)阿布勒",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -29711,7 +29711,7 @@
         {
           "word": "aboard",
           "book": "cet4",
-          "coreMeaning": "在飞机上；[船] 在船上；在……………………上",
+          "coreMeaning": "在飞机上；在船上；在……………………上",
           "fullMeaning": "adv. 在飞机上；[船] 在船上 prep. 在…………上",
           "allSourceMeanings": [
             {
@@ -31373,8 +31373,8 @@
         {
           "word": "ago",
           "book": "cet4",
-          "coreMeaning": "(Ago)人名；(英、西、意、塞、瑞典)阿戈",
-          "fullMeaning": "n. (Ago)人名；(英、西、意、塞、瑞典)阿戈",
+          "coreMeaning": "以前",
+          "fullMeaning": "adv. 以前 n. (Ago)人名；(英、西、意、塞、瑞典)阿戈",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -32021,8 +32021,8 @@
         {
           "word": "also",
           "book": "cet4",
-          "coreMeaning": "也；(Also)人名；(罗)阿尔索",
-          "fullMeaning": "adv. 也 n. (Also)人名；(罗)阿尔索",
+          "coreMeaning": "也；而且",
+          "fullMeaning": "adv. 也；而且；也 n. (Also)人名；(罗)阿尔索",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -32421,8 +32421,8 @@
         {
           "word": "and",
           "book": "cet4",
-          "coreMeaning": "(And)人名；(土、瑞典)安德",
-          "fullMeaning": "n. (And)人名；(土、瑞典)安德",
+          "coreMeaning": "和；与；而且",
+          "fullMeaning": "conj. 和；与；而且 n. (And)人名；(土、瑞典)安德",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -32755,8 +32755,8 @@
         {
           "word": "any",
           "book": "cet4",
-          "coreMeaning": "任何的；任何一个；(Any)人名",
-          "fullMeaning": "adj. 任何的 pron. 任何一个 n. (Any)人名",
+          "coreMeaning": "任何的；任一；一些",
+          "fullMeaning": "det./pron. 任何的；任一；一些 adj. 任何的 pron. 任何一个 n. (Any)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -33062,8 +33062,8 @@
         {
           "word": "argue",
           "book": "cet4",
-          "coreMeaning": "说服；争论,争辩,辩论；(Argue)人名",
-          "fullMeaning": "v. 说服；争论,争辩,辩论 n. (Argue)人名",
+          "coreMeaning": "争论；论证；主张",
+          "fullMeaning": "v. 争论；论证；主张；说服；争论,争辩,辩论 n. (Argue)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -33120,7 +33120,7 @@
         {
           "word": "arise",
           "book": "cet4",
-          "coreMeaning": "出现；由……………………引起；(Arise)人名",
+          "coreMeaning": "出现；由……………………引起",
           "fullMeaning": "v. 出现；由…………引起 n. (Arise)人名",
           "allSourceMeanings": [
             {
@@ -33299,7 +33299,7 @@
         {
           "word": "arrive",
           "book": "cet4",
-          "coreMeaning": "到达；(Arrive)人名；(法)阿里夫",
+          "coreMeaning": "到达",
           "fullMeaning": "v. 到达 n. (Arrive)人名；(法)阿里夫",
           "allSourceMeanings": [
             {
@@ -33584,8 +33584,8 @@
         {
           "word": "as",
           "book": "cet4",
-          "coreMeaning": "因为；当……………………时；同样地",
-          "fullMeaning": "conj. 因为；当…………时 adv. 同样地",
+          "coreMeaning": "作为；像；当……时；因为",
+          "fullMeaning": "prep./conj. 作为；像；当……时；因为 conj. 因为；当…………时 adv. 同样地",
           "allSourceMeanings": [
             {
               "pos": "conj.",
@@ -33749,8 +33749,8 @@
         {
           "word": "ask",
           "book": "cet4",
-          "coreMeaning": "要求；邀请；(Ask)人名",
-          "fullMeaning": "v. 要求；邀请 n. (Ask)人名",
+          "coreMeaning": "询问；请求；要求；邀请",
+          "fullMeaning": "v. 询问；请求；要求；邀请；要求；邀请 n. (Ask)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -34009,8 +34009,8 @@
         {
           "word": "at",
           "book": "cet4",
-          "coreMeaning": "阿特(老挝货币基本单位att)；砹(极不稳定放射性元素)；在(表示存在或出现的地点、场所、位置、空间)",
-          "fullMeaning": "n. 阿特(老挝货币基本单位att)；砹(极不稳定放射性元素) prep. 在(表示存在或出现的地点、场所、位置、空间)",
+          "coreMeaning": "在；向；以（价格、速度等）",
+          "fullMeaning": "prep. 在；向；以（价格、速度等）；在(表示存在或出现的地点、场所、位置、空间) n. 阿特(老挝货币基本单位att)；砹(极不稳定放射性元素)",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -34698,7 +34698,7 @@
         {
           "word": "aware",
           "book": "cet4",
-          "coreMeaning": "知道的, 意识到的；(Aware)人名；(阿拉伯、索)阿瓦雷",
+          "coreMeaning": "知道的；意识到的",
           "fullMeaning": "adj. 知道的, 意识到的 n. (Aware)人名；(阿拉伯、索)阿瓦雷",
           "allSourceMeanings": [
             {
@@ -35619,7 +35619,7 @@
         {
           "word": "bare",
           "book": "cet4",
-          "coreMeaning": "赤裸的；(Bare)人名；(英)贝尔",
+          "coreMeaning": "赤裸的",
           "fullMeaning": "adj. 赤裸的 n. (Bare)人名；(英)贝尔",
           "allSourceMeanings": [
             {
@@ -36154,8 +36154,8 @@
         {
           "word": "be",
           "book": "cet4",
-          "coreMeaning": "(Be)人名；(缅)拜",
-          "fullMeaning": "n. (Be)人名；(缅)拜",
+          "coreMeaning": "是；存在；成为",
+          "fullMeaning": "v. 是；存在；成为 n. (Be)人名；(缅)拜",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -36730,7 +36730,7 @@
         {
           "word": "beg",
           "book": "cet4",
-          "coreMeaning": "(Beg)人名；(德、塞、巴基)贝格；乞讨",
+          "coreMeaning": "乞讨",
           "fullMeaning": "n. (Beg)人名；(德、塞、巴基)贝格 v. 乞讨",
           "allSourceMeanings": [
             {
@@ -36811,7 +36811,7 @@
         {
           "word": "begin",
           "book": "cet4",
-          "coreMeaning": "开始；(Begin)人名；(以、德)贝京",
+          "coreMeaning": "开始",
           "fullMeaning": "v. 开始 n. (Begin)人名；(以、德)贝京",
           "allSourceMeanings": [
             {
@@ -37097,7 +37097,7 @@
         {
           "word": "below",
           "book": "cet4",
-          "coreMeaning": "在……………………下面；(Below)人名；(英、德、芬、瑞典)贝洛",
+          "coreMeaning": "在……………………下面",
           "fullMeaning": "prep. 在…………下面 n. (Below)人名；(英、德、芬、瑞典)贝洛",
           "allSourceMeanings": [
             {
@@ -37755,8 +37755,8 @@
         {
           "word": "big",
           "book": "cet4",
-          "coreMeaning": "(Big)人名；(土)比格",
-          "fullMeaning": "n. (Big)人名；(土)比格",
+          "coreMeaning": "大的；重要的；重大的",
+          "fullMeaning": "adj. 大的；重要的；重大的 n. (Big)人名；(土)比格",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -39516,7 +39516,7 @@
         {
           "word": "born",
           "book": "cet4",
-          "coreMeaning": "天生的；出生的；(Born)人名",
+          "coreMeaning": "出生的；天生的",
           "fullMeaning": "adj. 天生的；出生的 n. (Born)人名",
           "allSourceMeanings": [
             {
@@ -39559,7 +39559,7 @@
         {
           "word": "borrow",
           "book": "cet4",
-          "coreMeaning": "借；借用；(Borrow)人名",
+          "coreMeaning": "借；借用",
           "fullMeaning": "v. 借；借用 n. (Borrow)人名",
           "allSourceMeanings": [
             {
@@ -39673,7 +39673,7 @@
         {
           "word": "both",
           "book": "cet4",
-          "coreMeaning": "两者都；双方都；(Both)人名",
+          "coreMeaning": "两者都；双方",
           "fullMeaning": "pron. 两者都；双方都 n. (Both)人名",
           "allSourceMeanings": [
             {
@@ -41013,8 +41013,8 @@
         {
           "word": "bring",
           "book": "cet4",
-          "coreMeaning": "带来；促使；(Bring)人名",
-          "fullMeaning": "v. 带来；促使 n. (Bring)人名",
+          "coreMeaning": "带来；拿来；引起",
+          "fullMeaning": "v. 带来；拿来；引起；带来；促使 n. (Bring)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -42077,7 +42077,7 @@
         {
           "word": "bury",
           "book": "cet4",
-          "coreMeaning": "埋葬；(Bury)人名；(法)比里",
+          "coreMeaning": "埋葬",
           "fullMeaning": "v. 埋葬 n. (Bury)人名；(法)比里",
           "allSourceMeanings": [
             {
@@ -42206,8 +42206,8 @@
         {
           "word": "busy",
           "book": "cet4",
-          "coreMeaning": "忙碌的；(Busy)人名；(匈)布希",
-          "fullMeaning": "adj. 忙碌的 n. (Busy)人名；(匈)布希",
+          "coreMeaning": "忙碌的；繁忙的；占线的",
+          "fullMeaning": "adj. 忙碌的；繁忙的；占线的；忙碌的 n. (Busy)人名；(匈)布希",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -42259,8 +42259,8 @@
         {
           "word": "but",
           "book": "cet4",
-          "coreMeaning": "但是,可是；(But)人名；(俄、罗)布特",
-          "fullMeaning": "conj. 但是,可是 n. (But)人名；(俄、罗)布特",
+          "coreMeaning": "但是；除……之外",
+          "fullMeaning": "conj./prep. 但是；除……之外 conj. 但是,可是 n. (But)人名；(俄、罗)布特",
           "allSourceMeanings": [
             {
               "pos": "conj.",
@@ -42494,8 +42494,8 @@
         {
           "word": "by",
           "book": "cet4",
-          "coreMeaning": "被；通过；经过",
-          "fullMeaning": "prep. 被 adv. 通过；经过",
+          "coreMeaning": "由；被；通过；在……旁边",
+          "fullMeaning": "prep. 由；被；通过；在……旁边；被 adv. 通过；经过",
           "allSourceMeanings": [
             {
               "pos": "prep.",
@@ -42872,7 +42872,7 @@
         {
           "word": "camel",
           "book": "cet4",
-          "coreMeaning": "骆驼；[畜牧][脊椎] 骆驼；驼色的",
+          "coreMeaning": "骆驼；驼色的",
           "fullMeaning": "n. 骆驼；[畜牧][脊椎] 骆驼 adj. 驼色的",
           "allSourceMeanings": [
             {
@@ -43389,7 +43389,7 @@
         {
           "word": "carbon",
           "book": "cet4",
-          "coreMeaning": "碳；[化学] 碳；碳的",
+          "coreMeaning": "碳；碳的",
           "fullMeaning": "n. 碳；[化学] 碳 adj. 碳的",
           "allSourceMeanings": [
             {
@@ -43623,7 +43623,7 @@
         {
           "word": "carrier",
           "book": "cet4",
-          "coreMeaning": "带菌者；[化学] 载体",
+          "coreMeaning": "带菌者；载体",
           "fullMeaning": "n. 带菌者；[化学] 载体",
           "allSourceMeanings": [
             {
@@ -43754,7 +43754,7 @@
         {
           "word": "carve",
           "book": "cet4",
-          "coreMeaning": "雕刻；切开；(Carve)人名",
+          "coreMeaning": "雕刻；切开",
           "fullMeaning": "v. 雕刻；切开 n. (Carve)人名",
           "allSourceMeanings": [
             {
@@ -44465,8 +44465,8 @@
         {
           "word": "certain",
           "book": "cet4",
-          "coreMeaning": "(Certain)人名；(葡)塞尔塔因；某一",
-          "fullMeaning": "n. (Certain)人名；(葡)塞尔塔因 adj. 某一",
+          "coreMeaning": "确定的；某一；某些",
+          "fullMeaning": "adj./det. 确定的；某一；某些 n. (Certain)人名；(葡)塞尔塔因 adj. 某一",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -45364,7 +45364,7 @@
         {
           "word": "check",
           "book": "cet4",
-          "coreMeaning": "检查；<美>支票",
+          "coreMeaning": "检查；支票",
           "fullMeaning": "v. 检查 n. 检查；<美>支票",
           "allSourceMeanings": [
             {
@@ -45512,7 +45512,7 @@
         {
           "word": "cheese",
           "book": "cet4",
-          "coreMeaning": "[食品] 奶酪；干酪",
+          "coreMeaning": "奶酪；干酪",
           "fullMeaning": "n. [食品] 奶酪；干酪",
           "allSourceMeanings": [
             {
@@ -46207,7 +46207,7 @@
         {
           "word": "circuit",
           "book": "cet4",
-          "coreMeaning": "电路；[电子] 电路,回路；环行",
+          "coreMeaning": "电路；电路,回路；环行",
           "fullMeaning": "n. 电路；[电子] 电路,回路 v. 环行",
           "allSourceMeanings": [
             {
@@ -46354,7 +46354,7 @@
         {
           "word": "civil",
           "book": "cet4",
-          "coreMeaning": "公民的；文职的；(Civil)人名",
+          "coreMeaning": "公民的；文职的",
           "fullMeaning": "adj. 公民的；文职的 n. (Civil)人名",
           "allSourceMeanings": [
             {
@@ -47322,7 +47322,7 @@
         {
           "word": "clothing",
           "book": "cet4",
-          "coreMeaning": "(总称)[服装] 服装；帆装；覆盖(clothe的ing形式)",
+          "coreMeaning": "(总称) 服装；帆装；覆盖(clothe的ing形式)",
           "fullMeaning": "n. (总称)[服装] 服装；帆装 v. 覆盖(clothe的ing形式)",
           "allSourceMeanings": [
             {
@@ -47890,8 +47890,8 @@
         {
           "word": "collect",
           "book": "cet4",
-          "coreMeaning": "收集；(Collect)人名；(英)科莱克特",
-          "fullMeaning": "v. 收集 n. (Collect)人名；(英)科莱克特",
+          "coreMeaning": "收集；领取；募捐",
+          "fullMeaning": "v. 收集；领取；募捐；收集 n. (Collect)人名；(英)科莱克特",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -48091,8 +48091,8 @@
         {
           "word": "come",
           "book": "cet4",
-          "coreMeaning": "出现；变成；(Come)人名",
-          "fullMeaning": "v. 出现；变成 n. (Come)人名",
+          "coreMeaning": "来；到达；出现；变成",
+          "fullMeaning": "v. 来；到达；出现；变成；出现；变成 n. (Come)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -51670,7 +51670,7 @@
         {
           "word": "cubic",
           "book": "cet4",
-          "coreMeaning": "立方的；(Cubic)人名；(罗)库比克",
+          "coreMeaning": "立方的",
           "fullMeaning": "adj. 立方的 n. (Cubic)人名；(罗)库比克",
           "allSourceMeanings": [
             {
@@ -51713,7 +51713,7 @@
         {
           "word": "culture",
           "book": "cet4",
-          "coreMeaning": "文化,文明；教养；[细胞][微] 培养(等于cultivate)",
+          "coreMeaning": "文化；文明；培养",
           "fullMeaning": "n. 文化,文明；教养 v. [细胞][微] 培养(等于cultivate)",
           "allSourceMeanings": [
             {
@@ -52945,7 +52945,7 @@
         {
           "word": "daughter",
           "book": "cet4",
-          "coreMeaning": "女儿；[遗][农学] 子代",
+          "coreMeaning": "女儿；子代",
           "fullMeaning": "n. 女儿；[遗][农学] 子代",
           "allSourceMeanings": [
             {
@@ -54229,8 +54229,8 @@
         {
           "word": "differ",
           "book": "cet4",
-          "coreMeaning": "不同,相异；(Differ)人名；(法)迪费",
-          "fullMeaning": "v. 不同,相异 n. (Differ)人名；(法)迪费",
+          "coreMeaning": "不同；有区别",
+          "fullMeaning": "v. 不同；有区别；不同,相异 n. (Differ)人名；(法)迪费",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -55234,8 +55234,8 @@
         {
           "word": "do",
           "book": "cet4",
-          "coreMeaning": "用以构成疑问句及否定句；做,干",
-          "fullMeaning": "v. 用以构成疑问句及否定句；做,干",
+          "coreMeaning": "做；干；助动词",
+          "fullMeaning": "v. 做；干；助动词；用以构成疑问句及否定句；做,干",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -55591,8 +55591,8 @@
         {
           "word": "down",
           "book": "cet4",
-          "coreMeaning": "软毛,绒毛；[地质] 开阔的高地",
-          "fullMeaning": "n. 软毛,绒毛；[地质] 开阔的高地",
+          "coreMeaning": "向下；往下；在下面；下降",
+          "fullMeaning": "adv. 向下；往下；在下面 v. 下降；降低 adj. 向下的；沮丧的 n. 软毛；绒毛；开阔的高地",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -56582,7 +56582,7 @@
         {
           "word": "drown",
           "book": "cet4",
-          "coreMeaning": "(Drown)人名；(英)德朗；淹没",
+          "coreMeaning": "淹没",
           "fullMeaning": "n. (Drown)人名；(英)德朗 v. 淹没",
           "allSourceMeanings": [
             {
@@ -56880,7 +56880,7 @@
         {
           "word": "dull",
           "book": "cet4",
-          "coreMeaning": "钝的；迟钝的；(Dull)人名",
+          "coreMeaning": "钝的；迟钝的",
           "fullMeaning": "adj. 钝的；迟钝的 n. (Dull)人名",
           "allSourceMeanings": [
             {
@@ -57007,8 +57007,8 @@
         {
           "word": "during",
           "book": "cet4",
-          "coreMeaning": "(During)人名；(法)迪兰；在……………………的时候,在……………………的期间",
-          "fullMeaning": "n. (During)人名；(法)迪兰 prep. 在…………的时候,在…………的期间",
+          "coreMeaning": "在……期间",
+          "fullMeaning": "prep. 在……期间；在…………的时候,在…………的期间 n. (During)人名；(法)迪兰",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -57293,7 +57293,7 @@
         {
           "word": "eager",
           "book": "cet4",
-          "coreMeaning": "渴望的, 热切的；(Eager)人名；(英)伊格",
+          "coreMeaning": "渴望的, 热切的",
           "fullMeaning": "adj. 渴望的, 热切的 n. (Eager)人名；(英)伊格",
           "allSourceMeanings": [
             {
@@ -57389,8 +57389,8 @@
         {
           "word": "early",
           "book": "cet4",
-          "coreMeaning": "早的,早期的；(Early)人名；(英)厄尔利",
-          "fullMeaning": "adj. 早的,早期的 n. (Early)人名；(英)厄尔利",
+          "coreMeaning": "早的；早期的；提前",
+          "fullMeaning": "adj./adv. 早的；早期的；提前 adj. 早的,早期的 n. (Early)人名；(英)厄尔利",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -57447,7 +57447,7 @@
         {
           "word": "earn",
           "book": "cet4",
-          "coreMeaning": "(Earn)人名；(泰)炎；赚,赚得",
+          "coreMeaning": "赚,赚得",
           "fullMeaning": "n. (Earn)人名；(泰)炎 v. 赚,赚得",
           "allSourceMeanings": [
             {
@@ -58554,8 +58554,8 @@
         {
           "word": "else",
           "book": "cet4",
-          "coreMeaning": "别的；(Else)人名；(英)埃尔斯",
-          "fullMeaning": "adj. 别的 n. (Else)人名；(英)埃尔斯",
+          "coreMeaning": "其他的；另外",
+          "fullMeaning": "adj./adv. 其他的；另外 adj. 别的 n. (Else)人名；(英)埃尔斯",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -59110,7 +59110,7 @@
         {
           "word": "entire",
           "book": "cet4",
-          "coreMeaning": "全部的,整个的；(Entire)人名；(英)恩泰尔",
+          "coreMeaning": "全部的,整个的",
           "fullMeaning": "adj. 全部的,整个的 n. (Entire)人名；(英)恩泰尔",
           "allSourceMeanings": [
             {
@@ -59467,8 +59467,8 @@
         {
           "word": "even",
           "book": "cet4",
-          "coreMeaning": "平坦的；甚至；(Even)人名",
-          "fullMeaning": "adj. 平坦的 adv. 甚至 n. (Even)人名",
+          "coreMeaning": "甚至；平坦的；偶数的",
+          "fullMeaning": "adv./adj. 甚至；平坦的；偶数的 adj. 平坦的 adv. 甚至 n. (Even)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -59620,8 +59620,8 @@
         {
           "word": "ever",
           "book": "cet4",
-          "coreMeaning": "曾经；(Ever)人名；(英)埃弗",
-          "fullMeaning": "adv. 曾经 n. (Ever)人名；(英)埃弗",
+          "coreMeaning": "曾经；始终；究竟",
+          "fullMeaning": "adv. 曾经；始终；究竟；曾经 n. (Ever)人名；(英)埃弗",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -59678,8 +59678,8 @@
         {
           "word": "every",
           "book": "cet4",
-          "coreMeaning": "每隔……………………的；(Every)人名；(英)埃夫里",
-          "fullMeaning": "adj. 每隔…………的 n. (Every)人名；(英)埃夫里",
+          "coreMeaning": "每个；每一",
+          "fullMeaning": "det. 每个；每一 adj. 每隔…………的 n. (Every)人名；(英)埃夫里",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -61172,7 +61172,7 @@
         {
           "word": "fairly",
           "book": "cet4",
-          "coreMeaning": "公平地；相当；(Fairly)人名",
+          "coreMeaning": "公平地；相当",
           "fullMeaning": "adv. 公平地；相当 n. (Fairly)人名",
           "allSourceMeanings": [
             {
@@ -61784,7 +61784,7 @@
         {
           "word": "fasten",
           "book": "cet4",
-          "coreMeaning": "扎牢, 扣住；(Fasten)人名；(英)法森",
+          "coreMeaning": "扎牢, 扣住",
           "fullMeaning": "v. 扎牢, 扣住 n. (Fasten)人名；(英)法森",
           "allSourceMeanings": [
             {
@@ -62208,7 +62208,7 @@
         {
           "word": "federal",
           "book": "cet4",
-          "coreMeaning": "联邦的；联邦的, 联盟的；(Federal)人名",
+          "coreMeaning": "联邦的；联邦的, 联盟的",
           "fullMeaning": "adj. 联邦的；联邦的, 联盟的 n. (Federal)人名",
           "allSourceMeanings": [
             {
@@ -62955,7 +62955,7 @@
         {
           "word": "fierce",
           "book": "cet4",
-          "coreMeaning": "凶猛的；(Fierce)人名；(英)菲尔斯",
+          "coreMeaning": "凶猛的",
           "fullMeaning": "adj. 凶猛的 n. (Fierce)人名；(英)菲尔斯",
           "allSourceMeanings": [
             {
@@ -65479,7 +65479,7 @@
         {
           "word": "fond",
           "book": "cet4",
-          "coreMeaning": "(Fond)人名；(法)丰；喜欢的",
+          "coreMeaning": "喜欢的",
           "fullMeaning": "n. (Fond)人名；(法)丰 adj. 喜欢的",
           "allSourceMeanings": [
             {
@@ -65696,8 +65696,8 @@
         {
           "word": "for",
           "book": "cet4",
-          "coreMeaning": "因为；给",
-          "fullMeaning": "prep. 因为；给 conj. 因为",
+          "coreMeaning": "为了；给；对于；因为",
+          "fullMeaning": "prep. 为了；给；对于；因为；因为；给 conj. 因为",
           "allSourceMeanings": [
             {
               "pos": "prep.",
@@ -65934,7 +65934,7 @@
         {
           "word": "forget",
           "book": "cet4",
-          "coreMeaning": "(Forget)人名；(法)福尔热；忘记",
+          "coreMeaning": "忘记",
           "fullMeaning": "n. (Forget)人名；(法)福尔热 v. 忘记",
           "allSourceMeanings": [
             {
@@ -66311,8 +66311,8 @@
         {
           "word": "four",
           "book": "cet4",
-          "coreMeaning": "(Four)人名；(西)福尔",
-          "fullMeaning": "n. (Four)人名；(西)福尔",
+          "coreMeaning": "四；四个",
+          "fullMeaning": "num. 四；四个 n. (Four)人名；(西)福尔",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -66534,8 +66534,8 @@
         {
           "word": "free",
           "book": "cet4",
-          "coreMeaning": "免费的；(Free)人名；(英)弗里",
-          "fullMeaning": "adj. 免费的 n. (Free)人名；(英)弗里",
+          "coreMeaning": "免费的；自由的；空闲的",
+          "fullMeaning": "adj. 免费的；自由的；空闲的；免费的 n. (Free)人名；(英)弗里",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -66908,8 +66908,8 @@
         {
           "word": "friendly",
           "book": "cet4",
-          "coreMeaning": "友好的；(Friendly)人名；(英)弗兰德利",
-          "fullMeaning": "adj. 友好的 n. (Friendly)人名；(英)弗兰德利",
+          "coreMeaning": "友好的；友善的",
+          "fullMeaning": "adj. 友好的；友善的；友好的 n. (Friendly)人名；(英)弗兰德利",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -68298,8 +68298,8 @@
         {
           "word": "get",
           "book": "cet4",
-          "coreMeaning": "到达；生殖；幼兽",
-          "fullMeaning": "v. 到达 n. 生殖；幼兽",
+          "coreMeaning": "得到；到达；变得；理解",
+          "fullMeaning": "v. 得到；到达；变得；理解；到达 n. 生殖；幼兽",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -68467,7 +68467,7 @@
         {
           "word": "glad",
           "book": "cet4",
-          "coreMeaning": "高兴的；乐意的；(Glad)人名",
+          "coreMeaning": "高兴的；乐意的",
           "fullMeaning": "adj. 高兴的；乐意的 n. (Glad)人名",
           "allSourceMeanings": [
             {
@@ -69257,8 +69257,8 @@
         {
           "word": "golden",
           "book": "cet4",
-          "coreMeaning": "(Golden)人名；(英、法、罗、德、瑞典)戈尔登",
-          "fullMeaning": "n. (Golden)人名；(英、法、罗、德、瑞典)戈尔登",
+          "coreMeaning": "金色的；黄金般的；极好的",
+          "fullMeaning": "adj. 金色的；黄金般的；极好的 n. (Golden)人名；(英、法、罗、德、瑞典)戈尔登",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -70239,7 +70239,7 @@
         {
           "word": "greet",
           "book": "cet4",
-          "coreMeaning": "(Greet)人名；(英)格里特；欢迎,迎接",
+          "coreMeaning": "欢迎,迎接",
           "fullMeaning": "n. (Greet)人名；(英)格里特 v. 欢迎,迎接",
           "allSourceMeanings": [
             {
@@ -70591,8 +70591,8 @@
         {
           "word": "grow",
           "book": "cet4",
-          "coreMeaning": "生长；(Grow)人名；(英)格罗",
-          "fullMeaning": "v. 生长 n. (Grow)人名；(英)格罗",
+          "coreMeaning": "生长；增长；种植；逐渐变得",
+          "fullMeaning": "v. 生长；增长；种植；逐渐变得；生长 n. (Grow)人名；(英)格罗",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -71388,7 +71388,7 @@
         {
           "word": "handy",
           "book": "cet4",
-          "coreMeaning": "便利的；手边的；(Handy)人名",
+          "coreMeaning": "便利的；手边的",
           "fullMeaning": "adj. 便利的；手边的 n. (Handy)人名",
           "allSourceMeanings": [
             {
@@ -71514,7 +71514,7 @@
         {
           "word": "happy",
           "book": "cet4",
-          "coreMeaning": "幸福的；(Happy)人名",
+          "coreMeaning": "幸福的",
           "fullMeaning": "adj. 幸福的 n. (Happy)人名",
           "allSourceMeanings": [
             {
@@ -71625,8 +71625,8 @@
         {
           "word": "hard",
           "book": "cet4",
-          "coreMeaning": "硬的；困难的；(Hard)人名",
-          "fullMeaning": "adj. 硬的；困难的 n. (Hard)人名",
+          "coreMeaning": "困难的；坚硬的；努力地",
+          "fullMeaning": "adj./adv. 困难的；坚硬的；努力地 adj. 硬的；困难的 n. (Hard)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -71952,8 +71952,8 @@
         {
           "word": "have",
           "book": "cet4",
-          "coreMeaning": "有；(Have)人名；(芬)哈韦",
-          "fullMeaning": "v. 有 n. (Have)人名；(芬)哈韦",
+          "coreMeaning": "有；拥有；已经（助动词）",
+          "fullMeaning": "v. 有；拥有；已经（助动词）；有 n. (Have)人名；(芬)哈韦",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -72112,8 +72112,8 @@
         {
           "word": "he",
           "book": "cet4",
-          "coreMeaning": "男孩,男人；它(雄性动物)",
-          "fullMeaning": "n. 男孩,男人；它(雄性动物)",
+          "coreMeaning": "他",
+          "fullMeaning": "pron. 他 n. 男孩,男人；它(雄性动物)",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -72646,7 +72646,7 @@
         {
           "word": "helicopter",
           "book": "cet4",
-          "coreMeaning": "直升机；[航] 直升飞机；[航] 乘直升飞机",
+          "coreMeaning": "直升机；直升飞机；乘直升飞机",
           "fullMeaning": "n. 直升机；[航] 直升飞机 v. [航] 乘直升飞机",
           "allSourceMeanings": [
             {
@@ -72785,8 +72785,8 @@
         {
           "word": "her",
           "book": "cet4",
-          "coreMeaning": "(法)埃尔(人名)；她(she的宾格)",
-          "fullMeaning": "n. (法)埃尔(人名) pron. 她(she的宾格)",
+          "coreMeaning": "她；她的",
+          "fullMeaning": "pron./det. 她；她的 n. (法)埃尔(人名) pron. 她(she的宾格)",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -72909,8 +72909,8 @@
         {
           "word": "hers",
           "book": "cet4",
-          "coreMeaning": "(Hers)人名；(法)埃尔",
-          "fullMeaning": "n. (Hers)人名；(法)埃尔",
+          "coreMeaning": "她的（所有格代词）",
+          "fullMeaning": "pron. 她的（所有格代词） n. (Hers)人名；(法)埃尔",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -72942,8 +72942,8 @@
         {
           "word": "hi",
           "book": "cet4",
-          "coreMeaning": "(Hi)人名；(柬)希",
-          "fullMeaning": "n. (Hi)人名；(柬)希",
+          "coreMeaning": "嗨；你好",
+          "fullMeaning": "interj. 嗨；你好 n. (Hi)人名；(柬)希",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -73096,8 +73096,8 @@
         {
           "word": "him",
           "book": "cet4",
-          "coreMeaning": "(Him)人名；(东南亚国家华语)欣",
-          "fullMeaning": "n. (Him)人名；(东南亚国家华语)欣",
+          "coreMeaning": "他（宾格）",
+          "fullMeaning": "pron. 他（宾格） n. (Him)人名；(东南亚国家华语)欣",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -73172,8 +73172,8 @@
         {
           "word": "his",
           "book": "cet4",
-          "coreMeaning": "(His)人名；(法)伊斯",
-          "fullMeaning": "n. (His)人名；(法)伊斯",
+          "coreMeaning": "他的",
+          "fullMeaning": "det./pron. 他的 n. (His)人名；(法)伊斯",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -73223,8 +73223,8 @@
         {
           "word": "hold",
           "book": "cet4",
-          "coreMeaning": "拥有；控制；保留",
-          "fullMeaning": "v. 拥有 n. 控制；保留",
+          "coreMeaning": "拿着；保持；举行；容纳",
+          "fullMeaning": "v. 拿着；保持；举行；容纳；拥有 n. 控制；保留",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -74225,8 +74225,8 @@
         {
           "word": "huge",
           "book": "cet4",
-          "coreMeaning": "(Huge)人名；(英)休奇",
-          "fullMeaning": "n. (Huge)人名；(英)休奇",
+          "coreMeaning": "巨大的",
+          "fullMeaning": "adj. 巨大的 n. (Huge)人名；(英)休奇",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -74840,8 +74840,8 @@
         {
           "word": "if",
           "book": "cet4",
-          "coreMeaning": "条件；设想",
-          "fullMeaning": "n. 条件；设想",
+          "coreMeaning": "如果；是否",
+          "fullMeaning": "conj. 如果；是否 n. 条件；设想",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -75155,8 +75155,8 @@
         {
           "word": "in",
           "book": "cet4",
-          "coreMeaning": "执政者；门路",
-          "fullMeaning": "n. 执政者；门路",
+          "coreMeaning": "在……里面；进入；处于",
+          "fullMeaning": "prep. 在……里面；进入；处于 n. 执政者；门路",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -75267,7 +75267,7 @@
         {
           "word": "incident",
           "book": "cet4",
-          "coreMeaning": "事件；发生的事, 事件；[光] 入射的",
+          "coreMeaning": "事件；发生的事, 事件；入射的",
           "fullMeaning": "n. 事件；发生的事, 事件 adj. [光] 入射的",
           "allSourceMeanings": [
             {
@@ -76420,8 +76420,8 @@
         {
           "word": "into",
           "book": "cet4",
-          "coreMeaning": "(Into)人名；(芬、英)因托",
-          "fullMeaning": "n. (Into)人名；(芬、英)因托",
+          "coreMeaning": "进入；到……里面；变成",
+          "fullMeaning": "prep. 进入；到……里面；变成 n. (Into)人名；(芬、英)因托",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -76684,8 +76684,8 @@
         {
           "word": "it",
           "book": "cet4",
-          "coreMeaning": "[指无生命的东西、动物、植物]它；这",
-          "fullMeaning": "pron. [指无生命的东西、动物、植物]它；这",
+          "coreMeaning": "它；这；那",
+          "fullMeaning": "pron. 它；这；那；[指无生命的东西、动物、植物]它；这",
           "allSourceMeanings": [
             {
               "pos": "pron.",
@@ -76765,7 +76765,7 @@
         {
           "word": "its",
           "book": "cet4",
-          "coreMeaning": "它的；(Its)人名",
+          "coreMeaning": "它的",
           "fullMeaning": "pron. 它的 n. (Its)人名",
           "allSourceMeanings": [
             {
@@ -77790,8 +77790,8 @@
         {
           "word": "just",
           "book": "cet4",
-          "coreMeaning": "(Just)人名；(英)贾斯特；公正的,合理的",
-          "fullMeaning": "n. (Just)人名；(英)贾斯特 adj. 公正的,合理的",
+          "coreMeaning": "正好；刚才；公正的；仅仅",
+          "fullMeaning": "adv./adj. 正好；刚才；公正的；仅仅 n. (Just)人名；(英)贾斯特 adj. 公正的,合理的",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -79440,8 +79440,8 @@
         {
           "word": "later",
           "book": "cet4",
-          "coreMeaning": "后来；(Later)人名",
-          "fullMeaning": "adv. 后来 n. (Later)人名",
+          "coreMeaning": "后来；较晚的",
+          "fullMeaning": "adv./adj. 后来；较晚的 adv. 后来 n. (Later)人名",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -79517,7 +79517,7 @@
         {
           "word": "latter",
           "book": "cet4",
-          "coreMeaning": "后者的；(Latter)人名；(英、德、捷)拉特",
+          "coreMeaning": "后者的",
           "fullMeaning": "adj. 后者的 n. (Latter)人名；(英、德、捷)拉特",
           "allSourceMeanings": [
             {
@@ -79801,8 +79801,8 @@
         {
           "word": "lazy",
           "book": "cet4",
-          "coreMeaning": "(Lazy)人名；(德)拉齐",
-          "fullMeaning": "n. (Lazy)人名；(德)拉齐",
+          "coreMeaning": "懒惰的；懒散的",
+          "fullMeaning": "adj. 懒惰的；懒散的 n. (Lazy)人名；(德)拉齐",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -80262,8 +80262,8 @@
         {
           "word": "learned",
           "book": "cet4",
-          "coreMeaning": "有学问的；学术上的；(Learned)人名",
-          "fullMeaning": "adj. 有学问的；学术上的 n. (Learned)人名",
+          "coreMeaning": "有学问的；博学的",
+          "fullMeaning": "adj. 有学问的；博学的；有学问的；学术上的 n. (Learned)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -80497,8 +80497,8 @@
         {
           "word": "left",
           "book": "cet4",
-          "coreMeaning": "左边的；左边；左派",
-          "fullMeaning": "adj. 左边的 n. 左边；左派",
+          "coreMeaning": "左边的；左边；剩下的",
+          "fullMeaning": "adj./n. 左边的；左边；剩下的 adj. 左边的 n. 左边；左派",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -80603,8 +80603,8 @@
         {
           "word": "lend",
           "book": "cet4",
-          "coreMeaning": "(Lend)人名；(德)伦德",
-          "fullMeaning": "n. (Lend)人名；(德)伦德",
+          "coreMeaning": "借给；贷款给",
+          "fullMeaning": "v. 借给；贷款给 n. (Lend)人名；(德)伦德",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -82151,8 +82151,8 @@
         {
           "word": "live",
           "book": "cet4",
-          "coreMeaning": "活的；(Live)人名；(法)利夫",
-          "fullMeaning": "adj. 活的 n. (Live)人名；(法)利夫",
+          "coreMeaning": "生活；居住；活的；现场直播的",
+          "fullMeaning": "v./adj. 生活；居住；活的；现场直播的 adj. 活的 n. (Live)人名；(法)利夫",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -82230,7 +82230,7 @@
         {
           "word": "lively",
           "book": "cet4",
-          "coreMeaning": "活泼的；(Lively)人名；(英)莱夫利",
+          "coreMeaning": "活泼的",
           "fullMeaning": "adj. 活泼的 n. (Lively)人名；(英)莱夫利",
           "allSourceMeanings": [
             {
@@ -82352,7 +82352,7 @@
         {
           "word": "load",
           "book": "cet4",
-          "coreMeaning": "负载,负荷；工作量；[力] 加载",
+          "coreMeaning": "负载,负荷；工作量；加载",
           "fullMeaning": "n. 负载,负荷；工作量 v. [力] 加载",
           "allSourceMeanings": [
             {
@@ -82888,8 +82888,8 @@
         {
           "word": "lose",
           "book": "cet4",
-          "coreMeaning": "(Lose)人名；(英)洛斯；浪费",
-          "fullMeaning": "n. (Lose)人名；(英)洛斯 v. 浪费",
+          "coreMeaning": "失去；输掉；迷失；浪费",
+          "fullMeaning": "v. 失去；输掉；迷失；浪费；浪费 n. (Lose)人名；(英)洛斯",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -83030,8 +83030,8 @@
         {
           "word": "loud",
           "book": "cet4",
-          "coreMeaning": "(Loud)人名；(英)劳德",
-          "fullMeaning": "n. (Loud)人名；(英)劳德",
+          "coreMeaning": "大声的；响亮的",
+          "fullMeaning": "adj./adv. 大声的；响亮的 n. (Loud)人名；(英)劳德",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -83891,8 +83891,8 @@
         {
           "word": "make",
           "book": "cet4",
-          "coreMeaning": "制造；构造；使得",
-          "fullMeaning": "n. 制造；构造 v. 使得",
+          "coreMeaning": "制造；使得；成为；赚得",
+          "fullMeaning": "v. 制造；使得；成为；赚得；使得 n. 制造；构造",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -84661,7 +84661,7 @@
         {
           "word": "marry",
           "book": "cet4",
-          "coreMeaning": "娶,嫁；(Marry)人名；(阿拉伯)马雷",
+          "coreMeaning": "娶,嫁",
           "fullMeaning": "v. 娶,嫁 n. (Marry)人名；(阿拉伯)马雷",
           "allSourceMeanings": [
             {
@@ -85381,8 +85381,8 @@
         {
           "word": "mean",
           "book": "cet4",
-          "coreMeaning": "平均值；平均的；卑鄙的",
-          "fullMeaning": "n. 平均值 adj. 平均的；卑鄙的",
+          "coreMeaning": "意思是；意味着；平均的；吝啬的",
+          "fullMeaning": "v./adj. 意思是；意味着；平均的；吝啬的 n. 平均值 adj. 平均的；卑鄙的",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -87803,7 +87803,7 @@
         {
           "word": "modest",
           "book": "cet4",
-          "coreMeaning": "羞怯的；谦虚的；(Modest)人名",
+          "coreMeaning": "羞怯的；谦虚的",
           "fullMeaning": "adj. 羞怯的；谦虚的 n. (Modest)人名",
           "allSourceMeanings": [
             {
@@ -89277,7 +89277,7 @@
         {
           "word": "my",
           "book": "cet4",
-          "coreMeaning": "我的；(My)人名",
+          "coreMeaning": "我的",
           "fullMeaning": "pron. 我的 n. (My)人名",
           "allSourceMeanings": [
             {
@@ -89320,7 +89320,7 @@
         {
           "word": "nail",
           "book": "cet4",
-          "coreMeaning": "钉；[解剖] 指甲",
+          "coreMeaning": "钉；指甲",
           "fullMeaning": "v. 钉 n. [解剖] 指甲",
           "allSourceMeanings": [
             {
@@ -90175,8 +90175,8 @@
         {
           "word": "new",
           "book": "cet4",
-          "coreMeaning": "(New)人名；(英)纽",
-          "fullMeaning": "n. (New)人名；(英)纽",
+          "coreMeaning": "新的；新出现的；新鲜的",
+          "fullMeaning": "adj. 新的；新出现的；新鲜的 n. (New)人名；(英)纽",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -90335,7 +90335,7 @@
         {
           "word": "nice",
           "book": "cet4",
-          "coreMeaning": "(Nice)人名；(英)尼斯；精密的",
+          "coreMeaning": "精密的",
           "fullMeaning": "n. (Nice)人名；(英)尼斯 adj. 精密的",
           "allSourceMeanings": [
             {
@@ -90750,7 +90750,7 @@
         {
           "word": "noise",
           "book": "cet4",
-          "coreMeaning": "响声；[环境] 噪音",
+          "coreMeaning": "响声；噪音",
           "fullMeaning": "n. 响声；[环境] 噪音",
           "allSourceMeanings": [
             {
@@ -90793,7 +90793,7 @@
         {
           "word": "none",
           "book": "cet4",
-          "coreMeaning": "没有人；(None)人名；(葡、罗)诺内",
+          "coreMeaning": "没有人",
           "fullMeaning": "pron. 没有人 n. (None)人名；(葡、罗)诺内",
           "allSourceMeanings": [
             {
@@ -90856,7 +90856,7 @@
         {
           "word": "nor",
           "book": "cet4",
-          "coreMeaning": "也不；(Nor)人名；(中)挪(广东话·威妥玛)",
+          "coreMeaning": "也不",
           "fullMeaning": "conj. 也不 n. (Nor)人名；(中)挪(广东话·威妥玛)",
           "allSourceMeanings": [
             {
@@ -91826,7 +91826,7 @@
         {
           "word": "obey",
           "book": "cet4",
-          "coreMeaning": "(Obey)人名；(英、法)奥贝；服从,听从",
+          "coreMeaning": "服从,听从",
           "fullMeaning": "n. (Obey)人名；(英、法)奥贝 v. 服从,听从",
           "allSourceMeanings": [
             {
@@ -92082,8 +92082,8 @@
         {
           "word": "off",
           "book": "cet4",
-          "coreMeaning": "远离的；空闲的；切断",
-          "fullMeaning": "adj. 远离的；空闲的 adv. 切断",
+          "coreMeaning": "离开；关掉；停止；休息的",
+          "fullMeaning": "adv./adj. 离开；关掉；停止；休息的 adj. 远离的；空闲的 adv. 切断",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -92429,8 +92429,8 @@
         {
           "word": "on",
           "book": "cet4",
-          "coreMeaning": "关于；在…………………………………………时候；(On)人名",
-          "fullMeaning": "prep. 关于；在……………………时候 n. (On)人名",
+          "coreMeaning": "在……上；关于；继续",
+          "fullMeaning": "prep. 在……上；关于；继续；关于；在……………………时候 n. (On)人名",
           "allSourceMeanings": [
             {
               "pos": "prep.",
@@ -92953,8 +92953,8 @@
         {
           "word": "or",
           "book": "cet4",
-          "coreMeaning": "或,或者；(Or)人名；(中)柯(广东话·威妥玛)",
-          "fullMeaning": "conj. 或,或者 n. (Or)人名；(中)柯(广东话·威妥玛)",
+          "coreMeaning": "或者；否则",
+          "fullMeaning": "conj. 或者；否则；或,或者 n. (Or)人名；(中)柯(广东话·威妥玛)",
           "allSourceMeanings": [
             {
               "pos": "conj.",
@@ -93471,7 +93471,7 @@
         {
           "word": "ours",
           "book": "cet4",
-          "coreMeaning": "我们的；(Ours)人名",
+          "coreMeaning": "我们的",
           "fullMeaning": "pron. 我们的 n. (Ours)人名",
           "allSourceMeanings": [
             {
@@ -93499,8 +93499,8 @@
         {
           "word": "out",
           "book": "cet4",
-          "coreMeaning": "出局；外面的",
-          "fullMeaning": "n. 出局 adj. 外面的",
+          "coreMeaning": "向外；在外；出去；不在",
+          "fullMeaning": "adv. 向外；在外；出去；不在 n. 出局 adj. 外面的",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -94038,8 +94038,8 @@
         {
           "word": "over",
           "book": "cet4",
-          "coreMeaning": "越过；在……………………之上；超过",
-          "fullMeaning": "adv. 越过 prep. 在…………之上；超过",
+          "coreMeaning": "在……上方；越过；超过；结束",
+          "fullMeaning": "prep./adv. 在……上方；越过；超过；结束 adv. 越过 prep. 在…………之上；超过",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -94376,7 +94376,7 @@
         {
           "word": "owe",
           "book": "cet4",
-          "coreMeaning": "欠；应把……………………归功于；(Owe)人名",
+          "coreMeaning": "欠；应把……………………归功于",
           "fullMeaning": "v. 欠；应把…………归功于 n. (Owe)人名",
           "allSourceMeanings": [
             {
@@ -96382,8 +96382,8 @@
         {
           "word": "per",
           "book": "cet4",
-          "coreMeaning": "每；(Per)人名；(德、挪、丹、瑞典)佩尔",
-          "fullMeaning": "prep. 每 n. (Per)人名；(德、挪、丹、瑞典)佩尔",
+          "coreMeaning": "每；每一",
+          "fullMeaning": "prep. 每；每一；每 n. (Per)人名；(德、挪、丹、瑞典)佩尔",
           "allSourceMeanings": [
             {
               "pos": "prep.",
@@ -97605,7 +97605,7 @@
         {
           "word": "pine",
           "book": "cet4",
-          "coreMeaning": "松树,松木；[林] 松树；松木的",
+          "coreMeaning": "松树,松木；松树；松木的",
           "fullMeaning": "n. 松树,松木；[林] 松树 adj. 松木的",
           "allSourceMeanings": [
             {
@@ -98345,7 +98345,7 @@
         {
           "word": "pleasant",
           "book": "cet4",
-          "coreMeaning": "令人愉快的,舒适的；(Pleasant)人名；(英)普莱曾特",
+          "coreMeaning": "令人愉快的,舒适的",
           "fullMeaning": "adj. 令人愉快的,舒适的 n. (Pleasant)人名；(英)普莱曾特",
           "allSourceMeanings": [
             {
@@ -99209,8 +99209,8 @@
         {
           "word": "poor",
           "book": "cet4",
-          "coreMeaning": "贫穷的；贫乏的；(Poor)人名",
-          "fullMeaning": "adj. 贫穷的；贫乏的 n. (Poor)人名",
+          "coreMeaning": "贫穷的；差的；不足的",
+          "fullMeaning": "adj. 贫穷的；差的；不足的；贫穷的；贫乏的 n. (Poor)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -100049,7 +100049,7 @@
         {
           "word": "pray",
           "book": "cet4",
-          "coreMeaning": "祈祷, 祈求；(Pray)人名；(匈)普劳伊",
+          "coreMeaning": "祈祷, 祈求",
           "fullMeaning": "v. 祈祷, 祈求 n. (Pray)人名；(匈)普劳伊",
           "allSourceMeanings": [
             {
@@ -100112,7 +100112,7 @@
         {
           "word": "precious",
           "book": "cet4",
-          "coreMeaning": "珍贵的,宝贵的；(Precious)人名；(英)普雷舍斯,普雷舍丝(女名)",
+          "coreMeaning": "珍贵的,宝贵的",
           "fullMeaning": "adj. 珍贵的,宝贵的 n. (Precious)人名；(英)普雷舍斯,普雷舍丝(女名)",
           "allSourceMeanings": [
             {
@@ -101388,7 +101388,7 @@
         {
           "word": "proper",
           "book": "cet4",
-          "coreMeaning": "(Proper)人名；(英、德)普罗珀；适当的",
+          "coreMeaning": "适当的",
           "fullMeaning": "n. (Proper)人名；(英、德)普罗珀 adj. 适当的",
           "allSourceMeanings": [
             {
@@ -101474,7 +101474,7 @@
         {
           "word": "proud",
           "book": "cet4",
-          "coreMeaning": "自豪的；(Proud)人名；(英)普劳德",
+          "coreMeaning": "自豪的",
           "fullMeaning": "adj. 自豪的 n. (Proud)人名；(英)普劳德",
           "allSourceMeanings": [
             {
@@ -101860,7 +101860,7 @@
         {
           "word": "pure",
           "book": "cet4",
-          "coreMeaning": "纯粹的；纯洁的；(Pure)人名",
+          "coreMeaning": "纯粹的；纯洁的",
           "fullMeaning": "adj. 纯粹的；纯洁的 n. (Pure)人名",
           "allSourceMeanings": [
             {
@@ -103080,8 +103080,8 @@
         {
           "word": "rainy",
           "book": "cet4",
-          "coreMeaning": "(Rainy)人名；(英)雷尼",
-          "fullMeaning": "n. (Rainy)人名；(英)雷尼",
+          "coreMeaning": "多雨的；下雨的",
+          "fullMeaning": "adj. 多雨的；下雨的 n. (Rainy)人名；(英)雷尼",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -103199,8 +103199,8 @@
         {
           "word": "rather",
           "book": "cet4",
-          "coreMeaning": "宁可,宁愿；相当；(Rather)人名",
-          "fullMeaning": "adv. 宁可,宁愿；相当 n. (Rather)人名",
+          "coreMeaning": "相当；宁愿；而不是",
+          "fullMeaning": "adv. 相当；宁愿；而不是；宁可,宁愿；相当 n. (Rather)人名",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -105322,7 +105322,7 @@
         {
           "word": "reply",
           "book": "cet4",
-          "coreMeaning": "回答；[法] 答辩",
+          "coreMeaning": "回答；答辩",
           "fullMeaning": "n. 回答；[法] 答辩 v. 回答",
           "allSourceMeanings": [
             {
@@ -105749,7 +105749,7 @@
         {
           "word": "rid",
           "book": "cet4",
-          "coreMeaning": "使摆脱；(Rid)人名；(英)里德",
+          "coreMeaning": "使摆脱",
           "fullMeaning": "v. 使摆脱 n. (Rid)人名；(英)里德",
           "allSourceMeanings": [
             {
@@ -105850,7 +105850,7 @@
         {
           "word": "ripe",
           "book": "cet4",
-          "coreMeaning": "时机成熟的；熟的；(Ripe)人名",
+          "coreMeaning": "时机成熟的；熟的",
           "fullMeaning": "adj. 时机成熟的；熟的 n. (Ripe)人名",
           "allSourceMeanings": [
             {
@@ -106880,8 +106880,8 @@
         {
           "word": "say",
           "book": "cet4",
-          "coreMeaning": "(Say)人名；(土)萨伊；讲",
-          "fullMeaning": "n. (Say)人名；(土)萨伊 v. 讲",
+          "coreMeaning": "说；讲；表示",
+          "fullMeaning": "v. 说；讲；表示；讲 n. (Say)人名；(土)萨伊",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -109095,7 +109095,7 @@
         {
           "word": "smart",
           "book": "cet4",
-          "coreMeaning": "巧妙的；(Smart)人名；(法)斯马尔",
+          "coreMeaning": "巧妙的",
           "fullMeaning": "adj. 巧妙的 n. (Smart)人名；(法)斯马尔",
           "allSourceMeanings": [
             {
@@ -111274,7 +111274,7 @@
         {
           "word": "strange",
           "book": "cet4",
-          "coreMeaning": "陌生的；奇怪的；(Strange)人名",
+          "coreMeaning": "陌生的；奇怪的",
           "fullMeaning": "adj. 陌生的；奇怪的 n. (Strange)人名",
           "allSourceMeanings": [
             {
@@ -113810,7 +113810,7 @@
         {
           "word": "tour",
           "book": "cet4",
-          "coreMeaning": "旅行,游历；[C] 参观, 观光, 旅行",
+          "coreMeaning": "旅行,游历；参观, 观光, 旅行",
           "fullMeaning": "n&vi. 旅行,游历 n. [C] 参观, 观光, 旅行",
           "allSourceMeanings": [
             {
@@ -113886,7 +113886,7 @@
         {
           "word": "towel",
           "book": "cet4",
-          "coreMeaning": "毛巾,手巾；[纸] 纸巾；用毛巾擦",
+          "coreMeaning": "毛巾,手巾；纸巾；用毛巾擦",
           "fullMeaning": "n. 毛巾,手巾；[纸] 纸巾 v. 用毛巾擦",
           "allSourceMeanings": [
             {
@@ -115125,7 +115125,7 @@
         {
           "word": "tyre",
           "book": "cet4",
-          "coreMeaning": "轮胎,车胎；[橡胶] 轮胎；装轮胎于",
+          "coreMeaning": "轮胎,车胎；轮胎；装轮胎于",
           "fullMeaning": "n. 轮胎,车胎；[橡胶] 轮胎 v. 装轮胎于",
           "allSourceMeanings": [
             {
@@ -115467,7 +115467,7 @@
         {
           "word": "upper",
           "book": "cet4",
-          "coreMeaning": "(Upper)人名；(英)厄珀；上面的,上部的",
+          "coreMeaning": "上面的,上部的",
           "fullMeaning": "n. (Upper)人名；(英)厄珀 adj. 上面的,上部的",
           "allSourceMeanings": [
             {
@@ -115700,8 +115700,8 @@
         {
           "word": "urban",
           "book": "cet4",
-          "coreMeaning": "住在都市的；都市的,住在都市的；(Urban)人名",
-          "fullMeaning": "adj. 住在都市的；都市的,住在都市的 n. (Urban)人名",
+          "coreMeaning": "城市的；都市的",
+          "fullMeaning": "adj. 城市的；都市的；住在都市的；都市的,住在都市的 n. (Urban)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -115898,7 +115898,7 @@
         {
           "word": "vacant",
           "book": "cet4",
-          "coreMeaning": "空缺的；空的；(Vacant)人名",
+          "coreMeaning": "空缺的；空的",
           "fullMeaning": "adj. 空缺的；空的 n. (Vacant)人名",
           "allSourceMeanings": [
             {
@@ -116004,7 +116004,7 @@
         {
           "word": "vague",
           "book": "cet4",
-          "coreMeaning": "含糊的；不明确的；(Vague)人名",
+          "coreMeaning": "含糊的；不明确的",
           "fullMeaning": "adj. 含糊的；不明确的 n. (Vague)人名",
           "allSourceMeanings": [
             {
@@ -116541,7 +116541,7 @@
         {
           "word": "wander",
           "book": "cet4",
-          "coreMeaning": "漫步；迷路；(Wander)人名",
+          "coreMeaning": "漫步；迷路",
           "fullMeaning": "v. 漫步；迷路 n. (Wander)人名",
           "allSourceMeanings": [
             {
@@ -117304,7 +117304,7 @@
         {
           "word": "willing",
           "book": "cet4",
-          "coreMeaning": "(Willing)人名；(德、芬、瑞典)维林；乐意的",
+          "coreMeaning": "乐意的",
           "fullMeaning": "n. (Willing)人名；(德、芬、瑞典)维林 adj. 乐意的",
           "allSourceMeanings": [
             {
@@ -117802,7 +117802,7 @@
         {
           "word": "wound",
           "book": "cet4",
-          "coreMeaning": "使受伤；创伤,伤口；[C] 创伤",
+          "coreMeaning": "使受伤；创伤,伤口；创伤",
           "fullMeaning": "v. 使受伤 n. 创伤,伤口；[C] 创伤",
           "allSourceMeanings": [
             {
@@ -119358,7 +119358,7 @@
         {
           "word": "video",
           "book": "cet4",
-          "coreMeaning": "录像的；电视的；[电子] 视频",
+          "coreMeaning": "视频；录像",
           "fullMeaning": "adj. 录像的；电视的 n. [电子] 视频",
           "allSourceMeanings": [
             {
@@ -120265,7 +120265,7 @@
         {
           "word": "bloody",
           "book": "cet4",
-          "coreMeaning": "[用于加强语气]非常的",
+          "coreMeaning": "非常的",
           "fullMeaning": "adj. [用于加强语气]非常的",
           "allSourceMeanings": [
             {
@@ -121305,7 +121305,7 @@
         {
           "word": "summary",
           "book": "cet4",
-          "coreMeaning": "概要,摘要,总结；[C] 摘要, 概要；简易的",
+          "coreMeaning": "概要,摘要,总结；摘要, 概要；简易的",
           "fullMeaning": "n. 概要,摘要,总结；[C] 摘要, 概要 adj. 简易的",
           "allSourceMeanings": [
             {
@@ -121769,7 +121769,7 @@
         {
           "word": "shallow",
           "book": "cet4",
-          "coreMeaning": "浅的；[地理] 浅滩",
+          "coreMeaning": "浅的；浅滩",
           "fullMeaning": "adj. 浅的 n. [地理] 浅滩",
           "allSourceMeanings": [
             {
@@ -122181,7 +122181,7 @@
         {
           "word": "slim",
           "book": "cet4",
-          "coreMeaning": "苗条的；微小的；(Slim)人名",
+          "coreMeaning": "苗条的；微小的",
           "fullMeaning": "adj. 苗条的；微小的 n. (Slim)人名",
           "allSourceMeanings": [
             {
@@ -123075,7 +123075,7 @@
         {
           "word": "superb",
           "book": "cet4",
-          "coreMeaning": "极好的；(Superb)人名；(罗)苏佩尔布",
+          "coreMeaning": "极好的",
           "fullMeaning": "adj. 极好的 n. (Superb)人名；(罗)苏佩尔布",
           "allSourceMeanings": [
             {
@@ -123433,8 +123433,8 @@
         {
           "word": "truly",
           "book": "cet4",
-          "coreMeaning": "(Truly)人名；(英)特鲁利",
-          "fullMeaning": "n. (Truly)人名；(英)特鲁利",
+          "coreMeaning": "真正地；确实",
+          "fullMeaning": "adv. 真正地；确实 n. (Truly)人名；(英)特鲁利",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -124757,7 +124757,7 @@
         {
           "word": "cartoon",
           "book": "cet4",
-          "coreMeaning": "卡通片,[电影] 动画片；连环漫画；为……………………画漫画",
+          "coreMeaning": "卡通片, 动画片；连环漫画；为……………………画漫画",
           "fullMeaning": "n. 卡通片,[电影] 动画片；连环漫画 v. 为…………画漫画",
           "allSourceMeanings": [
             {
@@ -125653,7 +125653,7 @@
         {
           "word": "adolescent",
           "book": "cet4",
-          "coreMeaning": "青春期的；青少年；[C]青少年",
+          "coreMeaning": "青春期的；青少年",
           "fullMeaning": "adj. 青春期的 n. 青少年；[C]青少年",
           "allSourceMeanings": [
             {
@@ -125691,7 +125691,7 @@
         {
           "word": "adore",
           "book": "cet4",
-          "coreMeaning": "(Adore)人名；(法)阿多尔；崇拜",
+          "coreMeaning": "崇拜",
           "fullMeaning": "n. (Adore)人名；(法)阿多尔 v. 崇拜",
           "allSourceMeanings": [
             {
@@ -125886,8 +125886,8 @@
         {
           "word": "am",
           "book": "cet4",
-          "coreMeaning": "(柬)安(人名)",
-          "fullMeaning": "n. (柬)安(人名)",
+          "coreMeaning": "是（be 的第一人称单数现在式）",
+          "fullMeaning": "v. 是（be 的第一人称单数现在式） n. (柬)安(人名)",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -125943,7 +125943,7 @@
         {
           "word": "ample",
           "book": "cet4",
-          "coreMeaning": "足够的；宽敞的；(Ample)人名",
+          "coreMeaning": "足够的；宽敞的",
           "fullMeaning": "adj. 足够的；宽敞的 n. (Ample)人名",
           "allSourceMeanings": [
             {
@@ -126019,7 +126019,7 @@
         {
           "word": "apron",
           "book": "cet4",
-          "coreMeaning": "围裙；[航] 停机坪",
+          "coreMeaning": "围裙；停机坪",
           "fullMeaning": "n. 围裙；[航] 停机坪",
           "allSourceMeanings": [
             {
@@ -126532,7 +126532,7 @@
         {
           "word": "beddings",
           "book": "cet4",
-          "coreMeaning": "寝具；(建筑)[建] 基床",
+          "coreMeaning": "寝具；(建筑) 基床",
           "fullMeaning": "n. 寝具；(建筑)[建] 基床",
           "allSourceMeanings": [
             {
@@ -126854,7 +126854,7 @@
         {
           "word": "bookcase",
           "book": "cet4",
-          "coreMeaning": "[家具] 书柜,书架",
+          "coreMeaning": "书柜,书架",
           "fullMeaning": "n. [家具] 书柜,书架",
           "allSourceMeanings": [
             {
@@ -127818,7 +127818,7 @@
         {
           "word": "chips",
           "book": "cet4",
-          "coreMeaning": "[食品] 炸土豆条",
+          "coreMeaning": "炸土豆条",
           "fullMeaning": "n. [食品] 炸土豆条",
           "allSourceMeanings": [
             {
@@ -127952,7 +127952,7 @@
         {
           "word": "cleaner",
           "book": "cet4",
-          "coreMeaning": "[化工] 清洁剂",
+          "coreMeaning": "清洁剂",
           "fullMeaning": "n. [化工] 清洁剂",
           "allSourceMeanings": [
             {
@@ -128825,7 +128825,7 @@
         {
           "word": "dine",
           "book": "cet4",
-          "coreMeaning": "(Dine)人名；(意、葡)迪内；进餐,用餐",
+          "coreMeaning": "进餐,用餐",
           "fullMeaning": "n. (Dine)人名；(意、葡)迪内 v. 进餐,用餐",
           "allSourceMeanings": [
             {
@@ -129066,7 +129066,7 @@
         {
           "word": "dizzy",
           "book": "cet4",
-          "coreMeaning": "(Dizzy)人名；(英)迪齐；晕眩的",
+          "coreMeaning": "晕眩的",
           "fullMeaning": "n. (Dizzy)人名；(英)迪齐 adj. 晕眩的",
           "allSourceMeanings": [
             {
@@ -129720,8 +129720,8 @@
         {
           "word": "flaming",
           "book": "cet4",
-          "coreMeaning": "(Flaming)人名",
-          "fullMeaning": "n. (Flaming)人名",
+          "coreMeaning": "燃烧的；火红的；强烈的",
+          "fullMeaning": "adj. 燃烧的；火红的；强烈的 n. (Flaming)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -129971,7 +129971,7 @@
         {
           "word": "gale",
           "book": "cet4",
-          "coreMeaning": "[气象] 大风,狂风",
+          "coreMeaning": "大风,狂风",
           "fullMeaning": "n. [气象] 大风,狂风",
           "allSourceMeanings": [
             {
@@ -130388,8 +130388,8 @@
         {
           "word": "ha",
           "book": "cet4",
-          "coreMeaning": "(Ha)人名",
-          "fullMeaning": "n. (Ha)人名",
+          "coreMeaning": "哈；啊（表示惊讶或得意）",
+          "fullMeaning": "interj. 哈；啊（表示惊讶或得意） n. (Ha)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -130647,8 +130647,8 @@
         {
           "word": "hilly",
           "book": "cet4",
-          "coreMeaning": "(Hilly)人名",
-          "fullMeaning": "n. (Hilly)人名",
+          "coreMeaning": "多小山的；丘陵起伏的",
+          "fullMeaning": "adj. 多小山的；丘陵起伏的 n. (Hilly)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -131468,7 +131468,7 @@
         {
           "word": "litre",
           "book": "cet4",
-          "coreMeaning": "[计量] 公升(米制容量单位)",
+          "coreMeaning": "公升(米制容量单位)",
           "fullMeaning": "n. [计量] 公升(米制容量单位)",
           "allSourceMeanings": [
             {
@@ -132447,7 +132447,7 @@
         {
           "word": "offshore",
           "book": "cet4",
-          "coreMeaning": "离岸的；[海洋] 近海的",
+          "coreMeaning": "离岸的；近海的",
           "fullMeaning": "adj. 离岸的；[海洋] 近海的",
           "allSourceMeanings": [
             {
@@ -132558,7 +132558,7 @@
         {
           "word": "opener",
           "book": "cet4",
-          "coreMeaning": "[五金] 开启工具",
+          "coreMeaning": "开启工具",
           "fullMeaning": "n. [五金] 开启工具",
           "allSourceMeanings": [
             {
@@ -133129,7 +133129,7 @@
         {
           "word": "pineapple",
           "book": "cet4",
-          "coreMeaning": "[园艺] 菠萝；[园艺] 凤梨",
+          "coreMeaning": "菠萝；凤梨",
           "fullMeaning": "n. [园艺] 菠萝；[园艺] 凤梨",
           "allSourceMeanings": [
             {
@@ -134100,7 +134100,7 @@
         {
           "word": "relay",
           "book": "cet4",
-          "coreMeaning": "转播；[电] 继电器；接替,接替人员",
+          "coreMeaning": "转播；继电器；接替,接替人员",
           "fullMeaning": "v. 转播 n. [电] 继电器；接替,接替人员",
           "allSourceMeanings": [
             {
@@ -134628,8 +134628,8 @@
         {
           "word": "rich",
           "book": "cet4",
-          "coreMeaning": "(Rich)人名",
-          "fullMeaning": "n. (Rich)人名",
+          "coreMeaning": "富有的；丰富的；肥沃的",
+          "fullMeaning": "adj. 富有的；丰富的；肥沃的 n. (Rich)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -134804,8 +134804,8 @@
         {
           "word": "right",
           "book": "cet4",
-          "coreMeaning": "正确",
-          "fullMeaning": "n. 正确",
+          "coreMeaning": "正确的；右边；权利；恰好",
+          "fullMeaning": "adj./n./adv. 正确的；右边；权利；恰好 n. 正确",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -135682,8 +135682,8 @@
         {
           "word": "run",
           "book": "cet4",
-          "coreMeaning": "奔跑；赛跑",
-          "fullMeaning": "n. 奔跑；赛跑",
+          "coreMeaning": "跑；运行；经营；持续",
+          "fullMeaning": "v. 跑；运行；经营；持续 n. 奔跑；赛跑",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -136084,7 +136084,7 @@
         {
           "word": "saleswoman",
           "book": "cet4",
-          "coreMeaning": "[贸易] 女售货员",
+          "coreMeaning": "女售货员",
           "fullMeaning": "n. [贸易] 女售货员",
           "allSourceMeanings": [
             {
@@ -136254,8 +136254,8 @@
         {
           "word": "same",
           "book": "cet4",
-          "coreMeaning": "(Same)人名；(意)萨梅",
-          "fullMeaning": "n. (Same)人名；(意)萨梅",
+          "coreMeaning": "相同的；同一的",
+          "fullMeaning": "adj./pron. 相同的；同一的 n. (Same)人名；(意)萨梅",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -137370,7 +137370,7 @@
         {
           "word": "see",
           "book": "cet4",
-          "coreMeaning": "领会；(See)人名",
+          "coreMeaning": "领会",
           "fullMeaning": "v. 领会 n. (See)人名",
           "allSourceMeanings": [
             {
@@ -137423,8 +137423,8 @@
         {
           "word": "seem",
           "book": "cet4",
-          "coreMeaning": "(Seem)人名；(英)西姆",
-          "fullMeaning": "n. (Seem)人名；(英)西姆",
+          "coreMeaning": "似乎；好像",
+          "fullMeaning": "v. 似乎；好像 n. (Seem)人名；(英)西姆",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -137801,8 +137801,8 @@
         {
           "word": "set",
           "book": "cet4",
-          "coreMeaning": "集合；一套；树立",
-          "fullMeaning": "n. 集合；一套 v. 树立",
+          "coreMeaning": "放置；设置；一套；集合",
+          "fullMeaning": "v./n. 放置；设置；一套；集合 n. 集合；一套 v. 树立",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -138647,8 +138647,8 @@
         {
           "word": "she",
           "book": "cet4",
-          "coreMeaning": "女人",
-          "fullMeaning": "n. 女人",
+          "coreMeaning": "她",
+          "fullMeaning": "pron. 她 n. 女人",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -140032,7 +140032,7 @@
         {
           "word": "sit",
           "book": "cet4",
-          "coreMeaning": "坐；(Sit)人名",
+          "coreMeaning": "坐",
           "fullMeaning": "v. 坐 n. (Sit)人名",
           "allSourceMeanings": [
             {
@@ -140553,8 +140553,8 @@
         {
           "word": "slow",
           "book": "cet4",
-          "coreMeaning": "(Slow)人名；(英)斯洛",
-          "fullMeaning": "n. (Slow)人名；(英)斯洛",
+          "coreMeaning": "慢的；缓慢地；减速",
+          "fullMeaning": "adj./adv./v. 慢的；缓慢地；减速 n. (Slow)人名；(英)斯洛",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -141213,8 +141213,8 @@
         {
           "word": "so",
           "book": "cet4",
-          "coreMeaning": "(So)人名；(柬)索",
-          "fullMeaning": "n. (So)人名；(柬)索",
+          "coreMeaning": "如此；这么；所以",
+          "fullMeaning": "adv./conj. 如此；这么；所以 n. (So)人名；(柬)索",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -142144,7 +142144,7 @@
         {
           "word": "spaceship",
           "book": "cet4",
-          "coreMeaning": "[航] 宇宙飞船",
+          "coreMeaning": "宇宙飞船",
           "fullMeaning": "n. [航] 宇宙飞船",
           "allSourceMeanings": [
             {
@@ -144138,8 +144138,8 @@
         {
           "word": "strong",
           "book": "cet4",
-          "coreMeaning": "(Strong)人名",
-          "fullMeaning": "n. (Strong)人名",
+          "coreMeaning": "强壮的；强烈的；牢固的",
+          "fullMeaning": "adj. 强壮的；强烈的；牢固的 n. (Strong)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -144461,8 +144461,8 @@
         {
           "word": "such",
           "book": "cet4",
-          "coreMeaning": "(Such)人名；(英)萨奇",
-          "fullMeaning": "n. (Such)人名；(英)萨奇",
+          "coreMeaning": "这样的；如此的",
+          "fullMeaning": "det./pron. 这样的；如此的 n. (Such)人名；(英)萨奇",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -144866,8 +144866,8 @@
         {
           "word": "sure",
           "book": "cet4",
-          "coreMeaning": "(Sure)人名；(英)休尔",
-          "fullMeaning": "n. (Sure)人名；(英)休尔",
+          "coreMeaning": "确信的；一定的；当然",
+          "fullMeaning": "adj./adv. 确信的；一定的；当然 n. (Sure)人名；(英)休尔",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -145562,8 +145562,8 @@
         {
           "word": "take",
           "book": "cet4",
-          "coreMeaning": "捕获量；看法",
-          "fullMeaning": "n. 捕获量；看法",
+          "coreMeaning": "拿；带走；花费；采取",
+          "fullMeaning": "v. 拿；带走；花费；采取 n. 捕获量；看法",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -145631,8 +145631,8 @@
         {
           "word": "tall",
           "book": "cet4",
-          "coreMeaning": "(Tall)人名",
-          "fullMeaning": "n. (Tall)人名",
+          "coreMeaning": "高的；高大的",
+          "fullMeaning": "adj. 高的；高大的 n. (Tall)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -145867,7 +145867,7 @@
         {
           "word": "teach",
           "book": "cet4",
-          "coreMeaning": "教；(Teach)人名",
+          "coreMeaning": "教",
           "fullMeaning": "v. 教 n. (Teach)人名",
           "allSourceMeanings": [
             {
@@ -146092,7 +146092,7 @@
         {
           "word": "telegraph",
           "book": "cet4",
-          "coreMeaning": "[通信] 电报机,电报",
+          "coreMeaning": "电报机,电报",
           "fullMeaning": "n. [通信] 电报机,电报",
           "allSourceMeanings": [
             {
@@ -146185,8 +146185,8 @@
         {
           "word": "tell",
           "book": "cet4",
-          "coreMeaning": "(Tell)人名；(英、德、瑞典)特尔",
-          "fullMeaning": "n. (Tell)人名；(英、德、瑞典)特尔",
+          "coreMeaning": "告诉；讲述；辨别",
+          "fullMeaning": "v. 告诉；讲述；辨别 n. (Tell)人名；(英、德、瑞典)特尔",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -146283,8 +146283,8 @@
         {
           "word": "ten",
           "book": "cet4",
-          "coreMeaning": "(Ten)人名",
-          "fullMeaning": "n. (Ten)人名",
+          "coreMeaning": "十；十个",
+          "fullMeaning": "num. 十；十个 n. (Ten)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -146516,8 +146516,8 @@
         {
           "word": "than",
           "book": "cet4",
-          "coreMeaning": "(Than)人名；(老、柬、德)坦",
-          "fullMeaning": "n. (Than)人名；(老、柬、德)坦",
+          "coreMeaning": "比；与其",
+          "fullMeaning": "conj./prep. 比；与其 n. (Than)人名；(老、柬、德)坦",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -146632,8 +146632,8 @@
         {
           "word": "that",
           "book": "cet4",
-          "coreMeaning": "(That)人名；(德)塔特",
-          "fullMeaning": "n. (That)人名；(德)塔特",
+          "coreMeaning": "那；那个；（引导从句）",
+          "fullMeaning": "pron./conj. 那；那个；（引导从句） n. (That)人名；(德)塔特",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -146711,8 +146711,8 @@
         {
           "word": "the",
           "book": "cet4",
-          "coreMeaning": "更加(用于比较级,最高级前)",
-          "fullMeaning": "adv. 更加(用于比较级,最高级前)",
+          "coreMeaning": "这；那；这些；那些（定冠词）",
+          "fullMeaning": "art. 这；那；这些；那些（定冠词） adv. 更加(用于比较级,最高级前)",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -146740,8 +146740,8 @@
         {
           "word": "their",
           "book": "cet4",
-          "coreMeaning": "(Their)人名",
-          "fullMeaning": "n. (Their)人名",
+          "coreMeaning": "他们的；她们的；它们的",
+          "fullMeaning": "det. 他们的；她们的；它们的 n. (Their)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -146807,8 +146807,8 @@
         {
           "word": "them",
           "book": "cet4",
-          "coreMeaning": "(Them)人名",
-          "fullMeaning": "n. (Them)人名",
+          "coreMeaning": "他们；她们；它们（宾格）",
+          "fullMeaning": "pron. 他们；她们；它们（宾格） n. (Them)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -146965,7 +146965,7 @@
         {
           "word": "these",
           "book": "cet4",
-          "coreMeaning": "这些的",
+          "coreMeaning": "这些",
           "fullMeaning": "adj. 这些的",
           "allSourceMeanings": [
             {
@@ -146989,8 +146989,8 @@
         {
           "word": "they",
           "book": "cet4",
-          "coreMeaning": "他们",
-          "fullMeaning": "pron. 他们",
+          "coreMeaning": "他们；她们；它们",
+          "fullMeaning": "pron. 他们；她们；它们；他们",
           "allSourceMeanings": [
             {
               "pos": "pron.",
@@ -147345,8 +147345,8 @@
         {
           "word": "this",
           "book": "cet4",
-          "coreMeaning": "(This)人名",
-          "fullMeaning": "n. (This)人名",
+          "coreMeaning": "这；这个",
+          "fullMeaning": "pron./det. 这；这个 n. (This)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -147415,7 +147415,7 @@
         {
           "word": "those",
           "book": "cet4",
-          "coreMeaning": "那些的",
+          "coreMeaning": "那些",
           "fullMeaning": "adj. 那些的",
           "allSourceMeanings": [
             {
@@ -148079,8 +148079,8 @@
         {
           "word": "tight",
           "book": "cet4",
-          "coreMeaning": "(Tight)人名；(英)泰特",
-          "fullMeaning": "n. (Tight)人名；(英)泰特",
+          "coreMeaning": "紧的；牢固的；严格的",
+          "fullMeaning": "adj./adv. 紧的；牢固的；严格的 n. (Tight)人名；(英)泰特",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -148153,7 +148153,7 @@
         {
           "word": "till",
           "book": "cet4",
-          "coreMeaning": "[地理][水文] 冰碛；放钱的抽屉",
+          "coreMeaning": "冰碛；放钱的抽屉",
           "fullMeaning": "n. [地理][水文] 冰碛；放钱的抽屉",
           "allSourceMeanings": [
             {
@@ -148348,8 +148348,8 @@
         {
           "word": "to",
           "book": "cet4",
-          "coreMeaning": "(To)人名",
-          "fullMeaning": "n. (To)人名",
+          "coreMeaning": "向；到；给；（不定式标记）",
+          "fullMeaning": "prep. 向；到；给；（不定式标记） n. (To)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -148921,8 +148921,8 @@
         {
           "word": "toward",
           "book": "cet4",
-          "coreMeaning": "(Toward)人名；(英)特沃德",
-          "fullMeaning": "n. (Toward)人名；(英)特沃德",
+          "coreMeaning": "朝；向；对于",
+          "fullMeaning": "prep. 朝；向；对于 n. (Toward)人名；(英)特沃德",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -149632,8 +149632,8 @@
         {
           "word": "turn",
           "book": "cet4",
-          "coreMeaning": "转弯",
-          "fullMeaning": "v. 转弯 n. 转弯",
+          "coreMeaning": "转动；转弯；变成；轮次",
+          "fullMeaning": "v./n. 转动；转弯；变成；轮次 v. 转弯 n. 转弯",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -150024,8 +150024,8 @@
         {
           "word": "under",
           "book": "cet4",
-          "coreMeaning": "下面的；从属的",
-          "fullMeaning": "adj. 下面的；从属的",
+          "coreMeaning": "在……下面；低于；在……控制下",
+          "fullMeaning": "prep. 在……下面；低于；在……控制下 adj. 下面的；从属的",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -150282,7 +150282,7 @@
         {
           "word": "unmarried",
           "book": "cet4",
-          "coreMeaning": "[法] 未婚的",
+          "coreMeaning": "未婚的",
           "fullMeaning": "adj. [法] 未婚的",
           "allSourceMeanings": [
             {
@@ -150461,8 +150461,8 @@
         {
           "word": "up",
           "book": "cet4",
-          "coreMeaning": "上升；繁荣",
-          "fullMeaning": "n. 上升；繁荣",
+          "coreMeaning": "向上；在上面；上升",
+          "fullMeaning": "adv. 向上；在上面；上升 n. 上升；繁荣",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -150884,8 +150884,8 @@
         {
           "word": "very",
           "book": "cet4",
-          "coreMeaning": "(Very)人名；(英)维里",
-          "fullMeaning": "n. (Very)人名；(英)维里",
+          "coreMeaning": "非常；正是；同一的",
+          "fullMeaning": "adv./adj. 非常；正是；同一的 n. (Very)人名；(英)维里",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -152156,8 +152156,8 @@
         {
           "word": "we",
           "book": "cet4",
-          "coreMeaning": "(We)人名",
-          "fullMeaning": "n. (We)人名",
+          "coreMeaning": "我们",
+          "fullMeaning": "pron. 我们 n. (We)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -153971,8 +153971,8 @@
         {
           "word": "with",
           "book": "cet4",
-          "coreMeaning": "(With)人名；(德、芬、丹、瑞典)维特",
-          "fullMeaning": "n. (With)人名；(德、芬、丹、瑞典)维特",
+          "coreMeaning": "和……一起；带有；用",
+          "fullMeaning": "prep. 和……一起；带有；用 n. (With)人名；(德、芬、丹、瑞典)维特",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -154359,8 +154359,8 @@
         {
           "word": "work",
           "book": "cet4",
-          "coreMeaning": "工作；著作",
-          "fullMeaning": "n. 工作；著作",
+          "coreMeaning": "工作；起作用；作品；运转",
+          "fullMeaning": "v./n. 工作；起作用；作品；运转 n. 工作；著作",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -154653,8 +154653,8 @@
         {
           "word": "worn",
           "book": "cet4",
-          "coreMeaning": "(Worn)人名；(柬)翁",
-          "fullMeaning": "n. (Worn)人名；(柬)翁",
+          "coreMeaning": "磨损的；疲惫的",
+          "fullMeaning": "adj. 磨损的；疲惫的 n. (Worn)人名；(柬)翁",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -155220,7 +155220,7 @@
         {
           "word": "yet",
           "book": "cet4",
-          "coreMeaning": "还；(Yet)人名",
+          "coreMeaning": "还",
           "fullMeaning": "adv. 还 n. (Yet)人名",
           "allSourceMeanings": [
             {
@@ -155279,8 +155279,8 @@
         {
           "word": "you",
           "book": "cet4",
-          "coreMeaning": "(You)人名",
-          "fullMeaning": "n. (You)人名",
+          "coreMeaning": "你；你们",
+          "fullMeaning": "pron. 你；你们 n. (You)人名",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -155358,7 +155358,7 @@
         {
           "word": "your",
           "book": "cet4",
-          "coreMeaning": "你的,你们的",
+          "coreMeaning": "你的；你们的",
           "fullMeaning": "pron. 你的,你们的",
           "allSourceMeanings": [
             {
@@ -155499,7 +155499,7 @@
         {
           "word": "zebra",
           "book": "cet4",
-          "coreMeaning": "[脊椎] 斑马；斑马",
+          "coreMeaning": "斑马",
           "fullMeaning": "n. [脊椎] 斑马；斑马",
           "allSourceMeanings": [
             {
@@ -156147,7 +156147,7 @@
         {
           "word": "behaviour",
           "book": "cet4",
-          "coreMeaning": "[U] 行为, 举止",
+          "coreMeaning": "行为, 举止",
           "fullMeaning": "n. [U] 行为, 举止",
           "allSourceMeanings": [
             {
@@ -159232,7 +159232,7 @@
         {
           "word": "check",
           "book": "cet6",
-          "coreMeaning": "检查；<美>支票",
+          "coreMeaning": "检查；支票",
           "fullMeaning": "v. 检查 n. 检查；<美>支票",
           "allSourceMeanings": [
             {
@@ -161677,7 +161677,7 @@
         {
           "word": "drown",
           "book": "cet6",
-          "coreMeaning": "(Drown)人名；(英)德朗；淹没",
+          "coreMeaning": "淹没",
           "fullMeaning": "n. (Drown)人名；(英)德朗 v. 淹没",
           "allSourceMeanings": [
             {
@@ -162379,7 +162379,7 @@
         {
           "word": "fade",
           "book": "cet6",
-          "coreMeaning": "褪色；逐渐消失；[电影][电视] 淡出",
+          "coreMeaning": "褪色；逐渐消失；淡出",
           "fullMeaning": "v. 褪色；逐渐消失 n. [电影][电视] 淡出",
           "allSourceMeanings": [
             {
@@ -162493,7 +162493,7 @@
         {
           "word": "fierce",
           "book": "cet6",
-          "coreMeaning": "凶猛的；(Fierce)人名；(英)菲尔斯",
+          "coreMeaning": "凶猛的",
           "fullMeaning": "adj. 凶猛的 n. (Fierce)人名；(英)菲尔斯",
           "allSourceMeanings": [
             {
@@ -163459,7 +163459,7 @@
         {
           "word": "genetic",
           "book": "cet6",
-          "coreMeaning": "[-s]遗传学；基因的",
+          "coreMeaning": "遗传学；基因的",
           "fullMeaning": "n. [-s]遗传学 adj. 基因的",
           "allSourceMeanings": [
             {
@@ -163621,7 +163621,7 @@
         {
           "word": "govern",
           "book": "cet6",
-          "coreMeaning": "管理；支配；(Govern)人名",
+          "coreMeaning": "管理；支配",
           "fullMeaning": "v. 管理；支配 n. (Govern)人名",
           "allSourceMeanings": [
             {
@@ -166588,7 +166588,7 @@
         {
           "word": "owe",
           "book": "cet6",
-          "coreMeaning": "欠；应把……………………归功于；(Owe)人名",
+          "coreMeaning": "欠；应把……………………归功于",
           "fullMeaning": "v. 欠；应把…………归功于 n. (Owe)人名",
           "allSourceMeanings": [
             {
@@ -169721,7 +169721,7 @@
         {
           "word": "resist",
           "book": "cet6",
-          "coreMeaning": "抵抗,抗拒；[助剂] 抗蚀剂；防染剂",
+          "coreMeaning": "抵抗,抗拒；抗蚀剂；防染剂",
           "fullMeaning": "v. 抵抗,抗拒 n. [助剂] 抗蚀剂；防染剂",
           "allSourceMeanings": [
             {
@@ -171385,7 +171385,7 @@
         {
           "word": "slim",
           "book": "cet6",
-          "coreMeaning": "苗条的；微小的；(Slim)人名",
+          "coreMeaning": "苗条的；微小的",
           "fullMeaning": "adj. 苗条的；微小的 n. (Slim)人名",
           "allSourceMeanings": [
             {
@@ -173911,8 +173911,8 @@
         {
           "word": "urban",
           "book": "cet6",
-          "coreMeaning": "住在都市的；都市的,住在都市的；(Urban)人名",
-          "fullMeaning": "adj. 住在都市的；都市的,住在都市的 n. (Urban)人名",
+          "coreMeaning": "城市的；都市的",
+          "fullMeaning": "adj. 城市的；都市的；住在都市的；都市的,住在都市的 n. (Urban)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -178101,7 +178101,7 @@
         {
           "word": "helicopter",
           "book": "cet6",
-          "coreMeaning": "直升机；[航] 直升飞机；[航] 乘直升飞机",
+          "coreMeaning": "直升机；直升飞机；乘直升飞机",
           "fullMeaning": "n. 直升机；[航] 直升飞机 v. [航] 乘直升飞机",
           "allSourceMeanings": [
             {
@@ -179767,8 +179767,8 @@
         {
           "word": "vital",
           "book": "cet6",
-          "coreMeaning": "重要的；生命的, 有生命力的；(Vital)人名",
-          "fullMeaning": "adj. 重要的；生命的, 有生命力的 n. (Vital)人名",
+          "coreMeaning": "至关重要的；有生命的",
+          "fullMeaning": "adj. 至关重要的；有生命的；重要的；生命的, 有生命力的 n. (Vital)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -180254,7 +180254,7 @@
         {
           "word": "relay",
           "book": "cet6",
-          "coreMeaning": "转播；[电] 继电器；接替,接替人员",
+          "coreMeaning": "转播；继电器；接替,接替人员",
           "fullMeaning": "v. 转播 n. [电] 继电器；接替,接替人员",
           "allSourceMeanings": [
             {
@@ -180733,7 +180733,7 @@
         {
           "word": "cater",
           "book": "cet6",
-          "coreMeaning": "迎合；(Cater)人名；(英)凯特",
+          "coreMeaning": "迎合",
           "fullMeaning": "v. 迎合 n. (Cater)人名；(英)凯特",
           "allSourceMeanings": [
             {
@@ -181592,7 +181592,7 @@
         {
           "word": "arise",
           "book": "cet6",
-          "coreMeaning": "出现；由……………………引起；(Arise)人名",
+          "coreMeaning": "出现；由……………………引起",
           "fullMeaning": "v. 出现；由…………引起 n. (Arise)人名",
           "allSourceMeanings": [
             {
@@ -182839,7 +182839,7 @@
         {
           "word": "ample",
           "book": "cet6",
-          "coreMeaning": "足够的；宽敞的；(Ample)人名",
+          "coreMeaning": "足够的；宽敞的",
           "fullMeaning": "adj. 足够的；宽敞的 n. (Ample)人名",
           "allSourceMeanings": [
             {
@@ -183328,7 +183328,7 @@
         {
           "word": "superb",
           "book": "cet6",
-          "coreMeaning": "极好的；(Superb)人名；(罗)苏佩尔布",
+          "coreMeaning": "极好的",
           "fullMeaning": "adj. 极好的 n. (Superb)人名；(罗)苏佩尔布",
           "allSourceMeanings": [
             {
@@ -185679,8 +185679,8 @@
         {
           "word": "over",
           "book": "cet6",
-          "coreMeaning": "越过；在……………………之上；超过",
-          "fullMeaning": "adv. 越过 prep. 在…………之上；超过",
+          "coreMeaning": "在……上方；越过；超过；结束",
+          "fullMeaning": "prep./adv. 在……上方；越过；超过；结束 adv. 越过 prep. 在…………之上；超过",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -190471,7 +190471,7 @@
         {
           "word": "nice",
           "book": "cet6",
-          "coreMeaning": "(Nice)人名；(英)尼斯；精密的",
+          "coreMeaning": "精密的",
           "fullMeaning": "n. (Nice)人名；(英)尼斯 adj. 精密的",
           "allSourceMeanings": [
             {
@@ -191926,7 +191926,7 @@
         {
           "word": "strange",
           "book": "cet6",
-          "coreMeaning": "陌生的；奇怪的；(Strange)人名",
+          "coreMeaning": "陌生的；奇怪的",
           "fullMeaning": "adj. 陌生的；奇怪的 n. (Strange)人名",
           "allSourceMeanings": [
             {
@@ -192476,7 +192476,7 @@
         {
           "word": "dizzy",
           "book": "cet6",
-          "coreMeaning": "(Dizzy)人名；(英)迪齐；晕眩的",
+          "coreMeaning": "晕眩的",
           "fullMeaning": "n. (Dizzy)人名；(英)迪齐 adj. 晕眩的",
           "allSourceMeanings": [
             {
@@ -192698,8 +192698,8 @@
         {
           "word": "even",
           "book": "cet6",
-          "coreMeaning": "平坦的；甚至；(Even)人名",
-          "fullMeaning": "adj. 平坦的 adv. 甚至 n. (Even)人名",
+          "coreMeaning": "甚至；平坦的；偶数的",
+          "fullMeaning": "adv./adj. 甚至；平坦的；偶数的 adj. 平坦的 adv. 甚至 n. (Even)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -202120,7 +202120,7 @@
         {
           "word": "cartoon",
           "book": "cet6",
-          "coreMeaning": "卡通片,[电影] 动画片；连环漫画；为……………………画漫画",
+          "coreMeaning": "卡通片, 动画片；连环漫画；为……………………画漫画",
           "fullMeaning": "n. 卡通片,[电影] 动画片；连环漫画 v. 为…………画漫画",
           "allSourceMeanings": [
             {
@@ -202402,7 +202402,7 @@
         {
           "word": "video",
           "book": "cet6",
-          "coreMeaning": "录像的；电视的；[电子] 视频",
+          "coreMeaning": "视频；录像",
           "fullMeaning": "adj. 录像的；电视的 n. [电子] 视频",
           "allSourceMeanings": [
             {
@@ -203252,7 +203252,7 @@
         {
           "word": "cubic",
           "book": "cet6",
-          "coreMeaning": "立方的；(Cubic)人名；(罗)库比克",
+          "coreMeaning": "立方的",
           "fullMeaning": "adj. 立方的 n. (Cubic)人名；(罗)库比克",
           "allSourceMeanings": [
             {
@@ -206786,8 +206786,8 @@
         {
           "word": "set",
           "book": "cet6",
-          "coreMeaning": "集合；一套；树立",
-          "fullMeaning": "n. 集合；一套 v. 树立",
+          "coreMeaning": "放置；设置；一套；集合",
+          "fullMeaning": "v./n. 放置；设置；一套；集合 n. 集合；一套 v. 树立",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -208031,7 +208031,7 @@
         {
           "word": "proper",
           "book": "cet6",
-          "coreMeaning": "(Proper)人名；(英、德)普罗珀；适当的",
+          "coreMeaning": "适当的",
           "fullMeaning": "n. (Proper)人名；(英、德)普罗珀 adj. 适当的",
           "allSourceMeanings": [
             {
@@ -210100,7 +210100,7 @@
         {
           "word": "summary",
           "book": "cet6",
-          "coreMeaning": "概要,摘要,总结；[C] 摘要, 概要；简易的",
+          "coreMeaning": "概要,摘要,总结；摘要, 概要；简易的",
           "fullMeaning": "n. 概要,摘要,总结；[C] 摘要, 概要 adj. 简易的",
           "allSourceMeanings": [
             {
@@ -210770,7 +210770,7 @@
         {
           "word": "pineapple",
           "book": "cet6",
-          "coreMeaning": "[园艺] 菠萝；[园艺] 凤梨",
+          "coreMeaning": "菠萝；凤梨",
           "fullMeaning": "n. [园艺] 菠萝；[园艺] 凤梨",
           "allSourceMeanings": [
             {
@@ -211395,7 +211395,7 @@
         {
           "word": "handy",
           "book": "cet6",
-          "coreMeaning": "便利的；手边的；(Handy)人名",
+          "coreMeaning": "便利的；手边的",
           "fullMeaning": "adj. 便利的；手边的 n. (Handy)人名",
           "allSourceMeanings": [
             {
@@ -214031,7 +214031,7 @@
         {
           "word": "smart",
           "book": "cet6",
-          "coreMeaning": "巧妙的；(Smart)人名；(法)斯马尔",
+          "coreMeaning": "巧妙的",
           "fullMeaning": "adj. 巧妙的 n. (Smart)人名；(法)斯马尔",
           "allSourceMeanings": [
             {
@@ -214822,7 +214822,7 @@
         {
           "word": "adore",
           "book": "cet6",
-          "coreMeaning": "(Adore)人名；(法)阿多尔；崇拜",
+          "coreMeaning": "崇拜",
           "fullMeaning": "n. (Adore)人名；(法)阿多尔 v. 崇拜",
           "allSourceMeanings": [
             {
@@ -215110,7 +215110,7 @@
         {
           "word": "dine",
           "book": "cet6",
-          "coreMeaning": "(Dine)人名；(意、葡)迪内；进餐,用餐",
+          "coreMeaning": "进餐,用餐",
           "fullMeaning": "n. (Dine)人名；(意、葡)迪内 v. 进餐,用餐",
           "allSourceMeanings": [
             {
@@ -219616,8 +219616,8 @@
         {
           "word": "hard",
           "book": "cet6",
-          "coreMeaning": "硬的；困难的；(Hard)人名",
-          "fullMeaning": "adj. 硬的；困难的 n. (Hard)人名",
+          "coreMeaning": "困难的；坚硬的；努力地",
+          "fullMeaning": "adj./adv. 困难的；坚硬的；努力地 adj. 硬的；困难的 n. (Hard)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -224896,7 +224896,7 @@
         {
           "word": "incident",
           "book": "cet6",
-          "coreMeaning": "事件；发生的事, 事件；[光] 入射的",
+          "coreMeaning": "事件；发生的事, 事件；入射的",
           "fullMeaning": "n. 事件；发生的事, 事件 adj. [光] 入射的",
           "allSourceMeanings": [
             {
@@ -227486,7 +227486,7 @@
         {
           "word": "illegal",
           "book": "cet6",
-          "coreMeaning": "不合法的,非法的；非法移民,非法劳工；[法] 非法的",
+          "coreMeaning": "不合法的,非法的；非法移民,非法劳工；非法的",
           "fullMeaning": "adj. 不合法的,非法的；[法] 非法的 n. 非法移民,非法劳工",
           "allSourceMeanings": [
             {
@@ -229017,7 +229017,7 @@
         {
           "word": "legal",
           "book": "cet6",
-          "coreMeaning": "法律的；合法的；(Legal)人名",
+          "coreMeaning": "法律的；合法的",
           "fullMeaning": "adj. 法律的；合法的 n. (Legal)人名",
           "allSourceMeanings": [
             {
@@ -230150,7 +230150,7 @@
         {
           "word": "vacant",
           "book": "cet6",
-          "coreMeaning": "空缺的；空的；(Vacant)人名",
+          "coreMeaning": "空缺的；空的",
           "fullMeaning": "adj. 空缺的；空的 n. (Vacant)人名",
           "allSourceMeanings": [
             {
@@ -230218,8 +230218,8 @@
         {
           "word": "afford",
           "book": "cet6",
-          "coreMeaning": "提供；担负得起……………………；(Afford)人名",
-          "fullMeaning": "v. 提供；担负得起………… n. (Afford)人名",
+          "coreMeaning": "买得起；承担得起；提供",
+          "fullMeaning": "v. 买得起；承担得起；提供；提供；担负得起………… n. (Afford)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -231070,7 +231070,7 @@
         {
           "word": "adolescent",
           "book": "cet6",
-          "coreMeaning": "青春期的；青少年；[C]青少年",
+          "coreMeaning": "青春期的；青少年",
           "fullMeaning": "adj. 青春期的 n. 青少年；[C]青少年",
           "allSourceMeanings": [
             {
@@ -233781,7 +233781,7 @@
         {
           "word": "federal",
           "book": "cet6",
-          "coreMeaning": "联邦的；联邦的, 联盟的；(Federal)人名",
+          "coreMeaning": "联邦的；联邦的, 联盟的",
           "fullMeaning": "adj. 联邦的；联邦的, 联盟的 n. (Federal)人名",
           "allSourceMeanings": [
             {
@@ -233970,7 +233970,7 @@
         {
           "word": "culture",
           "book": "cet6",
-          "coreMeaning": "文化,文明；教养；[细胞][微] 培养(等于cultivate)",
+          "coreMeaning": "文化；文明；培养",
           "fullMeaning": "n. 文化,文明；教养 v. [细胞][微] 培养(等于cultivate)",
           "allSourceMeanings": [
             {
@@ -234560,7 +234560,7 @@
         {
           "word": "vague",
           "book": "cet6",
-          "coreMeaning": "含糊的；不明确的；(Vague)人名",
+          "coreMeaning": "含糊的；不明确的",
           "fullMeaning": "adj. 含糊的；不明确的 n. (Vague)人名",
           "allSourceMeanings": [
             {
@@ -238459,7 +238459,7 @@
         {
           "word": "demand",
           "book": "cet6",
-          "coreMeaning": "要求；需要；[经] 需求",
+          "coreMeaning": "要求；需要；需求",
           "fullMeaning": "v. 要求；需要 n. [经] 需求",
           "allSourceMeanings": [
             {
@@ -239597,7 +239597,7 @@
         {
           "word": "modest",
           "book": "cet6",
-          "coreMeaning": "羞怯的；谦虚的；(Modest)人名",
+          "coreMeaning": "羞怯的；谦虚的",
           "fullMeaning": "adj. 羞怯的；谦虚的 n. (Modest)人名",
           "allSourceMeanings": [
             {
@@ -241280,7 +241280,7 @@
         {
           "word": "carve",
           "book": "cet6",
-          "coreMeaning": "雕刻；切开；(Carve)人名",
+          "coreMeaning": "雕刻；切开",
           "fullMeaning": "v. 雕刻；切开 n. (Carve)人名",
           "allSourceMeanings": [
             {
@@ -245249,8 +245249,8 @@
         {
           "word": "argue",
           "book": "cet6",
-          "coreMeaning": "说服；争论,争辩,辩论；(Argue)人名",
-          "fullMeaning": "v. 说服；争论,争辩,辩论 n. (Argue)人名",
+          "coreMeaning": "争论；论证；主张",
+          "fullMeaning": "v. 争论；论证；主张；说服；争论,争辩,辩论 n. (Argue)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -246249,7 +246249,7 @@
         {
           "word": "precious",
           "book": "cet6",
-          "coreMeaning": "珍贵的,宝贵的；(Precious)人名；(英)普雷舍斯,普雷舍丝(女名)",
+          "coreMeaning": "珍贵的,宝贵的",
           "fullMeaning": "adj. 珍贵的,宝贵的 n. (Precious)人名；(英)普雷舍斯,普雷舍丝(女名)",
           "allSourceMeanings": [
             {
@@ -246772,7 +246772,7 @@
         {
           "word": "aware",
           "book": "cet6",
-          "coreMeaning": "知道的, 意识到的；(Aware)人名；(阿拉伯、索)阿瓦雷",
+          "coreMeaning": "知道的；意识到的",
           "fullMeaning": "adj. 知道的, 意识到的 n. (Aware)人名；(阿拉伯、索)阿瓦雷",
           "allSourceMeanings": [
             {
@@ -247678,7 +247678,7 @@
         {
           "word": "bless",
           "book": "cet6",
-          "coreMeaning": "祝福；(Bless)人名；(英、意、德、匈)布莱斯",
+          "coreMeaning": "祝福",
           "fullMeaning": "v. 祝福 n. (Bless)人名；(英、意、德、匈)布莱斯",
           "allSourceMeanings": [
             {
@@ -247815,7 +247815,7 @@
         {
           "word": "careless",
           "book": "cet6",
-          "coreMeaning": "粗心的；(Careless)人名；(英)凯尔利斯",
+          "coreMeaning": "粗心的",
           "fullMeaning": "adj. 粗心的 n. (Careless)人名；(英)凯尔利斯",
           "allSourceMeanings": [
             {
@@ -248601,7 +248601,7 @@
         {
           "word": "divide",
           "book": "cet6",
-          "coreMeaning": "分开；除；[地理] 分水岭,分水线",
+          "coreMeaning": "分开；除；分水岭,分水线",
           "fullMeaning": "v. 分开；除 n. [地理] 分水岭,分水线",
           "allSourceMeanings": [
             {
@@ -252365,8 +252365,8 @@
         {
           "word": "suffer",
           "book": "cet6",
-          "coreMeaning": "(Suffer)人名；(意)苏费尔；遭受",
-          "fullMeaning": "n. (Suffer)人名；(意)苏费尔 v. 遭受",
+          "coreMeaning": "遭受；忍受；受苦",
+          "fullMeaning": "v. 遭受；忍受；受苦；遭受 n. (Suffer)人名；(意)苏费尔",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -252765,7 +252765,7 @@
         {
           "word": "tiny",
           "book": "cet6",
-          "coreMeaning": "微小的；(Tiny)人名",
+          "coreMeaning": "微小的",
           "fullMeaning": "adj. 微小的 n. (Tiny)人名",
           "allSourceMeanings": [
             {
@@ -253080,7 +253080,7 @@
         {
           "word": "wise",
           "book": "cet6",
-          "coreMeaning": "(Wise)人名；(英)怀斯；明智的",
+          "coreMeaning": "明智的",
           "fullMeaning": "n. (Wise)人名；(英)怀斯 adj. 明智的",
           "allSourceMeanings": [
             {
@@ -253857,7 +253857,7 @@
         {
           "word": "rude",
           "book": "cet6",
-          "coreMeaning": "粗鲁的；(Rude)人名；(英、西、瑞典)鲁德",
+          "coreMeaning": "粗鲁的",
           "fullMeaning": "adj. 粗鲁的 n. (Rude)人名；(英、西、瑞典)鲁德",
           "allSourceMeanings": [
             {
@@ -256166,8 +256166,8 @@
         {
           "word": "a",
           "book": "cet6",
-          "coreMeaning": "字母A；第一流的",
-          "fullMeaning": "n. 字母A；第一流的",
+          "coreMeaning": "一个；一（用于单数可数名词前）",
+          "fullMeaning": "art. 一个；一（用于单数可数名词前） n. 字母A；第一流的",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -256209,8 +256209,8 @@
         {
           "word": "able",
           "book": "cet6",
-          "coreMeaning": "有能力的；(Able)人名；(伊朗)阿布勒",
-          "fullMeaning": "adj. 有能力的 n. (Able)人名；(伊朗)阿布勒",
+          "coreMeaning": "有能力的；能干的",
+          "fullMeaning": "adj. 有能力的；能干的；有能力的 n. (Able)人名；(伊朗)阿布勒",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -256267,7 +256267,7 @@
         {
           "word": "aboard",
           "book": "cet6",
-          "coreMeaning": "在飞机上；[船] 在船上；在……………………上",
+          "coreMeaning": "在飞机上；在船上；在……………………上",
           "fullMeaning": "adv. 在飞机上；[船] 在船上 prep. 在…………上",
           "allSourceMeanings": [
             {
@@ -257338,8 +257338,8 @@
         {
           "word": "ago",
           "book": "cet6",
-          "coreMeaning": "(Ago)人名；(英、西、意、塞、瑞典)阿戈",
-          "fullMeaning": "n. (Ago)人名；(英、西、意、塞、瑞典)阿戈",
+          "coreMeaning": "以前",
+          "fullMeaning": "adv. 以前 n. (Ago)人名；(英、西、意、塞、瑞典)阿戈",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -257796,8 +257796,8 @@
         {
           "word": "also",
           "book": "cet6",
-          "coreMeaning": "也；(Also)人名；(罗)阿尔索",
-          "fullMeaning": "adv. 也 n. (Also)人名；(罗)阿尔索",
+          "coreMeaning": "也；而且",
+          "fullMeaning": "adv. 也；而且；也 n. (Also)人名；(罗)阿尔索",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -258133,8 +258133,8 @@
         {
           "word": "and",
           "book": "cet6",
-          "coreMeaning": "(And)人名；(土、瑞典)安德",
-          "fullMeaning": "n. (And)人名；(土、瑞典)安德",
+          "coreMeaning": "和；与；而且",
+          "fullMeaning": "conj. 和；与；而且 n. (And)人名；(土、瑞典)安德",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -258404,8 +258404,8 @@
         {
           "word": "any",
           "book": "cet6",
-          "coreMeaning": "任何的；任何一个；(Any)人名",
-          "fullMeaning": "adj. 任何的 pron. 任何一个 n. (Any)人名",
+          "coreMeaning": "任何的；任一；一些",
+          "fullMeaning": "det./pron. 任何的；任一；一些 adj. 任何的 pron. 任何一个 n. (Any)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -258688,7 +258688,7 @@
         {
           "word": "arrive",
           "book": "cet6",
-          "coreMeaning": "到达；(Arrive)人名；(法)阿里夫",
+          "coreMeaning": "到达",
           "fullMeaning": "v. 到达 n. (Arrive)人名；(法)阿里夫",
           "allSourceMeanings": [
             {
@@ -258900,8 +258900,8 @@
         {
           "word": "as",
           "book": "cet6",
-          "coreMeaning": "因为；当……………………时；同样地",
-          "fullMeaning": "conj. 因为；当…………时 adv. 同样地",
+          "coreMeaning": "作为；像；当……时；因为",
+          "fullMeaning": "prep./conj. 作为；像；当……时；因为 conj. 因为；当…………时 adv. 同样地",
           "allSourceMeanings": [
             {
               "pos": "conj.",
@@ -259065,8 +259065,8 @@
         {
           "word": "ask",
           "book": "cet6",
-          "coreMeaning": "要求；邀请；(Ask)人名",
-          "fullMeaning": "v. 要求；邀请 n. (Ask)人名",
+          "coreMeaning": "询问；请求；要求；邀请",
+          "fullMeaning": "v. 询问；请求；要求；邀请；要求；邀请 n. (Ask)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -259267,8 +259267,8 @@
         {
           "word": "at",
           "book": "cet6",
-          "coreMeaning": "阿特(老挝货币基本单位att)；砹(极不稳定放射性元素)；在(表示存在或出现的地点、场所、位置、空间)",
-          "fullMeaning": "n. 阿特(老挝货币基本单位att)；砹(极不稳定放射性元素) prep. 在(表示存在或出现的地点、场所、位置、空间)",
+          "coreMeaning": "在；向；以（价格、速度等）",
+          "fullMeaning": "prep. 在；向；以（价格、速度等）；在(表示存在或出现的地点、场所、位置、空间) n. 阿特(老挝货币基本单位att)；砹(极不稳定放射性元素)",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -260175,7 +260175,7 @@
         {
           "word": "bare",
           "book": "cet6",
-          "coreMeaning": "赤裸的；(Bare)人名；(英)贝尔",
+          "coreMeaning": "赤裸的",
           "fullMeaning": "adj. 赤裸的 n. (Bare)人名；(英)贝尔",
           "allSourceMeanings": [
             {
@@ -260642,8 +260642,8 @@
         {
           "word": "be",
           "book": "cet6",
-          "coreMeaning": "(Be)人名；(缅)拜",
-          "fullMeaning": "n. (Be)人名；(缅)拜",
+          "coreMeaning": "是；存在；成为",
+          "fullMeaning": "v. 是；存在；成为 n. (Be)人名；(缅)拜",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -261056,7 +261056,7 @@
         {
           "word": "beg",
           "book": "cet6",
-          "coreMeaning": "(Beg)人名；(德、塞、巴基)贝格；乞讨",
+          "coreMeaning": "乞讨",
           "fullMeaning": "n. (Beg)人名；(德、塞、巴基)贝格 v. 乞讨",
           "allSourceMeanings": [
             {
@@ -261137,7 +261137,7 @@
         {
           "word": "begin",
           "book": "cet6",
-          "coreMeaning": "开始；(Begin)人名；(以、德)贝京",
+          "coreMeaning": "开始",
           "fullMeaning": "v. 开始 n. (Begin)人名；(以、德)贝京",
           "allSourceMeanings": [
             {
@@ -261423,7 +261423,7 @@
         {
           "word": "below",
           "book": "cet6",
-          "coreMeaning": "在……………………下面；(Below)人名；(英、德、芬、瑞典)贝洛",
+          "coreMeaning": "在……………………下面",
           "fullMeaning": "prep. 在…………下面 n. (Below)人名；(英、德、芬、瑞典)贝洛",
           "allSourceMeanings": [
             {
@@ -261854,8 +261854,8 @@
         {
           "word": "big",
           "book": "cet6",
-          "coreMeaning": "(Big)人名；(土)比格",
-          "fullMeaning": "n. (Big)人名；(土)比格",
+          "coreMeaning": "大的；重要的；重大的",
+          "fullMeaning": "adj. 大的；重要的；重大的 n. (Big)人名；(土)比格",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -262897,7 +262897,7 @@
         {
           "word": "born",
           "book": "cet6",
-          "coreMeaning": "天生的；出生的；(Born)人名",
+          "coreMeaning": "出生的；天生的",
           "fullMeaning": "adj. 天生的；出生的 n. (Born)人名",
           "allSourceMeanings": [
             {
@@ -262940,7 +262940,7 @@
         {
           "word": "borrow",
           "book": "cet6",
-          "coreMeaning": "借；借用；(Borrow)人名",
+          "coreMeaning": "借；借用",
           "fullMeaning": "v. 借；借用 n. (Borrow)人名",
           "allSourceMeanings": [
             {
@@ -263054,7 +263054,7 @@
         {
           "word": "both",
           "book": "cet6",
-          "coreMeaning": "两者都；双方都；(Both)人名",
+          "coreMeaning": "两者都；双方",
           "fullMeaning": "pron. 两者都；双方都 n. (Both)人名",
           "allSourceMeanings": [
             {
@@ -263782,8 +263782,8 @@
         {
           "word": "bring",
           "book": "cet6",
-          "coreMeaning": "带来；促使；(Bring)人名",
-          "fullMeaning": "v. 带来；促使 n. (Bring)人名",
+          "coreMeaning": "带来；拿来；引起",
+          "fullMeaning": "v. 带来；拿来；引起；带来；促使 n. (Bring)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -264626,7 +264626,7 @@
         {
           "word": "bury",
           "book": "cet6",
-          "coreMeaning": "埋葬；(Bury)人名；(法)比里",
+          "coreMeaning": "埋葬",
           "fullMeaning": "v. 埋葬 n. (Bury)人名；(法)比里",
           "allSourceMeanings": [
             {
@@ -264755,8 +264755,8 @@
         {
           "word": "busy",
           "book": "cet6",
-          "coreMeaning": "忙碌的；(Busy)人名；(匈)布希",
-          "fullMeaning": "adj. 忙碌的 n. (Busy)人名；(匈)布希",
+          "coreMeaning": "忙碌的；繁忙的；占线的",
+          "fullMeaning": "adj. 忙碌的；繁忙的；占线的；忙碌的 n. (Busy)人名；(匈)布希",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -264808,8 +264808,8 @@
         {
           "word": "but",
           "book": "cet6",
-          "coreMeaning": "但是,可是；(But)人名；(俄、罗)布特",
-          "fullMeaning": "conj. 但是,可是 n. (But)人名；(俄、罗)布特",
+          "coreMeaning": "但是；除……之外",
+          "fullMeaning": "conj./prep. 但是；除……之外 conj. 但是,可是 n. (But)人名；(俄、罗)布特",
           "allSourceMeanings": [
             {
               "pos": "conj.",
@@ -265043,8 +265043,8 @@
         {
           "word": "by",
           "book": "cet6",
-          "coreMeaning": "被；通过；经过",
-          "fullMeaning": "prep. 被 adv. 通过；经过",
+          "coreMeaning": "由；被；通过；在……旁边",
+          "fullMeaning": "prep. 由；被；通过；在……旁边；被 adv. 通过；经过",
           "allSourceMeanings": [
             {
               "pos": "prep.",
@@ -265378,7 +265378,7 @@
         {
           "word": "camel",
           "book": "cet6",
-          "coreMeaning": "骆驼；[畜牧][脊椎] 骆驼；驼色的",
+          "coreMeaning": "骆驼；驼色的",
           "fullMeaning": "n. 骆驼；[畜牧][脊椎] 骆驼 adj. 驼色的",
           "allSourceMeanings": [
             {
@@ -265755,7 +265755,7 @@
         {
           "word": "carbon",
           "book": "cet6",
-          "coreMeaning": "碳；[化学] 碳；碳的",
+          "coreMeaning": "碳；碳的",
           "fullMeaning": "n. 碳；[化学] 碳 adj. 碳的",
           "allSourceMeanings": [
             {
@@ -265989,7 +265989,7 @@
         {
           "word": "carrier",
           "book": "cet6",
-          "coreMeaning": "带菌者；[化学] 载体",
+          "coreMeaning": "带菌者；载体",
           "fullMeaning": "n. 带菌者；[化学] 载体",
           "allSourceMeanings": [
             {
@@ -266525,8 +266525,8 @@
         {
           "word": "certain",
           "book": "cet6",
-          "coreMeaning": "(Certain)人名；(葡)塞尔塔因；某一",
-          "fullMeaning": "n. (Certain)人名；(葡)塞尔塔因 adj. 某一",
+          "coreMeaning": "确定的；某一；某些",
+          "fullMeaning": "adj./det. 确定的；某一；某些 n. (Certain)人名；(葡)塞尔塔因 adj. 某一",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -267163,7 +267163,7 @@
         {
           "word": "cheese",
           "book": "cet6",
-          "coreMeaning": "[食品] 奶酪；干酪",
+          "coreMeaning": "奶酪；干酪",
           "fullMeaning": "n. [食品] 奶酪；干酪",
           "allSourceMeanings": [
             {
@@ -267544,7 +267544,7 @@
         {
           "word": "circuit",
           "book": "cet6",
-          "coreMeaning": "电路；[电子] 电路,回路；环行",
+          "coreMeaning": "电路；电路,回路；环行",
           "fullMeaning": "n. 电路；[电子] 电路,回路 v. 环行",
           "allSourceMeanings": [
             {
@@ -267653,7 +267653,7 @@
         {
           "word": "civil",
           "book": "cet6",
-          "coreMeaning": "公民的；文职的；(Civil)人名",
+          "coreMeaning": "公民的；文职的",
           "fullMeaning": "adj. 公民的；文职的 n. (Civil)人名",
           "allSourceMeanings": [
             {
@@ -268272,7 +268272,7 @@
         {
           "word": "clothing",
           "book": "cet6",
-          "coreMeaning": "(总称)[服装] 服装；帆装；覆盖(clothe的ing形式)",
+          "coreMeaning": "(总称) 服装；帆装；覆盖(clothe的ing形式)",
           "fullMeaning": "n. (总称)[服装] 服装；帆装 v. 覆盖(clothe的ing形式)",
           "allSourceMeanings": [
             {
@@ -268686,8 +268686,8 @@
         {
           "word": "collect",
           "book": "cet6",
-          "coreMeaning": "收集；(Collect)人名；(英)科莱克特",
-          "fullMeaning": "v. 收集 n. (Collect)人名；(英)科莱克特",
+          "coreMeaning": "收集；领取；募捐",
+          "fullMeaning": "v. 收集；领取；募捐；收集 n. (Collect)人名；(英)科莱克特",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -268849,8 +268849,8 @@
         {
           "word": "come",
           "book": "cet6",
-          "coreMeaning": "出现；变成；(Come)人名",
-          "fullMeaning": "v. 出现；变成 n. (Come)人名",
+          "coreMeaning": "来；到达；出现；变成",
+          "fullMeaning": "v. 来；到达；出现；变成；出现；变成 n. (Come)人名",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -271380,7 +271380,7 @@
         {
           "word": "daughter",
           "book": "cet6",
-          "coreMeaning": "女儿；[遗][农学] 子代",
+          "coreMeaning": "女儿；子代",
           "fullMeaning": "n. 女儿；[遗][农学] 子代",
           "allSourceMeanings": [
             {
@@ -272050,8 +272050,8 @@
         {
           "word": "differ",
           "book": "cet6",
-          "coreMeaning": "不同,相异；(Differ)人名；(法)迪费",
-          "fullMeaning": "v. 不同,相异 n. (Differ)人名；(法)迪费",
+          "coreMeaning": "不同；有区别",
+          "fullMeaning": "v. 不同；有区别；不同,相异 n. (Differ)人名；(法)迪费",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -272618,8 +272618,8 @@
         {
           "word": "do",
           "book": "cet6",
-          "coreMeaning": "用以构成疑问句及否定句；做,干",
-          "fullMeaning": "v. 用以构成疑问句及否定句；做,干",
+          "coreMeaning": "做；干；助动词",
+          "fullMeaning": "v. 做；干；助动词；用以构成疑问句及否定句；做,干",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -272917,8 +272917,8 @@
         {
           "word": "down",
           "book": "cet6",
-          "coreMeaning": "软毛,绒毛；[地质] 开阔的高地",
-          "fullMeaning": "n. 软毛,绒毛；[地质] 开阔的高地",
+          "coreMeaning": "向下；往下；在下面；下降",
+          "fullMeaning": "adv. 向下；往下；在下面 v. 下降；降低 adj. 向下的；沮丧的 n. 软毛；绒毛；开阔的高地",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -273761,7 +273761,7 @@
         {
           "word": "dull",
           "book": "cet6",
-          "coreMeaning": "钝的；迟钝的；(Dull)人名",
+          "coreMeaning": "钝的；迟钝的",
           "fullMeaning": "adj. 钝的；迟钝的 n. (Dull)人名",
           "allSourceMeanings": [
             {
@@ -273888,8 +273888,8 @@
         {
           "word": "during",
           "book": "cet6",
-          "coreMeaning": "(During)人名；(法)迪兰；在……………………的时候,在……………………的期间",
-          "fullMeaning": "n. (During)人名；(法)迪兰 prep. 在…………的时候,在…………的期间",
+          "coreMeaning": "在……期间",
+          "fullMeaning": "prep. 在……期间；在…………的时候,在…………的期间 n. (During)人名；(法)迪兰",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -274111,7 +274111,7 @@
         {
           "word": "eager",
           "book": "cet6",
-          "coreMeaning": "渴望的, 热切的；(Eager)人名；(英)伊格",
+          "coreMeaning": "渴望的, 热切的",
           "fullMeaning": "adj. 渴望的, 热切的 n. (Eager)人名；(英)伊格",
           "allSourceMeanings": [
             {
@@ -274154,8 +274154,8 @@
         {
           "word": "early",
           "book": "cet6",
-          "coreMeaning": "早的,早期的；(Early)人名；(英)厄尔利",
-          "fullMeaning": "adj. 早的,早期的 n. (Early)人名；(英)厄尔利",
+          "coreMeaning": "早的；早期的；提前",
+          "fullMeaning": "adj./adv. 早的；早期的；提前 adj. 早的,早期的 n. (Early)人名；(英)厄尔利",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -274212,7 +274212,7 @@
         {
           "word": "earn",
           "book": "cet6",
-          "coreMeaning": "(Earn)人名；(泰)炎；赚,赚得",
+          "coreMeaning": "赚,赚得",
           "fullMeaning": "n. (Earn)人名；(泰)炎 v. 赚,赚得",
           "allSourceMeanings": [
             {
@@ -274997,8 +274997,8 @@
         {
           "word": "else",
           "book": "cet6",
-          "coreMeaning": "别的；(Else)人名；(英)埃尔斯",
-          "fullMeaning": "adj. 别的 n. (Else)人名；(英)埃尔斯",
+          "coreMeaning": "其他的；另外",
+          "fullMeaning": "adj./adv. 其他的；另外 adj. 别的 n. (Else)人名；(英)埃尔斯",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -275462,7 +275462,7 @@
         {
           "word": "entire",
           "book": "cet6",
-          "coreMeaning": "全部的,整个的；(Entire)人名；(英)恩泰尔",
+          "coreMeaning": "全部的,整个的",
           "fullMeaning": "adj. 全部的,整个的 n. (Entire)人名；(英)恩泰尔",
           "allSourceMeanings": [
             {
@@ -275772,8 +275772,8 @@
         {
           "word": "ever",
           "book": "cet6",
-          "coreMeaning": "曾经；(Ever)人名；(英)埃弗",
-          "fullMeaning": "adv. 曾经 n. (Ever)人名；(英)埃弗",
+          "coreMeaning": "曾经；始终；究竟",
+          "fullMeaning": "adv. 曾经；始终；究竟；曾经 n. (Ever)人名；(英)埃弗",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -275830,8 +275830,8 @@
         {
           "word": "every",
           "book": "cet6",
-          "coreMeaning": "每隔……………………的；(Every)人名；(英)埃夫里",
-          "fullMeaning": "adj. 每隔…………的 n. (Every)人名；(英)埃夫里",
+          "coreMeaning": "每个；每一",
+          "fullMeaning": "det. 每个；每一 adj. 每隔…………的 n. (Every)人名；(英)埃夫里",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -276830,7 +276830,7 @@
         {
           "word": "fairly",
           "book": "cet6",
-          "coreMeaning": "公平地；相当；(Fairly)人名",
+          "coreMeaning": "公平地；相当",
           "fullMeaning": "adv. 公平地；相当 n. (Fairly)人名",
           "allSourceMeanings": [
             {
@@ -277363,7 +277363,7 @@
         {
           "word": "fasten",
           "book": "cet6",
-          "coreMeaning": "扎牢, 扣住；(Fasten)人名；(英)法森",
+          "coreMeaning": "扎牢, 扣住",
           "fullMeaning": "v. 扎牢, 扣住 n. (Fasten)人名；(英)法森",
           "allSourceMeanings": [
             {
@@ -279797,7 +279797,7 @@
         {
           "word": "fond",
           "book": "cet6",
-          "coreMeaning": "(Fond)人名；(法)丰；喜欢的",
+          "coreMeaning": "喜欢的",
           "fullMeaning": "n. (Fond)人名；(法)丰 adj. 喜欢的",
           "allSourceMeanings": [
             {
@@ -280014,8 +280014,8 @@
         {
           "word": "for",
           "book": "cet6",
-          "coreMeaning": "因为；给",
-          "fullMeaning": "prep. 因为；给 conj. 因为",
+          "coreMeaning": "为了；给；对于；因为",
+          "fullMeaning": "prep. 为了；给；对于；因为；因为；给 conj. 因为",
           "allSourceMeanings": [
             {
               "pos": "prep.",
@@ -280110,7 +280110,7 @@
         {
           "word": "forget",
           "book": "cet6",
-          "coreMeaning": "(Forget)人名；(法)福尔热；忘记",
+          "coreMeaning": "忘记",
           "fullMeaning": "n. (Forget)人名；(法)福尔热 v. 忘记",
           "allSourceMeanings": [
             {
@@ -280403,8 +280403,8 @@
         {
           "word": "four",
           "book": "cet6",
-          "coreMeaning": "(Four)人名；(西)福尔",
-          "fullMeaning": "n. (Four)人名；(西)福尔",
+          "coreMeaning": "四；四个",
+          "fullMeaning": "num. 四；四个 n. (Four)人名；(西)福尔",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -280626,8 +280626,8 @@
         {
           "word": "free",
           "book": "cet6",
-          "coreMeaning": "免费的；(Free)人名；(英)弗里",
-          "fullMeaning": "adj. 免费的 n. (Free)人名；(英)弗里",
+          "coreMeaning": "免费的；自由的；空闲的",
+          "fullMeaning": "adj. 免费的；自由的；空闲的；免费的 n. (Free)人名；(英)弗里",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -280836,8 +280836,8 @@
         {
           "word": "friendly",
           "book": "cet6",
-          "coreMeaning": "友好的；(Friendly)人名；(英)弗兰德利",
-          "fullMeaning": "adj. 友好的 n. (Friendly)人名；(英)弗兰德利",
+          "coreMeaning": "友好的；友善的",
+          "fullMeaning": "adj. 友好的；友善的；友好的 n. (Friendly)人名；(英)弗兰德利",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -281940,8 +281940,8 @@
         {
           "word": "get",
           "book": "cet6",
-          "coreMeaning": "到达；生殖；幼兽",
-          "fullMeaning": "v. 到达 n. 生殖；幼兽",
+          "coreMeaning": "得到；到达；变得；理解",
+          "fullMeaning": "v. 得到；到达；变得；理解；到达 n. 生殖；幼兽",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -282109,7 +282109,7 @@
         {
           "word": "glad",
           "book": "cet6",
-          "coreMeaning": "高兴的；乐意的；(Glad)人名",
+          "coreMeaning": "高兴的；乐意的",
           "fullMeaning": "adj. 高兴的；乐意的 n. (Glad)人名",
           "allSourceMeanings": [
             {
@@ -282537,8 +282537,8 @@
         {
           "word": "golden",
           "book": "cet6",
-          "coreMeaning": "(Golden)人名；(英、法、罗、德、瑞典)戈尔登",
-          "fullMeaning": "n. (Golden)人名；(英、法、罗、德、瑞典)戈尔登",
+          "coreMeaning": "金色的；黄金般的；极好的",
+          "fullMeaning": "adj. 金色的；黄金般的；极好的 n. (Golden)人名；(英、法、罗、德、瑞典)戈尔登",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -283143,7 +283143,7 @@
         {
           "word": "greet",
           "book": "cet6",
-          "coreMeaning": "(Greet)人名；(英)格里特；欢迎,迎接",
+          "coreMeaning": "欢迎,迎接",
           "fullMeaning": "n. (Greet)人名；(英)格里特 v. 欢迎,迎接",
           "allSourceMeanings": [
             {
@@ -283414,8 +283414,8 @@
         {
           "word": "grow",
           "book": "cet6",
-          "coreMeaning": "生长；(Grow)人名；(英)格罗",
-          "fullMeaning": "v. 生长 n. (Grow)人名；(英)格罗",
+          "coreMeaning": "生长；增长；种植；逐渐变得",
+          "fullMeaning": "v. 生长；增长；种植；逐渐变得；生长 n. (Grow)人名；(英)格罗",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -284206,7 +284206,7 @@
         {
           "word": "happy",
           "book": "cet6",
-          "coreMeaning": "幸福的；(Happy)人名",
+          "coreMeaning": "幸福的",
           "fullMeaning": "adj. 幸福的 n. (Happy)人名",
           "allSourceMeanings": [
             {
@@ -284371,8 +284371,8 @@
         {
           "word": "have",
           "book": "cet6",
-          "coreMeaning": "有；(Have)人名；(芬)哈韦",
-          "fullMeaning": "v. 有 n. (Have)人名；(芬)哈韦",
+          "coreMeaning": "有；拥有；已经（助动词）",
+          "fullMeaning": "v. 有；拥有；已经（助动词）；有 n. (Have)人名；(芬)哈韦",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -284473,8 +284473,8 @@
         {
           "word": "he",
           "book": "cet6",
-          "coreMeaning": "男孩,男人；它(雄性动物)",
-          "fullMeaning": "n. 男孩,男人；它(雄性动物)",
+          "coreMeaning": "他",
+          "fullMeaning": "pron. 他 n. 男孩,男人；它(雄性动物)",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -284913,8 +284913,8 @@
         {
           "word": "her",
           "book": "cet6",
-          "coreMeaning": "(法)埃尔(人名)；她(she的宾格)",
-          "fullMeaning": "n. (法)埃尔(人名) pron. 她(she的宾格)",
+          "coreMeaning": "她；她的",
+          "fullMeaning": "pron./det. 她；她的 n. (法)埃尔(人名) pron. 她(she的宾格)",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -285009,8 +285009,8 @@
         {
           "word": "hers",
           "book": "cet6",
-          "coreMeaning": "(Hers)人名；(法)埃尔",
-          "fullMeaning": "n. (Hers)人名；(法)埃尔",
+          "coreMeaning": "她的（所有格代词）",
+          "fullMeaning": "pron. 她的（所有格代词） n. (Hers)人名；(法)埃尔",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -285042,8 +285042,8 @@
         {
           "word": "hi",
           "book": "cet6",
-          "coreMeaning": "(Hi)人名；(柬)希",
-          "fullMeaning": "n. (Hi)人名；(柬)希",
+          "coreMeaning": "嗨；你好",
+          "fullMeaning": "interj. 嗨；你好 n. (Hi)人名；(柬)希",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -285138,8 +285138,8 @@
         {
           "word": "him",
           "book": "cet6",
-          "coreMeaning": "(Him)人名；(东南亚国家华语)欣",
-          "fullMeaning": "n. (Him)人名；(东南亚国家华语)欣",
+          "coreMeaning": "他（宾格）",
+          "fullMeaning": "pron. 他（宾格） n. (Him)人名；(东南亚国家华语)欣",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -285214,8 +285214,8 @@
         {
           "word": "his",
           "book": "cet6",
-          "coreMeaning": "(His)人名；(法)伊斯",
-          "fullMeaning": "n. (His)人名；(法)伊斯",
+          "coreMeaning": "他的",
+          "fullMeaning": "det./pron. 他的 n. (His)人名；(法)伊斯",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -285265,8 +285265,8 @@
         {
           "word": "hold",
           "book": "cet6",
-          "coreMeaning": "拥有；控制；保留",
-          "fullMeaning": "v. 拥有 n. 控制；保留",
+          "coreMeaning": "拿着；保持；举行；容纳",
+          "fullMeaning": "v. 拿着；保持；举行；容纳；拥有 n. 控制；保留",
           "allSourceMeanings": [
             {
               "pos": "v.",
@@ -286050,8 +286050,8 @@
         {
           "word": "huge",
           "book": "cet6",
-          "coreMeaning": "(Huge)人名；(英)休奇",
-          "fullMeaning": "n. (Huge)人名；(英)休奇",
+          "coreMeaning": "巨大的",
+          "fullMeaning": "adj. 巨大的 n. (Huge)人名；(英)休奇",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -286488,8 +286488,8 @@
         {
           "word": "if",
           "book": "cet6",
-          "coreMeaning": "条件；设想",
-          "fullMeaning": "n. 条件；设想",
+          "coreMeaning": "如果；是否",
+          "fullMeaning": "conj. 如果；是否 n. 条件；设想",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -286696,8 +286696,8 @@
         {
           "word": "in",
           "book": "cet6",
-          "coreMeaning": "执政者；门路",
-          "fullMeaning": "n. 执政者；门路",
+          "coreMeaning": "在……里面；进入；处于",
+          "fullMeaning": "prep. 在……里面；进入；处于 n. 执政者；门路",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -287425,8 +287425,8 @@
         {
           "word": "into",
           "book": "cet6",
-          "coreMeaning": "(Into)人名；(芬、英)因托",
-          "fullMeaning": "n. (Into)人名；(芬、英)因托",
+          "coreMeaning": "进入；到……里面；变成",
+          "fullMeaning": "prep. 进入；到……里面；变成 n. (Into)人名；(芬、英)因托",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -287689,8 +287689,8 @@
         {
           "word": "it",
           "book": "cet6",
-          "coreMeaning": "[指无生命的东西、动物、植物]它；这",
-          "fullMeaning": "pron. [指无生命的东西、动物、植物]它；这",
+          "coreMeaning": "它；这；那",
+          "fullMeaning": "pron. 它；这；那；[指无生命的东西、动物、植物]它；这",
           "allSourceMeanings": [
             {
               "pos": "pron.",
@@ -287770,7 +287770,7 @@
         {
           "word": "its",
           "book": "cet6",
-          "coreMeaning": "它的；(Its)人名",
+          "coreMeaning": "它的",
           "fullMeaning": "pron. 它的 n. (Its)人名",
           "allSourceMeanings": [
             {
@@ -288568,8 +288568,8 @@
         {
           "word": "just",
           "book": "cet6",
-          "coreMeaning": "(Just)人名；(英)贾斯特；公正的,合理的",
-          "fullMeaning": "n. (Just)人名；(英)贾斯特 adj. 公正的,合理的",
+          "coreMeaning": "正好；刚才；公正的；仅仅",
+          "fullMeaning": "adv./adj. 正好；刚才；公正的；仅仅 n. (Just)人名；(英)贾斯特 adj. 公正的,合理的",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -289910,8 +289910,8 @@
         {
           "word": "later",
           "book": "cet6",
-          "coreMeaning": "后来；(Later)人名",
-          "fullMeaning": "adv. 后来 n. (Later)人名",
+          "coreMeaning": "后来；较晚的",
+          "fullMeaning": "adv./adj. 后来；较晚的 adv. 后来 n. (Later)人名",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -289987,7 +289987,7 @@
         {
           "word": "latter",
           "book": "cet6",
-          "coreMeaning": "后者的；(Latter)人名；(英、德、捷)拉特",
+          "coreMeaning": "后者的",
           "fullMeaning": "adj. 后者的 n. (Latter)人名；(英、德、捷)拉特",
           "allSourceMeanings": [
             {
@@ -290271,8 +290271,8 @@
         {
           "word": "lazy",
           "book": "cet6",
-          "coreMeaning": "(Lazy)人名；(德)拉齐",
-          "fullMeaning": "n. (Lazy)人名；(德)拉齐",
+          "coreMeaning": "懒惰的；懒散的",
+          "fullMeaning": "adj. 懒惰的；懒散的 n. (Lazy)人名；(德)拉齐",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -290732,8 +290732,8 @@
         {
           "word": "learned",
           "book": "cet6",
-          "coreMeaning": "有学问的；学术上的；(Learned)人名",
-          "fullMeaning": "adj. 有学问的；学术上的 n. (Learned)人名",
+          "coreMeaning": "有学问的；博学的",
+          "fullMeaning": "adj. 有学问的；博学的；有学问的；学术上的 n. (Learned)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -290919,8 +290919,8 @@
         {
           "word": "left",
           "book": "cet6",
-          "coreMeaning": "左边的；左边；左派",
-          "fullMeaning": "adj. 左边的 n. 左边；左派",
+          "coreMeaning": "左边的；左边；剩下的",
+          "fullMeaning": "adj./n. 左边的；左边；剩下的 adj. 左边的 n. 左边；左派",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -291025,8 +291025,8 @@
         {
           "word": "lend",
           "book": "cet6",
-          "coreMeaning": "(Lend)人名；(德)伦德",
-          "fullMeaning": "n. (Lend)人名；(德)伦德",
+          "coreMeaning": "借给；贷款给",
+          "fullMeaning": "v. 借给；贷款给 n. (Lend)人名；(德)伦德",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -292451,8 +292451,8 @@
         {
           "word": "live",
           "book": "cet6",
-          "coreMeaning": "活的；(Live)人名；(法)利夫",
-          "fullMeaning": "adj. 活的 n. (Live)人名；(法)利夫",
+          "coreMeaning": "生活；居住；活的；现场直播的",
+          "fullMeaning": "v./adj. 生活；居住；活的；现场直播的 adj. 活的 n. (Live)人名；(法)利夫",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -292530,7 +292530,7 @@
         {
           "word": "lively",
           "book": "cet6",
-          "coreMeaning": "活泼的；(Lively)人名；(英)莱夫利",
+          "coreMeaning": "活泼的",
           "fullMeaning": "adj. 活泼的 n. (Lively)人名；(英)莱夫利",
           "allSourceMeanings": [
             {
@@ -292652,7 +292652,7 @@
         {
           "word": "load",
           "book": "cet6",
-          "coreMeaning": "负载,负荷；工作量；[力] 加载",
+          "coreMeaning": "负载,负荷；工作量；加载",
           "fullMeaning": "n. 负载,负荷；工作量 v. [力] 加载",
           "allSourceMeanings": [
             {
@@ -293122,8 +293122,8 @@
         {
           "word": "lose",
           "book": "cet6",
-          "coreMeaning": "(Lose)人名；(英)洛斯；浪费",
-          "fullMeaning": "n. (Lose)人名；(英)洛斯 v. 浪费",
+          "coreMeaning": "失去；输掉；迷失；浪费",
+          "fullMeaning": "v. 失去；输掉；迷失；浪费；浪费 n. (Lose)人名；(英)洛斯",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -293264,8 +293264,8 @@
         {
           "word": "loud",
           "book": "cet6",
-          "coreMeaning": "(Loud)人名；(英)劳德",
-          "fullMeaning": "n. (Loud)人名；(英)劳德",
+          "coreMeaning": "大声的；响亮的",
+          "fullMeaning": "adj./adv. 大声的；响亮的 n. (Loud)人名；(英)劳德",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -293938,8 +293938,8 @@
         {
           "word": "make",
           "book": "cet6",
-          "coreMeaning": "制造；构造；使得",
-          "fullMeaning": "n. 制造；构造 v. 使得",
+          "coreMeaning": "制造；使得；成为；赚得",
+          "fullMeaning": "v. 制造；使得；成为；赚得；使得 n. 制造；构造",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -294501,7 +294501,7 @@
         {
           "word": "marry",
           "book": "cet6",
-          "coreMeaning": "娶,嫁；(Marry)人名；(阿拉伯)马雷",
+          "coreMeaning": "娶,嫁",
           "fullMeaning": "v. 娶,嫁 n. (Marry)人名；(阿拉伯)马雷",
           "allSourceMeanings": [
             {
@@ -295065,8 +295065,8 @@
         {
           "word": "mean",
           "book": "cet6",
-          "coreMeaning": "平均值；平均的；卑鄙的",
-          "fullMeaning": "n. 平均值 adj. 平均的；卑鄙的",
+          "coreMeaning": "意思是；意味着；平均的；吝啬的",
+          "fullMeaning": "v./adj. 意思是；意味着；平均的；吝啬的 n. 平均值 adj. 平均的；卑鄙的",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -297670,7 +297670,7 @@
         {
           "word": "my",
           "book": "cet6",
-          "coreMeaning": "我的；(My)人名",
+          "coreMeaning": "我的",
           "fullMeaning": "pron. 我的 n. (My)人名",
           "allSourceMeanings": [
             {
@@ -297713,7 +297713,7 @@
         {
           "word": "nail",
           "book": "cet6",
-          "coreMeaning": "钉；[解剖] 指甲",
+          "coreMeaning": "钉；指甲",
           "fullMeaning": "v. 钉 n. [解剖] 指甲",
           "allSourceMeanings": [
             {
@@ -298399,8 +298399,8 @@
         {
           "word": "new",
           "book": "cet6",
-          "coreMeaning": "(New)人名；(英)纽",
-          "fullMeaning": "n. (New)人名；(英)纽",
+          "coreMeaning": "新的；新出现的；新鲜的",
+          "fullMeaning": "adj. 新的；新出现的；新鲜的 n. (New)人名；(英)纽",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -298921,7 +298921,7 @@
         {
           "word": "noise",
           "book": "cet6",
-          "coreMeaning": "响声；[环境] 噪音",
+          "coreMeaning": "响声；噪音",
           "fullMeaning": "n. 响声；[环境] 噪音",
           "allSourceMeanings": [
             {
@@ -298964,7 +298964,7 @@
         {
           "word": "none",
           "book": "cet6",
-          "coreMeaning": "没有人；(None)人名；(葡、罗)诺内",
+          "coreMeaning": "没有人",
           "fullMeaning": "pron. 没有人 n. (None)人名；(葡、罗)诺内",
           "allSourceMeanings": [
             {
@@ -299027,7 +299027,7 @@
         {
           "word": "nor",
           "book": "cet6",
-          "coreMeaning": "也不；(Nor)人名；(中)挪(广东话·威妥玛)",
+          "coreMeaning": "也不",
           "fullMeaning": "conj. 也不 n. (Nor)人名；(中)挪(广东话·威妥玛)",
           "allSourceMeanings": [
             {
@@ -299785,7 +299785,7 @@
         {
           "word": "obey",
           "book": "cet6",
-          "coreMeaning": "(Obey)人名；(英、法)奥贝；服从,听从",
+          "coreMeaning": "服从,听从",
           "fullMeaning": "n. (Obey)人名；(英、法)奥贝 v. 服从,听从",
           "allSourceMeanings": [
             {
@@ -299925,8 +299925,8 @@
         {
           "word": "off",
           "book": "cet6",
-          "coreMeaning": "远离的；空闲的；切断",
-          "fullMeaning": "adj. 远离的；空闲的 adv. 切断",
+          "coreMeaning": "离开；关掉；停止；休息的",
+          "fullMeaning": "adv./adj. 离开；关掉；停止；休息的 adj. 远离的；空闲的 adv. 切断",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -300193,8 +300193,8 @@
         {
           "word": "on",
           "book": "cet6",
-          "coreMeaning": "关于；在…………………………………………时候；(On)人名",
-          "fullMeaning": "prep. 关于；在……………………时候 n. (On)人名",
+          "coreMeaning": "在……上；关于；继续",
+          "fullMeaning": "prep. 在……上；关于；继续；关于；在……………………时候 n. (On)人名",
           "allSourceMeanings": [
             {
               "pos": "prep.",
@@ -300717,8 +300717,8 @@
         {
           "word": "or",
           "book": "cet6",
-          "coreMeaning": "或,或者；(Or)人名；(中)柯(广东话·威妥玛)",
-          "fullMeaning": "conj. 或,或者 n. (Or)人名；(中)柯(广东话·威妥玛)",
+          "coreMeaning": "或者；否则",
+          "fullMeaning": "conj. 或者；否则；或,或者 n. (Or)人名；(中)柯(广东话·威妥玛)",
           "allSourceMeanings": [
             {
               "pos": "conj.",
@@ -301023,7 +301023,7 @@
         {
           "word": "ours",
           "book": "cet6",
-          "coreMeaning": "我们的；(Ours)人名",
+          "coreMeaning": "我们的",
           "fullMeaning": "pron. 我们的 n. (Ours)人名",
           "allSourceMeanings": [
             {
@@ -301051,8 +301051,8 @@
         {
           "word": "out",
           "book": "cet6",
-          "coreMeaning": "出局；外面的",
-          "fullMeaning": "n. 出局 adj. 外面的",
+          "coreMeaning": "向外；在外；出去；不在",
+          "fullMeaning": "adv. 向外；在外；出去；不在 n. 出局 adj. 外面的",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -302801,8 +302801,8 @@
         {
           "word": "per",
           "book": "cet6",
-          "coreMeaning": "每；(Per)人名；(德、挪、丹、瑞典)佩尔",
-          "fullMeaning": "prep. 每 n. (Per)人名；(德、挪、丹、瑞典)佩尔",
+          "coreMeaning": "每；每一",
+          "fullMeaning": "prep. 每；每一；每 n. (Per)人名；(德、挪、丹、瑞典)佩尔",
           "allSourceMeanings": [
             {
               "pos": "prep.",
@@ -303918,7 +303918,7 @@
         {
           "word": "pine",
           "book": "cet6",
-          "coreMeaning": "松树,松木；[林] 松树；松木的",
+          "coreMeaning": "松树,松木；松树；松木的",
           "fullMeaning": "n. 松树,松木；[林] 松树 adj. 松木的",
           "allSourceMeanings": [
             {
@@ -304427,7 +304427,7 @@
         {
           "word": "pleasant",
           "book": "cet6",
-          "coreMeaning": "令人愉快的,舒适的；(Pleasant)人名；(英)普莱曾特",
+          "coreMeaning": "令人愉快的,舒适的",
           "fullMeaning": "adj. 令人愉快的,舒适的 n. (Pleasant)人名；(英)普莱曾特",
           "allSourceMeanings": [
             {
@@ -305036,8 +305036,8 @@
         {
           "word": "poor",
           "book": "cet6",
-          "coreMeaning": "贫穷的；贫乏的；(Poor)人名",
-          "fullMeaning": "adj. 贫穷的；贫乏的 n. (Poor)人名",
+          "coreMeaning": "贫穷的；差的；不足的",
+          "fullMeaning": "adj. 贫穷的；差的；不足的；贫穷的；贫乏的 n. (Poor)人名",
           "allSourceMeanings": [
             {
               "pos": "adj.",
@@ -305651,7 +305651,7 @@
         {
           "word": "pray",
           "book": "cet6",
-          "coreMeaning": "祈祷, 祈求；(Pray)人名；(匈)普劳伊",
+          "coreMeaning": "祈祷, 祈求",
           "fullMeaning": "v. 祈祷, 祈求 n. (Pray)人名；(匈)普劳伊",
           "allSourceMeanings": [
             {
@@ -306470,7 +306470,7 @@
         {
           "word": "proud",
           "book": "cet6",
-          "coreMeaning": "自豪的；(Proud)人名；(英)普劳德",
+          "coreMeaning": "自豪的",
           "fullMeaning": "adj. 自豪的 n. (Proud)人名；(英)普劳德",
           "allSourceMeanings": [
             {
@@ -306735,7 +306735,7 @@
         {
           "word": "pure",
           "book": "cet6",
-          "coreMeaning": "纯粹的；纯洁的；(Pure)人名",
+          "coreMeaning": "纯粹的；纯洁的",
           "fullMeaning": "adj. 纯粹的；纯洁的 n. (Pure)人名",
           "allSourceMeanings": [
             {
@@ -307844,8 +307844,8 @@
         {
           "word": "rainy",
           "book": "cet6",
-          "coreMeaning": "(Rainy)人名；(英)雷尼",
-          "fullMeaning": "n. (Rainy)人名；(英)雷尼",
+          "coreMeaning": "多雨的；下雨的",
+          "fullMeaning": "adj. 多雨的；下雨的 n. (Rainy)人名；(英)雷尼",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -307963,8 +307963,8 @@
         {
           "word": "rather",
           "book": "cet6",
-          "coreMeaning": "宁可,宁愿；相当；(Rather)人名",
-          "fullMeaning": "adv. 宁可,宁愿；相当 n. (Rather)人名",
+          "coreMeaning": "相当；宁愿；而不是",
+          "fullMeaning": "adv. 相当；宁愿；而不是；宁可,宁愿；相当 n. (Rather)人名",
           "allSourceMeanings": [
             {
               "pos": "adv.",
@@ -309119,7 +309119,7 @@
         {
           "word": "reply",
           "book": "cet6",
-          "coreMeaning": "回答；[法] 答辩",
+          "coreMeaning": "回答；答辩",
           "fullMeaning": "n. 回答；[法] 答辩 v. 回答",
           "allSourceMeanings": [
             {
@@ -309296,7 +309296,7 @@
         {
           "word": "rid",
           "book": "cet6",
-          "coreMeaning": "使摆脱；(Rid)人名；(英)里德",
+          "coreMeaning": "使摆脱",
           "fullMeaning": "v. 使摆脱 n. (Rid)人名；(英)里德",
           "allSourceMeanings": [
             {
@@ -309339,7 +309339,7 @@
         {
           "word": "ripe",
           "book": "cet6",
-          "coreMeaning": "时机成熟的；熟的；(Ripe)人名",
+          "coreMeaning": "时机成熟的；熟的",
           "fullMeaning": "adj. 时机成熟的；熟的 n. (Ripe)人名",
           "allSourceMeanings": [
             {
@@ -310080,8 +310080,8 @@
         {
           "word": "say",
           "book": "cet6",
-          "coreMeaning": "(Say)人名；(土)萨伊；讲",
-          "fullMeaning": "n. (Say)人名；(土)萨伊 v. 讲",
+          "coreMeaning": "说；讲；表示",
+          "fullMeaning": "v. 说；讲；表示；讲 n. (Say)人名；(土)萨伊",
           "allSourceMeanings": [
             {
               "pos": "n.",
@@ -314042,7 +314042,7 @@
         {
           "word": "tour",
           "book": "cet6",
-          "coreMeaning": "旅行,游历；[C] 参观, 观光, 旅行",
+          "coreMeaning": "旅行,游历；参观, 观光, 旅行",
           "fullMeaning": "n&vi. 旅行,游历 n. [C] 参观, 观光, 旅行",
           "allSourceMeanings": [
             {
@@ -314118,7 +314118,7 @@
         {
           "word": "towel",
           "book": "cet6",
-          "coreMeaning": "毛巾,手巾；[纸] 纸巾；用毛巾擦",
+          "coreMeaning": "毛巾,手巾；纸巾；用毛巾擦",
           "fullMeaning": "n. 毛巾,手巾；[纸] 纸巾 v. 用毛巾擦",
           "allSourceMeanings": [
             {
@@ -314765,7 +314765,7 @@
         {
           "word": "tyre",
           "book": "cet6",
-          "coreMeaning": "轮胎,车胎；[橡胶] 轮胎；装轮胎于",
+          "coreMeaning": "轮胎,车胎；轮胎；装轮胎于",
           "fullMeaning": "n. 轮胎,车胎；[橡胶] 轮胎 v. 装轮胎于",
           "allSourceMeanings": [
             {
@@ -315069,7 +315069,7 @@
         {
           "word": "upper",
           "book": "cet6",
-          "coreMeaning": "(Upper)人名；(英)厄珀；上面的,上部的",
+          "coreMeaning": "上面的,上部的",
           "fullMeaning": "n. (Upper)人名；(英)厄珀 adj. 上面的,上部的",
           "allSourceMeanings": [
             {
@@ -315462,7 +315462,7 @@
         {
           "word": "wander",
           "book": "cet6",
-          "coreMeaning": "漫步；迷路；(Wander)人名",
+          "coreMeaning": "漫步；迷路",
           "fullMeaning": "v. 漫步；迷路 n. (Wander)人名",
           "allSourceMeanings": [
             {
@@ -316076,7 +316076,7 @@
         {
           "word": "willing",
           "book": "cet6",
-          "coreMeaning": "(Willing)人名；(德、芬、瑞典)维林；乐意的",
+          "coreMeaning": "乐意的",
           "fullMeaning": "n. (Willing)人名；(德、芬、瑞典)维林 adj. 乐意的",
           "allSourceMeanings": [
             {
@@ -316405,7 +316405,7 @@
         {
           "word": "wound",
           "book": "cet6",
-          "coreMeaning": "使受伤；创伤,伤口；[C] 创伤",
+          "coreMeaning": "使受伤；创伤,伤口；创伤",
           "fullMeaning": "v. 使受伤 n. 创伤,伤口；[C] 创伤",
           "allSourceMeanings": [
             {
@@ -317939,7 +317939,7 @@
         {
           "word": "bloody",
           "book": "cet6",
-          "coreMeaning": "[用于加强语气]非常的",
+          "coreMeaning": "非常的",
           "fullMeaning": "adj. [用于加强语气]非常的",
           "allSourceMeanings": [
             {
@@ -318811,7 +318811,7 @@
         {
           "word": "shallow",
           "book": "cet6",
-          "coreMeaning": "浅的；[地理] 浅滩",
+          "coreMeaning": "浅的；浅滩",
           "fullMeaning": "adj. 浅的 n. [地理] 浅滩",
           "allSourceMeanings": [
             {
@@ -319465,8 +319465,8 @@
         {
           "word": "truly",
           "book": "cet6",
-          "coreMeaning": "(Truly)人名；(英)特鲁利",
-          "fullMeaning": "n. (Truly)人名；(英)特鲁利",
+          "coreMeaning": "真正地；确实",
+          "fullMeaning": "adv. 真正地；确实 n. (Truly)人名；(英)特鲁利",
           "allSourceMeanings": [
             {
               "pos": "n.",
