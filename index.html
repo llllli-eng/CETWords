@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/sample-data.js" defer></script>
     <script src="js/review-scheduler.js" defer></script>
+    <script src="js/review-workload.js" defer></script>
     <script src="js/smart-learning-order.js" defer></script>
     <script src="js/review-recovery.js" defer></script>
     <script src="js/new-word-learning.js" defer></script>
@@ -126,6 +127,24 @@
                     <span id="review-progress-bar" style="width: 0"></span>
                   </div>
                 </div>
+
+                <section class="review-workload-summary" aria-label="今日正式复习详情">
+                  <div class="review-workload-summary__meta">
+                    <span>总到期 <strong id="review-total-due">0</strong></span>
+                    <span>任务外积压 <strong id="review-backlog">0</strong></span>
+                  </div>
+                  <div class="review-workload-summary__breakdown">
+                    <span>正常复习 <strong id="review-answered">0</strong></span>
+                    <span>已掌握 <strong id="review-manual-mastered">0</strong></span>
+                    <span>今日跳过 <strong id="review-deferred">0</strong></span>
+                  </div>
+                  <p id="review-segment-progress">当前复习段：0 / 20</p>
+                  <p class="review-time-estimate" id="review-time-estimate" hidden></p>
+                  <div class="review-workload-summary__actions">
+                    <button class="text-button" id="adjust-today-review" type="button">调整今天</button>
+                    <button class="text-button" id="open-quick-cleanup" type="button">快速清理简单词</button>
+                  </div>
+                </section>
 
                 <p class="task-hint"><span aria-hidden="true">✦</span> 准备今日学习任务</p>
               </div>
@@ -375,6 +394,18 @@
                   提交答案
                 </button>
               </form>
+              <div class="review-question-actions" id="review-question-actions" hidden>
+                <button class="secondary-button review-manual-master-button" id="review-manual-master-button" type="button">
+                  ✓ 我已掌握
+                </button>
+                <details class="review-more-actions" id="review-more-actions">
+                  <summary>··· 更多</summary>
+                  <div>
+                    <button class="text-button" id="review-later-button" type="button">稍后再看</button>
+                    <button class="text-button" id="review-defer-button" type="button">今天先不学</button>
+                  </div>
+                </details>
+              </div>
             </div>
 
             <div class="answer-feedback" id="answer-feedback" role="status" aria-live="polite" hidden>
@@ -553,6 +584,34 @@
               <button class="text-button" id="group-break-stop" type="button">今天先到这里</button>
             </div>
           </section>
+
+          <section class="result-card review-segment-card" id="review-segment-screen" aria-labelledby="review-segment-title" hidden>
+            <span class="result-symbol" aria-hidden="true">☕</span>
+            <p class="section-kicker">REVIEW SEGMENT COMPLETE</p>
+            <h1 id="review-segment-title">已完成一段复习</h1>
+            <div class="group-complete-progress">
+              <strong id="review-segment-total">20 / 120</strong>
+              <span id="review-segment-current">本段：20</span>
+            </div>
+            <p class="group-break-suggestion">建议休息 3 分钟</p>
+            <div class="group-complete-actions">
+              <button class="primary-button" id="review-segment-start-break" type="button">休息一下</button>
+              <button class="secondary-button" id="review-segment-continue" type="button">直接继续</button>
+              <button class="text-button" id="review-segment-stop" type="button">今天先到这里</button>
+            </div>
+          </section>
+
+          <section class="result-card group-break-card" id="review-break-screen" aria-labelledby="review-break-title" hidden>
+            <span class="result-symbol" aria-hidden="true">☕</span>
+            <p class="section-kicker">REST & RESET</p>
+            <strong class="group-break-timer" id="review-break-timer">03:00</strong>
+            <h1 id="review-break-title">复习间歇</h1>
+            <p class="group-break-message" id="review-break-message">喝口水、看看远处</p>
+            <div class="group-complete-actions">
+              <button class="primary-button" id="review-break-continue" type="button">提前继续</button>
+              <button class="text-button" id="review-break-stop" type="button">今天先到这里</button>
+            </div>
+          </section>
         </main>
 
         <footer class="study-shortcuts">
@@ -645,7 +704,8 @@
               <button class="is-active" type="button" data-word-filter="all" aria-pressed="true">全部</button>
               <button type="button" data-word-filter="unlearned" aria-pressed="false">未学习</button>
               <button type="button" data-word-filter="learning" aria-pressed="false">学习中</button>
-              <button type="button" data-word-filter="mastered" aria-pressed="false">已掌握</button>
+              <button type="button" data-word-filter="mastered" aria-pressed="false">L5 熟练</button>
+              <button type="button" data-word-filter="manual-mastered" aria-pressed="false">已掌握</button>
               <button type="button" data-word-filter="wrong" aria-pressed="false">错词</button>
               <button type="button" data-word-filter="favorite" aria-pressed="false">收藏</button>
             </div>
@@ -705,7 +765,8 @@
 
           <section class="statistics-grid" aria-label="累计学习统计">
             <article><span>累计学习</span><strong id="stats-learned">0</strong></article>
-            <article><span>已掌握</span><strong id="stats-mastered">0</strong></article>
+            <article><span>L5 熟练</span><strong id="stats-mastered">0</strong></article>
+            <article><span>手动已掌握</span><strong id="stats-manual-mastered">0</strong></article>
             <article><span>未学习</span><strong id="stats-unlearned">0</strong></article>
             <article><span>错词</span><strong id="stats-wrong-words">0</strong></article>
             <article><span>累计答题</span><strong id="stats-answers">0</strong></article>
@@ -807,6 +868,24 @@
               <button type="button" data-vocabulary-scope="all" role="radio" aria-checked="false">
                 核心 + 补充词汇
               </button>
+            </div>
+          </section>
+
+          <section class="settings-card settings-card--review-limit" aria-labelledby="review-limit-title">
+            <div class="settings-card__content">
+              <span class="settings-card__icon" aria-hidden="true">↺</span>
+              <div>
+                <h2 id="review-limit-title">每日最大正式复习量</h2>
+                <p id="review-limit-description">到期词较多时，今天优先处理 120 个。</p>
+              </div>
+            </div>
+            <div class="daily-goal-picker" role="group" aria-label="选择每日正式复习上限">
+              <button type="button" data-review-limit="60" aria-pressed="false">60</button>
+              <button type="button" data-review-limit="100" aria-pressed="false">100</button>
+              <button class="is-selected" type="button" data-review-limit="120" aria-pressed="true">120</button>
+              <button type="button" data-review-limit="150" aria-pressed="false">150</button>
+              <button type="button" data-review-limit="200" aria-pressed="false">200</button>
+              <button type="button" data-review-limit="unlimited" aria-pressed="false">不限</button>
             </div>
           </section>
 
@@ -995,6 +1074,9 @@
         <div class="word-detail-actions">
           <button class="secondary-button" id="word-detail-favorite" type="button" aria-pressed="false">☆ 收藏</button>
           <button class="secondary-button" id="word-detail-wrong-book" type="button" aria-pressed="false">加入错词本</button>
+          <button class="secondary-button word-detail-manual-mastery" id="word-detail-manual-mastery" type="button" hidden>
+            ✓ 我已掌握
+          </button>
         </div>
       </article>
     </dialog>
@@ -1029,6 +1111,42 @@
       </div>
     </dialog>
 
-    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <dialog class="review-adjust-dialog" id="review-adjust-dialog" aria-labelledby="review-adjust-title">
+      <form method="dialog" class="review-dialog-card">
+        <button class="dialog-close-button" id="review-adjust-close" type="button" aria-label="关闭">&times;</button>
+        <p class="section-kicker">TODAY ONLY</p>
+        <h2 id="review-adjust-title">调整今天复习量</h2>
+        <p id="review-adjust-description">只影响今天，不修改长期默认设置。</p>
+        <label for="review-adjust-select">今日正式复习上限</label>
+        <select id="review-adjust-select">
+          <option value="60">60</option>
+          <option value="100">100</option>
+          <option value="120">120</option>
+          <option value="150">150</option>
+          <option value="200">200</option>
+          <option value="unlimited">不限</option>
+        </select>
+        <button class="primary-button" id="review-adjust-confirm" type="button">保存今日调整</button>
+      </form>
+    </dialog>
+
+    <dialog class="quick-cleanup-dialog" id="quick-cleanup-dialog" aria-labelledby="quick-cleanup-title">
+      <article class="review-dialog-card quick-cleanup-card">
+        <button class="dialog-close-button" id="quick-cleanup-close" type="button" aria-label="关闭">&times;</button>
+        <p class="section-kicker">QUICK CLEANUP</p>
+        <h2 id="quick-cleanup-title">快速清理简单词</h2>
+        <p>只会处理你明确勾选的词；点开词条可查看核心义。</p>
+        <div class="quick-cleanup-list" id="quick-cleanup-list"></div>
+        <p class="quick-cleanup-status" id="quick-cleanup-status" role="status"></p>
+        <button class="primary-button" id="quick-cleanup-confirm" type="button" disabled>
+          请先勾选单词
+        </button>
+      </article>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+      <span id="toast-message"></span>
+      <button class="toast__action" id="toast-action" type="button" hidden></button>
+    </div>
   </body>
 </html>

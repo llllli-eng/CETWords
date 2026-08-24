@@ -28,7 +28,7 @@ const PROTECTED_HASHES = {
   "js/review-scheduler.js": "b65b22be281665c1633c9859efb9c5c5cd7adff996d51ec60d933280c94fe4f7",
   "js/review-recovery.js": "050a8dff4e21b9be018f7631610cde9ef8c39e47fa97bd08f628f9e17c91bf05",
   "js/daily-group-service.js": "502275f89f546d34ae085f9fb769faa119903a5ff68cc10a4c5282d828d4f013",
-  "worker/src/index.js": "cb47296dcf93d6d5cf80b0beaa22282bce5850d526ed59a6b34f85675c438eaf",
+  "worker/src/index.js": "6fa1dacf44c84ce74c0206db73bdad4667a6cac1b3e9a4bd6df014fd07c40f5d",
 };
 
 const books = Object.fromEntries(
@@ -166,8 +166,8 @@ await test("SRS Recovery Phase16 grouping and Worker are unchanged", () => {
   }
 });
 
-await test("storage schema remains v13", () => {
-  assert.match(fs.readFileSync(path.join(ROOT, "js/storage.js"), "utf8"), /const DATA_VERSION = 13/);
+await test("storage schema is upgraded to v14", () => {
+  assert.match(fs.readFileSync(path.join(ROOT, "js/storage.js"), "utf8"), /const DATA_VERSION = 14/);
 });
 
 await test("neutral words keep raw frequency tiers but receive audited meanings", () => {

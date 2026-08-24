@@ -1,12 +1,19 @@
 /**
- * 拾词 · 本地学习数据服务 v13
+ * 拾词 · 本地学习数据服务 v14
  * 保持原有 localStorage key，只保存用户状态，不复制词库正文。
  */
 
 (function registerStorageService(app) {
-  const { reviewScheduler, reviewRecovery, newWordLearning, smartLearningOrder, dailyGroupService } = app;
+  const {
+    reviewScheduler,
+    reviewWorkload,
+    reviewRecovery,
+    newWordLearning,
+    smartLearningOrder,
+    dailyGroupService,
+  } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
-  const DATA_VERSION = 13;
+  const DATA_VERSION = 14;
   const AI_PROXY_TOKEN_KEY = "shi-ci-ai-proxy-token";
   const DEFAULT_STUDY_MODE = "en-to-zh";
   const DEFAULT_LEARNING_ORDER = "smart";
@@ -30,6 +37,8 @@
     lastLongTermAnchorAt: null,
     earliestReviewAt: null,
     firstLearnDate: null,
+    manualMastered: false,
+    manualMasteredAt: null,
   };
 
   const EMPTY_DAILY_STATS = {
@@ -46,6 +55,8 @@
     reviewedWordIds: [],
     scheduledNewWordIds: [],
     normalSessionAnswerSequence: 0,
+    manualMasteredWordIds: [],
+    deferredTodayWordIds: [],
     learningMetrics: {
       firstChoice: { correct: 0, wrong: 0 },
       choiceRetryCount: 0,
@@ -99,6 +110,8 @@
       reviewRecovery: {},
       dailyReviews: {},
       dailyGroupPlans: {},
+      dailyReviewTasks: {},
+      reviewPace: reviewWorkload.normalizePace(null),
     };
   }
 
@@ -109,6 +122,10 @@
       preferences: {
         theme: null,
         dailyNewWordGoals: { cet4: 30, cet6: 30 },
+        dailyReviewLimits: {
+          cet4: reviewWorkload.DEFAULT_DAILY_REVIEW_LIMIT,
+          cet6: reviewWorkload.DEFAULT_DAILY_REVIEW_LIMIT,
+        },
         vocabularyScope: { cet4: "core", cet6: "core" },
         studyMode: DEFAULT_STUDY_MODE,
         learningOrder: DEFAULT_LEARNING_ORDER,
@@ -141,6 +158,10 @@
   function normalizeGoal(value) {
     const goal = Number(value);
     return DAILY_GOAL_OPTIONS.includes(goal) ? goal : 30;
+  }
+
+  function normalizeDailyReviewLimit(value) {
+    return reviewWorkload.normalizeLimit(value);
   }
 
   function normalizeVocabularyScope(value) {
@@ -413,6 +434,10 @@
         typeof value.firstLearnDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.firstLearnDate)
           ? value.firstLearnDate
           : null,
+      manualMastered: sourceVersion >= 14 && Boolean(value.manualMastered),
+      manualMasteredAt: sourceVersion >= 14 && Boolean(value.manualMastered)
+        ? normalizeTimestamp(value.manualMasteredAt)
+        : null,
     };
   }
 
@@ -430,6 +455,12 @@
       ...normalizeStringIds(value.scheduledNewWordIds),
       ...newWordIds,
     ]);
+    const manualMasteredWordIds = sourceVersion >= 14
+      ? normalizeStringIds(value.manualMasteredWordIds)
+      : [];
+    const deferredTodayWordIds = sourceVersion >= 14
+      ? normalizeStringIds(value.deferredTodayWordIds)
+      : [];
 
     return {
       newWords: Math.max(toNonNegativeInteger(value.newWords), newWordIds.length),
@@ -445,6 +476,8 @@
       reviewedWordIds,
       scheduledNewWordIds,
       normalSessionAnswerSequence: toNonNegativeInteger(value.normalSessionAnswerSequence),
+      manualMasteredWordIds,
+      deferredTodayWordIds,
       learningMetrics: normalizeLearningMetrics(value.learningMetrics),
     };
   }
@@ -475,6 +508,16 @@
         if (normalized) result.dailyGroupPlans[dateKey] = normalized;
       });
     }
+    if (sourceVersion >= 14 && value.dailyReviewTasks && typeof value.dailyReviewTasks === "object" && !Array.isArray(value.dailyReviewTasks)) {
+      Object.entries(value.dailyReviewTasks).forEach(([dateKey, record]) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+        const normalized = reviewWorkload.normalizeTask(record, dateKey);
+        if (normalized) result.dailyReviewTasks[dateKey] = normalized;
+      });
+    }
+    result.reviewPace = sourceVersion >= 14
+      ? reviewWorkload.normalizePace(value.reviewPace)
+      : reviewWorkload.normalizePace(null);
 
     if (sourceVersion >= 5 && value.newWordLearning && typeof value.newWordLearning === "object" && !Array.isArray(value.newWordLearning)) {
       Object.entries(value.newWordLearning).forEach(([wordId, record]) => {
@@ -530,6 +573,14 @@
         dailyNewWordGoals: {
           cet4: normalizeGoal(rawGoals?.cet4 ?? legacyGlobalGoal),
           cet6: normalizeGoal(rawGoals?.cet6 ?? legacyGlobalGoal),
+        },
+        dailyReviewLimits: {
+          cet4: sourceVersion >= 14
+            ? normalizeDailyReviewLimit(raw.preferences?.dailyReviewLimits?.cet4)
+            : reviewWorkload.DEFAULT_DAILY_REVIEW_LIMIT,
+          cet6: sourceVersion >= 14
+            ? normalizeDailyReviewLimit(raw.preferences?.dailyReviewLimits?.cet6)
+            : reviewWorkload.DEFAULT_DAILY_REVIEW_LIMIT,
         },
         vocabularyScope: {
           cet4: normalizeVocabularyScope(raw.preferences?.vocabularyScope?.cet4),
@@ -701,6 +752,19 @@
     return normalizedGoal;
   }
 
+  function getConfiguredDailyReviewLimit(bookId) {
+    ensureBook(bookId);
+    return normalizeDailyReviewLimit(getMutableData().preferences.dailyReviewLimits[bookId]);
+  }
+
+  function setDailyReviewLimit(bookId, limit) {
+    ensureBook(bookId);
+    const normalized = normalizeDailyReviewLimit(limit);
+    getMutableData().preferences.dailyReviewLimits[bookId] = normalized;
+    persist();
+    return normalized;
+  }
+
   function getDailyGroupPlan(bookId, dateKey = getLocalDateKey()) {
     const plan = ensureBook(bookId).dailyGroupPlans[dateKey];
     return plan ? deepClone(plan) : null;
@@ -828,6 +892,158 @@
     return { action: "reduced", plan: deepClone(plan) };
   }
 
+  function getDailyReviewTask(bookId, dateKey = getLocalDateKey()) {
+    const task = ensureBook(bookId).dailyReviewTasks[dateKey];
+    return task ? deepClone(task) : null;
+  }
+
+  function getDailyReviewCandidates(bookId, validWordIds, now = Date.now()) {
+    const dueWords = getDueWords(bookId, validWordIds, now);
+    return dueWords.map((entry, originalIndex) => {
+      const level = reviewScheduler.getMasteryLevel(entry.progress);
+      const overdueDays = level === 0
+        ? Math.max(0, now - (Number(entry.progress.nextReviewTime) || now)) / (24 * 60 * 60 * 1000)
+        : Math.max(
+          0,
+          reviewScheduler.getCalendarDayDifference(
+            reviewScheduler.getLocalDateKey(now),
+            entry.progress.nextReviewDate,
+          ) || 0,
+        );
+      return {
+        entry,
+        originalIndex,
+        priority: reviewScheduler.calculateReviewPriority(entry.progress, now).total,
+        starvationAgeBoost: Math.max(0, overdueDays - 10) * 0.25,
+      };
+    }).sort((left, right) => (
+      (right.priority + right.starvationAgeBoost) - (left.priority + left.starvationAgeBoost)
+      || left.originalIndex - right.originalIndex
+    )).map(({ entry }) => entry);
+  }
+
+  function getOrCreateDailyReviewTask(bookId, validWordIds, now = Date.now()) {
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const currentTask = book.dailyReviewTasks[dateKey];
+    const mayBePreloadPlaceholder = currentTask
+      && currentTask.taskWordIds.length === 0
+      && currentTask.sourceDueCount === 0
+      && currentTask.startedWordIds.length === 0;
+    if (!currentTask || mayBePreloadPlaceholder) {
+      const dueWords = getDailyReviewCandidates(bookId, validWordIds, now);
+      if (!currentTask || dueWords.length > 0) {
+        book.dailyReviewTasks[dateKey] = reviewWorkload.createTask({
+          date: dateKey,
+          dueWordIds: dueWords.map((entry) => entry.wordId),
+          limit: getConfiguredDailyReviewLimit(bookId),
+          now,
+        });
+        persist();
+      }
+    }
+    return deepClone(book.dailyReviewTasks[dateKey]);
+  }
+
+  function buildDailyReviewTaskSummary(bookId, validWordIds, now = Date.now()) {
+    const task = getOrCreateDailyReviewTask(bookId, validWordIds, now);
+    const dueWords = getDailyReviewCandidates(bookId, validWordIds, now);
+    const dueById = new Map(dueWords.map((entry) => [entry.wordId, entry]));
+    const taskSet = new Set(task.taskWordIds);
+    const outsideBacklog = dueWords.filter((entry) => !taskSet.has(entry.wordId));
+    const summary = reviewWorkload.summarizeTask(task, {
+      currentDueWordIds: dueWords.map((entry) => entry.wordId),
+      outsideBacklogWordIds: outsideBacklog.map((entry) => entry.wordId),
+    });
+    const pendingTaskWords = summary.pendingTaskWordIds
+      .map((wordId) => dueById.get(wordId))
+      .filter(Boolean);
+    return {
+      ...summary,
+      dueWords: pendingTaskWords,
+      allDueWords: dueWords,
+      outsideBacklogWords: outsideBacklog,
+      pace: getReviewPace(bookId),
+      estimate: reviewWorkload.estimateRemaining(getReviewPace(bookId), summary.remainingCount),
+    };
+  }
+
+  function adjustTodayDailyReviewLimit(bookId, validWordIds, limit, now = Date.now()) {
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const current = getOrCreateDailyReviewTask(bookId, validWordIds, now);
+    const dueWords = getDailyReviewCandidates(bookId, validWordIds, now);
+    const adjustment = reviewWorkload.adjustTask(current, {
+      dueWordIds: dueWords.map((entry) => entry.wordId),
+      limit,
+      now,
+    });
+    book.dailyReviewTasks[dateKey] = adjustment.task;
+    persist();
+    return { ...adjustment, summary: buildDailyReviewTaskSummary(bookId, validWordIds, now) };
+  }
+
+  function markDailyReviewTaskStarted(bookId, wordId, now = Date.now()) {
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const task = book.dailyReviewTasks[dateKey];
+    if (!task || !task.taskWordIds.includes(wordId)) return task ? deepClone(task) : null;
+    book.dailyReviewTasks[dateKey] = reviewWorkload.markStarted(task, wordId);
+    persist();
+    return deepClone(book.dailyReviewTasks[dateKey]);
+  }
+
+  function markDailyReviewTaskHandled(bookId, wordId, type, now = Date.now(), shouldPersist = true) {
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const task = book.dailyReviewTasks[dateKey];
+    if (!task || !task.taskWordIds.includes(wordId)) return task ? deepClone(task) : null;
+    book.dailyReviewTasks[dateKey] = reviewWorkload.markHandled(task, wordId, type);
+    if (shouldPersist) persist();
+    return deepClone(book.dailyReviewTasks[dateKey]);
+  }
+
+  function startDailyReviewBreak(bookId, now = Date.now()) {
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const task = book.dailyReviewTasks[dateKey];
+    if (!task) return null;
+    book.dailyReviewTasks[dateKey] = reviewWorkload.startBreak(task, now);
+    persist();
+    return deepClone(book.dailyReviewTasks[dateKey]);
+  }
+
+  function continueDailyReviewTask(bookId, now = Date.now()) {
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const task = book.dailyReviewTasks[dateKey];
+    if (!task) return null;
+    book.dailyReviewTasks[dateKey] = reviewWorkload.acknowledgeSegment(task);
+    persist();
+    return deepClone(book.dailyReviewTasks[dateKey]);
+  }
+
+  function getReviewPace(bookId) {
+    return reviewWorkload.normalizePace(ensureBook(bookId).reviewPace);
+  }
+
+  function recordReviewPace(bookId, durationMs, shouldPersist = true) {
+    const book = ensureBook(bookId);
+    book.reviewPace = reviewWorkload.updatePace(book.reviewPace, durationMs);
+    if (shouldPersist) persist();
+    return getReviewPace(bookId);
+  }
+
+  function getQuickCleanupCandidates(bookId, validWordIds, now = Date.now()) {
+    const summary = buildDailyReviewTaskSummary(bookId, validWordIds, now);
+    const ids = reviewWorkload.getQuickCleanupWordIds(
+      summary,
+      summary.allDueWords.map((entry) => entry.wordId),
+    );
+    const dueById = new Map(summary.allDueWords.map((entry) => [entry.wordId, entry]));
+    return ids.map((wordId) => dueById.get(wordId)).filter(Boolean);
+  }
+
   function getVocabularyScope(bookId) {
     ensureBook(bookId);
     return normalizeVocabularyScope(getMutableData().preferences.vocabularyScope[bookId]);
@@ -947,6 +1163,15 @@
       : Date.now();
     const book = ensureBook(bookId);
     const progress = ensureWordProgress(bookId, wordId);
+    if (progress.manualMastered) {
+      return {
+        progress: normalizeWordProgress(progress),
+        daily: getDailyStats(bookId, getLocalDateKey(timestamp)),
+        mastered: isWordMastered(progress),
+        manualMastered: true,
+        ignored: true,
+      };
+    }
     const dateKey = getLocalDateKey(timestamp);
     const daily = ensureDailyStats(bookId, dateKey);
     const judgement = ["correct", "partial", "wrong"].includes(safeContext.judgement)
@@ -1168,6 +1393,12 @@
     daily.modeStats[studyMode].answerCount += 1;
     if (!wasLearned && addUniqueId(daily.newWordIds, wordId)) daily.newWords += 1;
     if (isFormalReview && wasDue && addUniqueId(daily.reviewedWordIds, wordId)) daily.reviewWords += 1;
+    if (isFormalReview) {
+      markDailyReviewTaskHandled(bookId, wordId, "answered", timestamp, false);
+      if (Number.isFinite(Number(safeContext.interactionDurationMs))) {
+        recordReviewPace(bookId, safeContext.interactionDurationMs, false);
+      }
+    }
     daily.completedNewWords = daily.completedNewWordIds.length;
 
     if (judgement === "correct") {
@@ -1203,6 +1434,7 @@
       recoveryState: recoveryState ? reviewRecovery.normalizeRecord(recoveryState) : null,
       answerSequence,
       wasDue,
+      reviewTask: isFormalReview ? getDailyReviewTask(bookId, dateKey) : null,
     };
   }
 
@@ -1225,6 +1457,136 @@
     progress.inWrongBook = Boolean(inWrongBook);
     persist();
     return normalizeWordProgress(progress);
+  }
+
+  function createManualMasterySnapshot(bookId, wordId, dateKey) {
+    const book = ensureBook(bookId);
+    const daily = ensureDailyStats(bookId, dateKey);
+    return {
+      bookId,
+      wordId,
+      dateKey,
+      progress: deepClone(book.words[wordId] || EMPTY_WORD_PROGRESS),
+      recovery: book.reviewRecovery[wordId] ? deepClone(book.reviewRecovery[wordId]) : null,
+      newWordLearning: book.newWordLearning[wordId] ? deepClone(book.newWordLearning[wordId]) : null,
+      dailyReviewTask: book.dailyReviewTasks[dateKey] ? deepClone(book.dailyReviewTasks[dateKey]) : null,
+      dailyManualMasteredWordIds: [...daily.manualMasteredWordIds],
+      dailyDeferredTodayWordIds: [...daily.deferredTodayWordIds],
+    };
+  }
+
+  function markWordManualMastered(bookId, wordId, options = {}) {
+    const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
+    const shouldPersist = options.persist !== false;
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const progress = ensureWordProgress(bookId, wordId);
+    if (!progress.learned || progress.manualMastered) {
+      return { changed: false, progress: normalizeWordProgress(progress), undo: null };
+    }
+    const undo = createManualMasterySnapshot(bookId, wordId, dateKey);
+    Object.assign(progress, {
+      manualMastered: true,
+      manualMasteredAt: now,
+      nextReviewTime: null,
+      nextReviewDate: null,
+      lastLongTermAnchorAt: null,
+      earliestReviewAt: null,
+    });
+    delete book.reviewRecovery[wordId];
+    delete book.newWordLearning[wordId];
+    const daily = ensureDailyStats(bookId, dateKey);
+    addUniqueId(daily.manualMasteredWordIds, wordId);
+    daily.deferredTodayWordIds = daily.deferredTodayWordIds.filter((entry) => entry !== wordId);
+    markDailyReviewTaskHandled(bookId, wordId, "manual-mastered", now, false);
+    if (shouldPersist) persist();
+    return { changed: true, progress: normalizeWordProgress(progress), undo };
+  }
+
+  function markWordsManualMastered(bookId, wordIds, options = {}) {
+    const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
+    const selectedIds = normalizeStringIds(wordIds);
+    const undoEntries = [];
+    selectedIds.forEach((wordId) => {
+      const result = markWordManualMastered(bookId, wordId, { now, persist: false });
+      if (result.changed && result.undo) undoEntries.push(result.undo);
+    });
+    persist();
+    return { changedCount: undoEntries.length, wordIds: undoEntries.map((entry) => entry.wordId), undoEntries };
+  }
+
+  function undoManualMastery(snapshot, options = {}) {
+    if (!snapshot || !["cet4", "cet6"].includes(snapshot.bookId) || typeof snapshot.wordId !== "string") return false;
+    const book = ensureBook(snapshot.bookId);
+    book.words[snapshot.wordId] = normalizeWordProgress(snapshot.progress, DATA_VERSION);
+    if (snapshot.recovery) book.reviewRecovery[snapshot.wordId] = reviewRecovery.normalizeRecord(snapshot.recovery);
+    else delete book.reviewRecovery[snapshot.wordId];
+    if (snapshot.newWordLearning) {
+      book.newWordLearning[snapshot.wordId] = newWordLearning.normalizeLearningRecord(snapshot.newWordLearning);
+    } else delete book.newWordLearning[snapshot.wordId];
+    if (snapshot.dailyReviewTask) {
+      book.dailyReviewTasks[snapshot.dateKey] = reviewWorkload.normalizeTask(snapshot.dailyReviewTask, snapshot.dateKey);
+    } else delete book.dailyReviewTasks[snapshot.dateKey];
+    const daily = ensureDailyStats(snapshot.bookId, snapshot.dateKey);
+    daily.manualMasteredWordIds = normalizeStringIds(snapshot.dailyManualMasteredWordIds);
+    daily.deferredTodayWordIds = normalizeStringIds(snapshot.dailyDeferredTodayWordIds);
+    if (options.persist !== false) persist();
+    return true;
+  }
+
+  function undoManualMasteryBatch(undoEntries) {
+    const entries = Array.isArray(undoEntries) ? [...undoEntries].reverse() : [];
+    let restored = 0;
+    entries.forEach((entry) => {
+      if (undoManualMastery(entry, { persist: false })) restored += 1;
+    });
+    persist();
+    return restored;
+  }
+
+  function getNextLocalMidnight(now = Date.now()) {
+    const date = new Date(now);
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime();
+  }
+
+  function restoreWordReview(bookId, wordId, now = Date.now()) {
+    const progress = ensureWordProgress(bookId, wordId);
+    if (!progress.learned || !progress.manualMastered) return normalizeWordProgress(progress);
+    const level = reviewScheduler.getMasteryLevel(progress);
+    const nextReviewDate = reviewScheduler.addLocalCalendarDays(now, 1);
+    progress.manualMastered = false;
+    progress.manualMasteredAt = null;
+    progress.lastLongTermAnchorAt = level > 0 ? now : null;
+    progress.nextReviewDate = level > 0 ? nextReviewDate : null;
+    progress.nextReviewTime = level === 0 ? getNextLocalMidnight(now) : null;
+    progress.earliestReviewAt = level === 1
+      ? Math.max(now + reviewScheduler.L1_MINIMUM_DELAY, getNextLocalMidnight(now))
+      : null;
+    persist();
+    return normalizeWordProgress(progress);
+  }
+
+  function deferDailyReviewWord(bookId, wordId, options = {}) {
+    const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const task = book.dailyReviewTasks[dateKey];
+    if (!task || !task.taskWordIds.includes(wordId)) return { changed: false, task: task ? deepClone(task) : null };
+    const handledBefore = new Set(reviewWorkload.getHandledWordIds(task));
+    if (handledBefore.has(wordId)) return { changed: false, task: deepClone(task) };
+    book.dailyReviewTasks[dateKey] = reviewWorkload.markHandled(task, wordId, "deferred");
+    const daily = ensureDailyStats(bookId, dateKey);
+    addUniqueId(daily.deferredTodayWordIds, wordId);
+    if (Number.isFinite(Number(options.durationMs))) recordReviewPace(bookId, options.durationMs, false);
+    persist();
+    return { changed: true, task: deepClone(book.dailyReviewTasks[dateKey]) };
+  }
+
+  function getManualMasteredWords(bookId) {
+    return Object.entries(ensureBook(bookId).words)
+      .filter(([, progress]) => Boolean(progress.manualMastered))
+      .map(([wordId, progress]) => ({ wordId, progress: normalizeWordProgress(progress) }))
+      .sort((left, right) => (right.progress.manualMasteredAt || 0) - (left.progress.manualMasteredAt || 0));
   }
 
   function getDailyStats(bookId, dateKey = getLocalDateKey()) {
@@ -1285,7 +1647,11 @@
     const book = ensureBook(bookId);
     const allowed = Array.isArray(validWordIds) ? new Set(validWordIds) : null;
     return Object.entries(book.reviewRecovery)
-      .filter(([wordId, record]) => (!allowed || allowed.has(wordId)) && record?.active)
+      .filter(([wordId, record]) => (
+        (!allowed || allowed.has(wordId))
+        && record?.active
+        && !normalizeWordProgress(book.words[wordId] || EMPTY_WORD_PROGRESS).manualMastered
+      ))
       .map(([wordId, record]) => {
         const recoveryState = reviewRecovery.normalizeRecord(record);
         return {
@@ -1317,7 +1683,9 @@
     const daily = getDailyStats(bookId, dateKey);
     return Object.entries(book.newWordLearning)
       .filter(([wordId, record]) => {
-        return (!allowed || allowed.has(wordId)) && newWordLearning.isPending(record);
+        return (!allowed || allowed.has(wordId))
+          && !normalizeWordProgress(book.words[wordId] || EMPTY_WORD_PROGRESS).manualMastered
+          && newWordLearning.isPending(record);
       })
       .map(([wordId, record]) => {
         const learningState = newWordLearning.normalizeLearningRecord(record);
@@ -1439,22 +1807,22 @@
     const book = ensureBook(bookId);
     const allowed = Array.isArray(validWordIds) ? new Set(validWordIds) : null;
     const records = Object.entries(book.words)
-      .filter(([wordId]) => (!allowed || allowed.has(wordId)) && !book.reviewRecovery[wordId]?.active)
+      .filter(([wordId, progress]) => (
+        (!allowed || allowed.has(wordId))
+        && !book.reviewRecovery[wordId]?.active
+        && !normalizeWordProgress(progress).manualMastered
+      ))
       .map(([wordId, progress]) => ({ wordId, progress: normalizeWordProgress(progress) }));
     return reviewScheduler.getDueWords(records, now);
   }
 
   function getDailyReviewSummary(bookId, validWordIds, now = Date.now()) {
-    const daily = getDailyStats(bookId, getLocalDateKey(now));
-    const reviewed = new Set(daily.reviewedWordIds);
-    const dueWords = getDueWords(bookId, validWordIds, now);
-    const newlyDueCount = dueWords.filter((entry) => !reviewed.has(entry.wordId)).length;
-
+    const summary = buildDailyReviewTaskSummary(bookId, validWordIds, now);
     return {
-      completed: daily.reviewWords,
-      total: daily.reviewWords + newlyDueCount,
-      dueCount: dueWords.length,
-      dueWords,
+      ...summary,
+      completed: summary.handledCount,
+      total: summary.target,
+      dueCount: summary.totalDueCount,
     };
   }
 
@@ -1463,13 +1831,15 @@
     const wordIds = Array.isArray(validWordIds) ? validWordIds : Object.keys(book.words);
     let learned = 0;
     let mastered = 0;
+    let manualMastered = 0;
     let wrong = 0;
     let favorite = 0;
 
     wordIds.forEach((wordId) => {
       const progress = normalizeWordProgress(book.words[wordId] || EMPTY_WORD_PROGRESS);
       if (progress.learned) learned += 1;
-      if (progress.learned && isWordMastered(progress)) mastered += 1;
+      if (progress.learned && !progress.manualMastered && isWordMastered(progress)) mastered += 1;
+      if (progress.manualMastered) manualMastered += 1;
       if (progress.inWrongBook) wrong += 1;
       if (progress.favorite) favorite += 1;
     });
@@ -1478,6 +1848,7 @@
       total: wordIds.length,
       learned,
       mastered,
+      manualMastered,
       remaining: Math.max(0, wordIds.length - learned),
       wrong,
       favorite,
@@ -1516,6 +1887,7 @@
     AI_PROXY_TOKEN_KEY,
     DATA_VERSION,
     DAILY_GOAL_OPTIONS,
+    DAILY_REVIEW_LIMIT_OPTIONS: reviewWorkload.DAILY_REVIEW_LIMIT_OPTIONS,
     loadUserData,
     saveUserData,
     getCurrentBook,
@@ -1525,6 +1897,8 @@
     getDailyNewWordGoal,
     getConfiguredDailyNewWordGoal,
     setDailyNewWordGoal,
+    getConfiguredDailyReviewLimit,
+    setDailyReviewLimit,
     getDailyGroupPlan,
     saveDailyGroupPlan,
     removeDailyGroupPlan,
@@ -1533,6 +1907,15 @@
     markDailyGroupStarted,
     advanceDailyGroup,
     adjustDailyGroupPlanTarget,
+    getDailyReviewTask,
+    getOrCreateDailyReviewTask,
+    adjustTodayDailyReviewLimit,
+    markDailyReviewTaskStarted,
+    startDailyReviewBreak,
+    continueDailyReviewTask,
+    getReviewPace,
+    recordReviewPace,
+    getQuickCleanupCandidates,
     getVocabularyScope,
     setVocabularyScope,
     getStudyMode,
@@ -1553,6 +1936,13 @@
     toggleFavorite,
     removeWrongWord,
     setWrongBookState,
+    markWordManualMastered,
+    markWordsManualMastered,
+    undoManualMastery,
+    undoManualMasteryBatch,
+    restoreWordReview,
+    deferDailyReviewWord,
+    getManualMasteredWords,
     getDailyStats,
     getDailyReviewRecord,
     saveDailyReviewRecord,

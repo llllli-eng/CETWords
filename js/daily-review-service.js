@@ -111,7 +111,7 @@
     };
   }
 
-  function buildLocalReview({ bookId, dailyTarget, daily, words = [], getProgress = () => ({}) }) {
+  function buildLocalReview({ bookId, dailyTarget, daily, reviewWorkload = {}, words = [], getProgress = () => ({}) }) {
     const metrics = daily?.learningMetrics || {};
     const firstChoice = metrics.firstChoice || {};
     const reinforcement = metrics.reinforcement || {};
@@ -191,6 +191,11 @@
         },
         repeatedErrorWords: summaries.filter((entry) => entry.repeatedError).length,
         correctedWords: correctedWords.length,
+        formalReviewTaskTarget: toCount(reviewWorkload.target),
+        formalReviewAnswered: toCount(reviewWorkload.answeredCount),
+        manualMasteredCount: toCount(reviewWorkload.manualMasteredCount),
+        deferredTodayCount: toCount(reviewWorkload.deferredTodayCount),
+        reviewBacklogCount: toCount(reviewWorkload.backlogCount),
       },
       weakWords,
       correctedWords,
@@ -198,10 +203,29 @@
   }
 
   function buildRequestPayload(localReview) {
+    const statistics = localReview.statistics;
     return {
       date: localReview.date,
       level: localReview.level,
-      statistics: localReview.statistics,
+      statistics: {
+        dailyTarget: statistics.dailyTarget,
+        completedNewWords: statistics.completedNewWords,
+        totalAnswers: statistics.totalAnswers,
+        firstChoiceCorrect: statistics.firstChoiceCorrect,
+        firstChoiceWrong: statistics.firstChoiceWrong,
+        firstChoiceAccuracy: statistics.firstChoiceAccuracy,
+        choiceRetryCount: statistics.choiceRetryCount,
+        reinforcementCorrect: statistics.reinforcementCorrect,
+        reinforcementPartial: statistics.reinforcementPartial,
+        reinforcementWrong: statistics.reinforcementWrong,
+        reinforcementPassRate: statistics.reinforcementPassRate,
+        formalReviewStats: statistics.formalReviewStats,
+        recoveryStats: statistics.recoveryStats,
+        enToZh: statistics.enToZh,
+        zhToEn: statistics.zhToEn,
+        repeatedErrorWords: statistics.repeatedErrorWords,
+        correctedWords: statistics.correctedWords,
+      },
       weakWords: localReview.weakWords.slice(0, MAX_WEAK_WORDS).map((entry) => ({ ...entry })),
       correctedWords: localReview.correctedWords.slice(0, MAX_CORRECTED_WORDS).map((entry) => ({ ...entry })),
     };

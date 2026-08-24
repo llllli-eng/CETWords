@@ -40,7 +40,7 @@ function loadApp(initialStorage = {}) {
     window, console, URL, Map, Set, Date, Math, Intl, AbortController, setTimeout, clearTimeout,
   });
   [
-    "js/review-scheduler.js", "js/smart-learning-order.js", "js/review-recovery.js",
+    "js/review-scheduler.js", "js/review-workload.js", "js/smart-learning-order.js", "js/review-recovery.js",
     "js/new-word-learning.js", "js/daily-group-service.js", "js/storage.js", "js/backup-service.js",
   ].forEach((file) => vm.runInContext(fs.readFileSync(path.join(ROOT, file), "utf8"), context, { filename: file }));
   return { app: window.CETWords, localStorage };
@@ -300,12 +300,12 @@ await test("local date keys do not use the UTC cutover date", () => {
   assert.equal(reviewScheduler.getNextReviewSchedule(1, afterLocalMidnight).nextReviewDate, "2026-08-16");
 });
 
-await test("v12 to v13 preserves the old target's local date", () => {
+await test("v12 to v14 preserves the old target's local date", () => {
   const data = legacyData(12);
   const oldTarget = localTime(2026, 8, 15, 21, 30);
   data.books.cet4.words.keep = { learned: true, masteryLevel: 3, nextReviewTime: oldTarget, lastReviewTime: anchor };
   const migrated = loadApp({ [STORAGE_KEY]: JSON.stringify(data) }).app.storage.loadUserData();
-  assert.equal(migrated.version, 13);
+  assert.equal(migrated.version, 14);
   assert.equal(migrated.books.cet4.words.keep.nextReviewDate, "2026-08-15");
   assert.equal(migrated.books.cet4.words.keep.nextReviewTime, null);
 });
@@ -358,7 +358,7 @@ await test("v12 migration preserves mastery, Recovery, daily reviews and Phase16
   assert.deepEqual(Array.from(migrated.books.cet4.dailyGroupPlans["2026-08-14"].groupSizes), [10, 10, 10]);
 });
 
-await test("v13 schedules stay identical across save and reload", () => {
+await test("v14 schedules stay identical across save and reload", () => {
   const first = loadApp();
   const schedule = reviewScheduler.getNextReviewSchedule(1, localTime(2026, 8, 14, 23, 55));
   seedWord(first, "stable", learnedProgress(1, schedule, schedule.lastLongTermAnchorAt));
@@ -370,7 +370,7 @@ await test("v13 schedules stay identical across save and reload", () => {
   assert.equal(after.earliestReviewAt, before.earliestReviewAt);
 });
 
-await test("ordinary practice cannot move an existing v13 long-term anchor", () => {
+await test("ordinary practice cannot move an existing v14 long-term anchor", () => {
   const first = loadApp();
   const originalAnchor = localTime(2026, 8, 14, 8, 0);
   const schedule = reviewScheduler.getNextReviewSchedule(1, originalAnchor);
@@ -384,8 +384,8 @@ await test("ordinary practice cannot move an existing v13 long-term anchor", () 
   assert.equal(progress.nextReviewDate, schedule.nextReviewDate);
 });
 
-await test("backup validation accepts every version from v1 through v13", () => {
-  for (let version = 1; version <= 13; version += 1) {
+await test("backup validation accepts every version from v1 through v14", () => {
+  for (let version = 1; version <= 14; version += 1) {
     assert.equal(loaded.app.backupService.validateBackup(legacyData(version)).valid, true, `v${version}`);
   }
 });

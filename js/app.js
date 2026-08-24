@@ -10,6 +10,7 @@ const {
   shuffleArray,
   storage,
   reviewScheduler,
+  reviewWorkload,
   wordLibrary,
   statisticsService,
   backupService,
@@ -38,6 +39,7 @@ const appState = {
   },
   dailyReview: { generating: false, session: null },
   dailyGroup: { generating: false, promise: null },
+  quickCleanup: { candidateIds: [], confirmPending: false },
   books: {
     cet4: {
       id: "cet4",
@@ -76,6 +78,15 @@ const elements = {
   reviewCompleted: document.querySelector("#review-completed"),
   reviewTotal: document.querySelector("#review-total"),
   reviewProgressBar: document.querySelector("#review-progress-bar"),
+  reviewTotalDue: document.querySelector("#review-total-due"),
+  reviewBacklog: document.querySelector("#review-backlog"),
+  reviewAnswered: document.querySelector("#review-answered"),
+  reviewManualMastered: document.querySelector("#review-manual-mastered"),
+  reviewDeferred: document.querySelector("#review-deferred"),
+  reviewSegmentProgress: document.querySelector("#review-segment-progress"),
+  reviewTimeEstimate: document.querySelector("#review-time-estimate"),
+  adjustTodayReview: document.querySelector("#adjust-today-review"),
+  openQuickCleanup: document.querySelector("#open-quick-cleanup"),
   taskHint: document.querySelector(".task-hint"),
   dailyGroupOverview: document.querySelector("#daily-group-overview"),
   dailyGroupSummary: document.querySelector("#daily-group-summary"),
@@ -145,6 +156,7 @@ const elements = {
   wordDetailNextDate: document.querySelector("#word-detail-next-date"),
   wordDetailFavorite: document.querySelector("#word-detail-favorite"),
   wordDetailWrongBook: document.querySelector("#word-detail-wrong-book"),
+  wordDetailManualMastery: document.querySelector("#word-detail-manual-mastery"),
   wordDetailFrequencyTier: document.querySelector("#word-detail-frequency-tier"),
   wordDetailFrequencySessions: document.querySelector("#word-detail-frequency-sessions"),
   wordDetailFrequencyPapers: document.querySelector("#word-detail-frequency-papers"),
@@ -157,6 +169,7 @@ const elements = {
   longestStreak: document.querySelector("#longest-streak"),
   statsLearned: document.querySelector("#stats-learned"),
   statsMastered: document.querySelector("#stats-mastered"),
+  statsManualMastered: document.querySelector("#stats-manual-mastered"),
   statsUnlearned: document.querySelector("#stats-unlearned"),
   statsWrongWords: document.querySelector("#stats-wrong-words"),
   statsAnswers: document.querySelector("#stats-answers"),
@@ -175,6 +188,8 @@ const elements = {
   settingsBookBadge: document.querySelector("#settings-book-badge"),
   dailyGoalOptions: document.querySelectorAll("[data-daily-goal]"),
   dailyGoalDescription: document.querySelector("#daily-goal-description"),
+  reviewLimitOptions: document.querySelectorAll("[data-review-limit]"),
+  reviewLimitDescription: document.querySelector("#review-limit-description"),
   vocabularyScopeOptions: document.querySelectorAll("[data-vocabulary-scope]"),
   vocabularyScopeDescription: document.querySelector("#vocabulary-scope-description"),
   studyModeOptions: document.querySelectorAll("[data-study-mode]"),
@@ -228,6 +243,18 @@ const elements = {
   dailyReviewFocus: document.querySelector("#daily-review-focus"),
   dailyReviewAdvice: document.querySelector("#daily-review-advice"),
   toast: document.querySelector("#toast"),
+  toastMessage: document.querySelector("#toast-message"),
+  toastAction: document.querySelector("#toast-action"),
+  reviewAdjustDialog: document.querySelector("#review-adjust-dialog"),
+  reviewAdjustClose: document.querySelector("#review-adjust-close"),
+  reviewAdjustDescription: document.querySelector("#review-adjust-description"),
+  reviewAdjustSelect: document.querySelector("#review-adjust-select"),
+  reviewAdjustConfirm: document.querySelector("#review-adjust-confirm"),
+  quickCleanupDialog: document.querySelector("#quick-cleanup-dialog"),
+  quickCleanupClose: document.querySelector("#quick-cleanup-close"),
+  quickCleanupList: document.querySelector("#quick-cleanup-list"),
+  quickCleanupStatus: document.querySelector("#quick-cleanup-status"),
+  quickCleanupConfirm: document.querySelector("#quick-cleanup-confirm"),
 };
 
 let toastTimer;
@@ -314,11 +341,21 @@ function setStudyMode(mode, { announce = true } = {}) {
   return savedMode;
 }
 
-function showToast(message) {
+function showToast(message, options = {}) {
   window.clearTimeout(toastTimer);
-  elements.toast.textContent = message;
+  elements.toastMessage.textContent = message;
+  elements.toastAction.hidden = !options.actionLabel || typeof options.onAction !== "function";
+  elements.toastAction.textContent = options.actionLabel || "";
+  elements.toastAction.onclick = elements.toastAction.hidden ? null : () => {
+    window.clearTimeout(toastTimer);
+    elements.toast.classList.remove("is-visible");
+    options.onAction();
+  };
   elements.toast.classList.add("is-visible");
-  toastTimer = window.setTimeout(() => elements.toast.classList.remove("is-visible"), 2600);
+  toastTimer = window.setTimeout(
+    () => elements.toast.classList.remove("is-visible"),
+    Math.max(1800, Number(options.duration) || 2600),
+  );
 }
 
 function setTheme(theme) {
@@ -379,10 +416,12 @@ function setTaskHint(icon, text) {
 function updateTaskHint(todayNew, pendingCount, recoveryCount, book, reviewSummary) {
   const newRemaining = Math.max(0, book.dailyGoal - todayNew);
 
-  if (reviewSummary.dueCount > 0) {
-    setTaskHint("↺", `先复习 ${reviewSummary.dueCount} 个到期单词，再学习新词`);
+  if (reviewSummary.remainingCount > 0) {
+    setTaskHint("↺", `先完成今日 ${reviewSummary.target} 个正式复习任务，然后即可继续新词`);
   } else if (recoveryCount > 0) {
     setTaskHint("◇", `有 ${recoveryCount} 个旧词等待纠错巩固，不影响今日新词完成`);
+  } else if (reviewSummary.backlogCount > 0) {
+    setTaskHint("✓", `今日复习预算已完成，任务外积压 ${reviewSummary.backlogCount} 个不再阻止新词`);
   } else if (pendingCount > 0) {
     setTaskHint("◇", `还有 ${pendingCount} 个新词等待当日巩固`);
   } else if (newRemaining > 0) {
@@ -544,10 +583,10 @@ function updateDashboard(bookId = appState.activeBookId) {
     now: Date.now(),
   });
   const todayNew = getScopedCompletedNewWordCount(book, summary.today);
-  const todayReview = summary.today.reviewWords;
-  const taskTotal = book.dailyGoal + reviewSummary.total;
+  const todayReview = reviewSummary.handledCount;
+  const taskTotal = book.dailyGoal + reviewSummary.target;
   const taskCompleted = Math.min(todayNew, book.dailyGoal)
-    + Math.min(todayReview, reviewSummary.total);
+    + Math.min(todayReview, reviewSummary.target);
   const dailyPercent = getPercent(taskCompleted, taskTotal);
   const overallPercent = getPercent(summary.learned, summary.total);
 
@@ -561,9 +600,19 @@ function updateDashboard(bookId = appState.activeBookId) {
   elements.newProgressBar.style.width = `${getPercent(todayNew, book.dailyGoal)}%`;
   elements.pendingReinforcementCount.textContent = formatNumber(pendingSummary.count);
   elements.reviewCompleted.textContent = todayReview;
-  elements.reviewTotal.textContent = reviewSummary.total;
-  elements.reviewProgressBar.style.width = `${getPercent(todayReview, reviewSummary.total)}%`;
-  elements.dueReviewCount.textContent = formatNumber(reviewSummary.dueCount);
+  elements.reviewTotal.textContent = reviewSummary.target;
+  elements.reviewProgressBar.style.width = `${getPercent(todayReview, reviewSummary.target)}%`;
+  elements.reviewTotalDue.textContent = formatNumber(reviewSummary.totalDueCount);
+  elements.reviewBacklog.textContent = formatNumber(reviewSummary.backlogCount);
+  elements.reviewAnswered.textContent = formatNumber(reviewSummary.answeredCount);
+  elements.reviewManualMastered.textContent = formatNumber(reviewSummary.manualMasteredCount);
+  elements.reviewDeferred.textContent = formatNumber(reviewSummary.deferredTodayCount);
+  elements.reviewSegmentProgress.textContent = `当前复习段：${reviewSummary.segmentHandledCount} / ${reviewSummary.segmentTarget || 0}`;
+  elements.reviewTimeEstimate.hidden = !reviewSummary.estimate;
+  elements.reviewTimeEstimate.textContent = reviewSummary.estimate ? `预计还需${reviewSummary.estimate.label}` : "";
+  elements.dueReviewCount.textContent = formatNumber(reviewSummary.remainingCount);
+  elements.adjustTodayReview.disabled = reviewSummary.sourceDueCount === 0;
+  elements.openQuickCleanup.disabled = reviewSummary.totalDueCount === 0;
   updateTaskHint(todayNew, pendingSummary.count, recoverySummary.count, book, reviewSummary);
   renderDailyGroupOverview(book);
 
@@ -579,7 +628,7 @@ function updateDashboard(bookId = appState.activeBookId) {
 
   const hasUnlearned = summary.remaining > 0;
   const buttonLabel = elements.continueButton.querySelector("span:first-child");
-  if (reviewSummary.dueCount > 0) buttonLabel.textContent = "先复习，再学新词";
+  if (reviewSummary.remainingCount > 0) buttonLabel.textContent = "先完成今日复习";
   else if (recoverySummary.count > 0) buttonLabel.textContent = "继续纠错巩固";
   else if (pendingSummary.count > 0) buttonLabel.textContent = "继续巩固";
   else if (todayNew < book.dailyGoal) buttonLabel.textContent = "继续学习";
@@ -591,6 +640,117 @@ function showHome() {
   setVisibleView("home");
   document.title = "拾词 · 四六级背单词";
   updateDashboard();
+}
+
+function closeReviewAdjustDialog() {
+  if (typeof elements.reviewAdjustDialog.close === "function" && elements.reviewAdjustDialog.open) {
+    elements.reviewAdjustDialog.close();
+  } else elements.reviewAdjustDialog.removeAttribute("open");
+}
+
+function openReviewAdjustDialog() {
+  const book = getActiveBook();
+  const summary = storage.getDailyReviewSummary(book.id, getAllBookWordIds(book));
+  elements.reviewAdjustSelect.value = String(summary.limit);
+  elements.reviewAdjustDescription.textContent = summary.started
+    ? `已处理 ${summary.handledCount} 个；已处理或已开始的词不会被替换。`
+    : "今日任务尚未开始，可按新上限重建任务。";
+  if (typeof elements.reviewAdjustDialog.showModal === "function") elements.reviewAdjustDialog.showModal();
+  else elements.reviewAdjustDialog.setAttribute("open", "");
+}
+
+function confirmTodayReviewAdjustment() {
+  const book = getActiveBook();
+  const raw = elements.reviewAdjustSelect.value;
+  const limit = raw === "unlimited" ? "unlimited" : Number(raw);
+  const adjustment = storage.adjustTodayDailyReviewLimit(book.id, getAllBookWordIds(book), limit);
+  studyController.clearSessions(book.id);
+  closeReviewAdjustDialog();
+  updateDashboard();
+  const target = adjustment.summary.target;
+  const message = adjustment.action === "extended"
+    ? `今日复习任务已按优先级追加至 ${target} 个`
+    : adjustment.action === "reduced"
+      ? `今日复习任务已安全调整为 ${target} 个`
+      : `今日复习任务为 ${target} 个`;
+  showToast(message);
+}
+
+function closeQuickCleanupDialog() {
+  if (typeof elements.quickCleanupDialog.close === "function" && elements.quickCleanupDialog.open) {
+    elements.quickCleanupDialog.close();
+  } else elements.quickCleanupDialog.removeAttribute("open");
+  appState.quickCleanup = { candidateIds: [], confirmPending: false };
+}
+
+function getQuickCleanupSelectedIds() {
+  return [...elements.quickCleanupList.querySelectorAll('input[type="checkbox"]:checked')]
+    .map((input) => input.value);
+}
+
+function updateQuickCleanupSelection() {
+  const count = getQuickCleanupSelectedIds().length;
+  appState.quickCleanup.confirmPending = false;
+  elements.quickCleanupConfirm.disabled = count === 0;
+  elements.quickCleanupConfirm.textContent = count ? `批量标记 ${count} 个为已掌握` : "请先勾选单词";
+  elements.quickCleanupStatus.textContent = count ? `已选 ${count} 个，未勾选词不会改变。` : "";
+}
+
+function openQuickCleanupDialog() {
+  const book = getActiveBook();
+  const candidates = storage.getQuickCleanupCandidates(book.id, getAllBookWordIds(book));
+  const wordMap = new Map(book.words.map((word) => [word.word, word]));
+  appState.quickCleanup = { candidateIds: candidates.map((entry) => entry.wordId), confirmPending: false };
+  elements.quickCleanupList.replaceChildren(...candidates.map((entry) => {
+    const word = wordMap.get(entry.wordId);
+    const row = createElement("article", "quick-cleanup-item");
+    const label = createElement("label");
+    label.setAttribute("aria-label", `选择 ${word.word}`);
+    const checkbox = createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = word.word;
+    checkbox.addEventListener("change", updateQuickCleanupSelection);
+    label.append(checkbox);
+    const details = createElement("details");
+    const summary = createElement("summary");
+    summary.append(createElement("strong", "", word.word), createElement("small", "", word.phonetic || "查看释义"));
+    details.append(summary, createElement("p", "", word.coreMeaning || word.shortMeaning || word.meaning));
+    row.append(label, details);
+    return row;
+  }));
+  elements.quickCleanupStatus.textContent = candidates.length
+    ? `展示优先级最高的 ${candidates.length} 个候选词。`
+    : "当前没有可快速清理的到期词。";
+  elements.quickCleanupConfirm.disabled = true;
+  elements.quickCleanupConfirm.textContent = "请先勾选单词";
+  if (typeof elements.quickCleanupDialog.showModal === "function") elements.quickCleanupDialog.showModal();
+  else elements.quickCleanupDialog.setAttribute("open", "");
+}
+
+function confirmQuickCleanup() {
+  const selectedIds = getQuickCleanupSelectedIds();
+  if (!selectedIds.length) return;
+  if (!appState.quickCleanup.confirmPending) {
+    appState.quickCleanup.confirmPending = true;
+    elements.quickCleanupStatus.textContent = `请再确认一次：将 ${selectedIds.length} 个勾选词退出常规 SRS。`;
+    elements.quickCleanupConfirm.textContent = `确认标记 ${selectedIds.length} 个`;
+    return;
+  }
+  const book = getActiveBook();
+  const result = storage.markWordsManualMastered(book.id, selectedIds);
+  closeQuickCleanupDialog();
+  studyController.clearSessions(book.id);
+  updateDashboard();
+  showToast(`已标记 ${result.changedCount} 个为已掌握`, {
+    actionLabel: "撤销本批次",
+    duration: 9000,
+    onAction: () => {
+      const restored = storage.undoManualMasteryBatch(result.undoEntries);
+      studyController.clearSessions(book.id);
+      updateDashboard();
+      showToast(`已撤销本批次，恢复 ${restored} 个词的原状态`);
+    },
+  });
 }
 
 function mapEntriesToItems(book, entries) {
@@ -660,7 +820,8 @@ function getModeStudyPlan(book, sessionMode) {
   }
 
   if (sessionMode === "wrong" || sessionMode === "favorite") {
-    const entries = sessionMode === "wrong" ? storage.getWrongWords(book.id) : storage.getFavoriteWords(book.id);
+    const entries = (sessionMode === "wrong" ? storage.getWrongWords(book.id) : storage.getFavoriteWords(book.id))
+      .filter((entry) => !entry.progress.manualMastered);
     return {
       studyItems: shuffleArray(mapEntriesToItems(book, entries)).slice(0, book.dailyGoal),
       isExtra: false,
@@ -825,8 +986,9 @@ async function showStudy(sessionMode = "normal", { forceNew = false, skipGroupPl
       ).count,
       normalSessionAnswerSequence: plan.daily.normalSessionAnswerSequence,
       studySessionId: plan.studySessionId,
-      reviewCompletedToday: plan.daily.reviewWords,
-      reviewTarget: plan.reviewSummary.total,
+      reviewCompletedToday: plan.reviewSummary.handledCount,
+      reviewTarget: plan.reviewSummary.target,
+      reviewTaskSummary: plan.reviewSummary,
       sessionMode,
       isExtra: plan.isExtra,
       studyItems: plan.studyItems,
@@ -875,6 +1037,7 @@ function handleAnswer({
   taskType,
   learningPhase,
   studySessionId,
+  interactionDurationMs,
 }) {
   const result = storage.updateWordProgress(bookId, wordId, correct, {
     judgement,
@@ -885,6 +1048,7 @@ function handleAnswer({
     taskType,
     learningPhase,
     studySessionId,
+    interactionDurationMs,
   });
   const book = appState.books[bookId];
   if (book) {
@@ -898,8 +1062,53 @@ function handleAnswer({
       result.groupPlan = groupState?.plan || null;
       result.groupProgress = groupState?.progress || null;
     }
+    result.reviewTaskSummary = storage.getDailyReviewSummary(book.id, getAllBookWordIds(book));
   }
   return result;
+}
+
+function handleReviewTaskStarted(bookId, wordId) {
+  return storage.markDailyReviewTaskStarted(bookId, wordId);
+}
+
+function handleManualMaster({ bookId, wordId, durationMs }) {
+  const result = storage.markWordManualMastered(bookId, wordId);
+  if (result.changed && Number.isFinite(Number(durationMs))) storage.recordReviewPace(bookId, durationMs);
+  const book = appState.books[bookId];
+  return {
+    ...result,
+    reviewTaskSummary: storage.getDailyReviewSummary(bookId, getAllBookWordIds(book)),
+  };
+}
+
+function handleUndoManualMaster(undo) {
+  if (!storage.undoManualMastery(undo)) return null;
+  const book = appState.books[undo.bookId];
+  showToast("已撤销，原复习与 Recovery 状态已恢复");
+  return {
+    reviewTaskSummary: storage.getDailyReviewSummary(undo.bookId, getAllBookWordIds(book)),
+  };
+}
+
+function handleDeferToday({ bookId, wordId, durationMs }) {
+  const result = storage.deferDailyReviewWord(bookId, wordId, { durationMs });
+  const book = appState.books[bookId];
+  return {
+    ...result,
+    reviewTaskSummary: storage.getDailyReviewSummary(bookId, getAllBookWordIds(book)),
+  };
+}
+
+function handleStartReviewBreak(bookId) {
+  storage.startDailyReviewBreak(bookId);
+  const book = appState.books[bookId];
+  return { reviewTaskSummary: storage.getDailyReviewSummary(bookId, getAllBookWordIds(book)) };
+}
+
+function handleContinueReviewTask(bookId) {
+  storage.continueDailyReviewTask(bookId);
+  const book = appState.books[bookId];
+  return { reviewTaskSummary: storage.getDailyReviewSummary(bookId, getAllBookWordIds(book)) };
 }
 
 function handleToggleFavorite(bookId, wordId) {
@@ -935,10 +1144,16 @@ function buildTodayLocalReview(bookId) {
     getAllBookWordIds(book),
     { sessionId: "daily-review", sequence: daily.normalSessionAnswerSequence, now: Date.now() },
   ).pendingCount;
+  const reviewTask = storage.getDailyReviewSummary(bookId, getAllBookWordIds(book));
   return dailyReviewService.buildLocalReview({
     bookId,
     dailyTarget: storage.getDailyNewWordGoal(bookId),
     daily: { ...daily, dateKey },
+    reviewWorkload: {
+      ...reviewTask,
+      manualMasteredCount: daily.manualMasteredWordIds.length,
+      deferredTodayCount: daily.deferredTodayWordIds.length,
+    },
     words: book.words,
     getProgress: (wordId) => storage.getWordProgress(bookId, wordId),
   });
@@ -1080,6 +1295,13 @@ const studyController = new StudyController({
   onContinueGroup: handleContinueGroup,
   onStopDailyGroups: handleStopDailyGroups,
   onDailyGroupStarted: handleDailyGroupStarted,
+  onReviewTaskStarted: handleReviewTaskStarted,
+  onManualMaster: handleManualMaster,
+  onUndoManualMaster: handleUndoManualMaster,
+  onDeferToday: handleDeferToday,
+  onStartReviewBreak: handleStartReviewBreak,
+  onContinueReviewTask: handleContinueReviewTask,
+  onStopReviewSession: showHome,
 });
 
 elements.dailyReviewGenerate.addEventListener("click", generateDailyReview);
@@ -1110,7 +1332,9 @@ function createMasteryStatus(progress) {
   const heading = createElement(
     "div",
     "mastery-status__heading",
-    `熟练度 ${level} / 5 · ${reviewScheduler.MASTERY_LABELS[level]}`,
+    progress.manualMastered
+      ? `✓ 已掌握 · 已退出常规复习（保留 Level ${level}）`
+      : `熟练度 ${level} / 5 · ${reviewScheduler.MASTERY_LABELS[level]}`,
   );
   const dots = createElement("div", "mastery-dots");
   dots.setAttribute("aria-label", `熟练度 ${level} / 5`);
@@ -1163,7 +1387,9 @@ function createCollectionCard(word, progress, mode) {
     createElement(
       "p",
       "collection-word-card__review-time",
-      `下次复习：${reviewScheduler.formatReviewSchedule(progress)}`,
+      progress.manualMastered
+        ? "已退出常规复习"
+        : `下次复习：${reviewScheduler.formatReviewSchedule(progress)}`,
     ),
   );
 
@@ -1304,7 +1530,9 @@ function createWordListCard(record) {
     createElement(
       "p",
       "word-list-card__review-time",
-      progress.learned
+      progress.manualMastered
+        ? "已退出常规复习"
+        : progress.learned
         ? `下次复习：${reviewScheduler.formatReviewSchedule(progress)}`
         : "尚未学习",
     ),
@@ -1356,6 +1584,9 @@ function renderWordList() {
     const active = button.dataset.wordFilter === state.filter;
     button.classList.toggle("is-active", active);
     button.setAttribute("aria-pressed", String(active));
+    if (button.dataset.wordFilter === "manual-mastered") {
+      button.textContent = `已掌握 ${storage.getManualMasteredWords(book.id).length}`;
+    }
   });
   elements.wordListRange.textContent = page.total
     ? `找到 ${page.total} 个 · 当前显示 ${page.start}–${page.end}`
@@ -1433,14 +1664,16 @@ function renderWordDetail() {
   );
   elements.wordDetailMastery.replaceChildren(createMasteryStatus(progress));
   elements.wordDetailLearningState.textContent = progress.learned
-    ? `熟练度 ${level} / 5 · ${reviewScheduler.MASTERY_LABELS[level]}`
+    ? progress.manualMastered
+      ? `✓ 已掌握 · 已退出常规复习（保留 Level ${level}）`
+      : `熟练度 ${level} / 5 · ${reviewScheduler.MASTERY_LABELS[level]}`
     : "尚未学习";
   elements.wordDetailCorrect.textContent = `${progress.correctCount} 次`;
   elements.wordDetailWrong.textContent = `${progress.wrongCount} 次`;
   elements.wordDetailFirstDate.textContent = formatCalendarDate(progress.firstLearnDate);
   elements.wordDetailLastDate.textContent = formatStudyTime(progress.lastStudyTime);
   elements.wordDetailNextDate.textContent = progress.learned
-    ? reviewScheduler.formatReviewSchedule(progress)
+    ? progress.manualMastered ? "已退出常规复习" : reviewScheduler.formatReviewSchedule(progress)
     : "待安排";
   const priority = smartLearningOrder.getLearningPriority(
     word.word,
@@ -1466,6 +1699,9 @@ function renderWordDetail() {
   elements.wordDetailFavorite.setAttribute("aria-pressed", String(progress.favorite));
   elements.wordDetailWrongBook.textContent = progress.inWrongBook ? "移出错词本" : "加入错词本";
   elements.wordDetailWrongBook.setAttribute("aria-pressed", String(progress.inWrongBook));
+  elements.wordDetailManualMastery.hidden = !progress.learned;
+  elements.wordDetailManualMastery.classList.toggle("is-mastered", progress.manualMastered);
+  elements.wordDetailManualMastery.textContent = progress.manualMastered ? "恢复复习" : "✓ 我已掌握";
 }
 
 function openWordDetail(wordId) {
@@ -1492,6 +1728,7 @@ function renderStatistics() {
   elements.longestStreak.textContent = `${statistics.longestStreak} 天`;
   elements.statsLearned.textContent = formatNumber(statistics.learned);
   elements.statsMastered.textContent = formatNumber(statistics.mastered);
+  elements.statsManualMastered.textContent = formatNumber(statistics.manualMastered);
   elements.statsUnlearned.textContent = formatNumber(statistics.unlearned);
   elements.statsWrongWords.textContent = formatNumber(statistics.wrongWords);
   elements.statsAnswers.textContent = formatNumber(statistics.answerCount);
@@ -1676,6 +1913,20 @@ function renderGoalPicker() {
     : `${book.shortName} 今天继续原计划 ${book.dailyGoal} 个；新目标 ${configuredGoal} 个将从明天生效。`;
 }
 
+function renderReviewLimitPicker() {
+  const book = getActiveBook();
+  const limit = storage.getConfiguredDailyReviewLimit(book.id);
+  elements.reviewLimitOptions.forEach((option) => {
+    const value = option.dataset.reviewLimit === "unlimited" ? "unlimited" : Number(option.dataset.reviewLimit);
+    const selected = value === limit;
+    option.classList.toggle("is-selected", selected);
+    option.setAttribute("aria-pressed", String(selected));
+  });
+  elements.reviewLimitDescription.textContent = limit === "unlimited"
+    ? `${book.shortName} 每天会将全部正式到期词纳入今日任务。`
+    : `${book.shortName} 到期词较多时，每天优先处理 ${limit} 个。`;
+}
+
 function renderVocabularyScopePicker() {
   const book = getActiveBook();
   const scope = getVocabularyScope(book);
@@ -1781,6 +2032,7 @@ function showSettings() {
   elements.settingsBookBadge.textContent = book.shortName;
   elements.clearBookDescription.textContent = `只清空 ${book.shortName} 的进度、错词与收藏，不影响另一个词库。`;
   renderGoalPicker();
+  renderReviewLimitPicker();
   renderVocabularyScopePicker();
   renderStudyModePicker();
   renderLearningOrderPicker();
@@ -1938,6 +2190,34 @@ elements.wordDetailWrongBook.addEventListener("click", () => {
   renderWordList();
   updateDashboard();
 });
+elements.wordDetailManualMastery.addEventListener("click", () => {
+  const book = getActiveBook();
+  const word = getDetailWord();
+  if (!word) return;
+  const progress = storage.getWordProgress(book.id, word.word);
+  if (progress.manualMastered) {
+    storage.restoreWordReview(book.id, word.word);
+    showToast("已恢复复习，将于明天进入正式复习");
+  } else {
+    const result = storage.markWordManualMastered(book.id, word.word);
+    if (result.changed) {
+      showToast("已标记为已掌握", {
+        actionLabel: "撤销",
+        duration: 8000,
+        onAction: () => {
+          storage.undoManualMastery(result.undo);
+          renderWordDetail();
+          renderWordList();
+          updateDashboard();
+        },
+      });
+    }
+  }
+  studyController.clearSessions(book.id);
+  renderWordDetail();
+  renderWordList();
+  updateDashboard();
+});
 
 elements.statisticsBackButton.addEventListener("click", showHome);
 
@@ -1959,6 +2239,17 @@ elements.dailyGoalOptions.forEach((option) => {
     } else {
       showToast(`${book.shortName} 每日新词目标已改为 ${requestedGoal} 个`);
     }
+  });
+});
+elements.reviewLimitOptions.forEach((option) => {
+  option.addEventListener("click", () => {
+    const book = getActiveBook();
+    const raw = option.dataset.reviewLimit;
+    const saved = storage.setDailyReviewLimit(book.id, raw === "unlimited" ? "unlimited" : Number(raw));
+    renderReviewLimitPicker();
+    showToast(saved === "unlimited"
+      ? `${book.shortName} 每日正式复习已设为不限`
+      : `${book.shortName} 每日正式复习上限已设为 ${saved}`);
   });
 });
 elements.vocabularyScopeOptions.forEach((option) => {
@@ -2010,6 +2301,18 @@ elements.resetAllCancel.addEventListener("click", closeResetAllDialog);
 elements.resetAllConfirm.addEventListener("click", confirmResetAll);
 elements.resetAllDialog.addEventListener("click", (event) => {
   if (event.target === elements.resetAllDialog) closeResetAllDialog();
+});
+elements.adjustTodayReview.addEventListener("click", openReviewAdjustDialog);
+elements.reviewAdjustClose.addEventListener("click", closeReviewAdjustDialog);
+elements.reviewAdjustConfirm.addEventListener("click", confirmTodayReviewAdjustment);
+elements.reviewAdjustDialog.addEventListener("click", (event) => {
+  if (event.target === elements.reviewAdjustDialog) closeReviewAdjustDialog();
+});
+elements.openQuickCleanup.addEventListener("click", openQuickCleanupDialog);
+elements.quickCleanupClose.addEventListener("click", closeQuickCleanupDialog);
+elements.quickCleanupConfirm.addEventListener("click", confirmQuickCleanup);
+elements.quickCleanupDialog.addEventListener("click", (event) => {
+  if (event.target === elements.quickCleanupDialog) closeQuickCleanupDialog();
 });
 
 document.querySelectorAll("[data-page]").forEach((button) => {

@@ -5,13 +5,14 @@
 
 (function registerWordLibrary(app) {
   const PAGE_SIZE = 50;
-  const FILTERS = Object.freeze(["all", "unlearned", "learning", "mastered", "wrong", "favorite"]);
+  const FILTERS = Object.freeze(["all", "unlearned", "learning", "mastered", "manual-mastered", "wrong", "favorite"]);
   const SORTS = Object.freeze(["default", "az", "mastery", "errors", "recent"]);
 
   function matchesFilter(progress, filter) {
     if (filter === "unlearned") return !progress.learned;
-    if (filter === "learning") return progress.learned && progress.masteryLevel < 5;
-    if (filter === "mastered") return progress.learned && progress.masteryLevel >= 5;
+    if (filter === "learning") return progress.learned && !progress.manualMastered && progress.masteryLevel < 5;
+    if (filter === "mastered") return progress.learned && !progress.manualMastered && progress.masteryLevel >= 5;
+    if (filter === "manual-mastered") return progress.learned && progress.manualMastered;
     if (filter === "wrong") return progress.inWrongBook;
     if (filter === "favorite") return progress.favorite;
     return true;

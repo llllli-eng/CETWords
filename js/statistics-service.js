@@ -98,7 +98,7 @@
     const counts = [0, 0, 0, 0, 0, 0];
     validWordIds.forEach((wordId) => {
       const progress = storage.getWordProgress(bookId, wordId);
-      if (!progress.learned) return;
+      if (!progress.learned || progress.manualMastered) return;
       counts[reviewScheduler.getMasteryLevel(progress)] += 1;
     });
     return counts.map((count, level) => ({
@@ -117,6 +117,7 @@
   function getBookStatistics(bookId, validWordIds, now = Date.now()) {
     let learned = 0;
     let mastered = 0;
+    let manualMastered = 0;
     let wrongWords = 0;
     let favoriteWords = 0;
     let correctAnswers = 0;
@@ -125,7 +126,8 @@
     validWordIds.forEach((wordId) => {
       const progress = storage.getWordProgress(bookId, wordId);
       if (progress.learned) learned += 1;
-      if (progress.learned && progress.masteryLevel >= 5) mastered += 1;
+      if (progress.learned && !progress.manualMastered && progress.masteryLevel >= 5) mastered += 1;
+      if (progress.manualMastered) manualMastered += 1;
       if (progress.inWrongBook) wrongWords += 1;
       if (progress.favorite) favoriteWords += 1;
       correctAnswers += progress.correctCount;
@@ -137,6 +139,7 @@
       total: validWordIds.length,
       learned,
       mastered,
+      manualMastered,
       unlearned: Math.max(0, validWordIds.length - learned),
       wrongWords,
       favoriteWords,

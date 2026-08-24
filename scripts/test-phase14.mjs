@@ -39,6 +39,7 @@ function loadApp(initialStorage = {}) {
   });
   [
     "js/review-scheduler.js",
+    "js/review-workload.js",
     "js/smart-learning-order.js",
     "js/review-recovery.js",
     "js/new-word-learning.js",
@@ -350,7 +351,7 @@ if (!WORKER_ONLY) {
     assert.equal(after.inWrongBook, before.inWrongBook);
   });
 
-  await test("v9 remains lossless through v13 with empty review, recovery and group maps", () => {
+  await test("v9 remains lossless through v14 with empty review, recovery and group maps", () => {
     const today = "2026-08-13";
     const v9 = {
       version: 9, currentBook: "cet6",
@@ -361,7 +362,7 @@ if (!WORKER_ONLY) {
       },
     };
     const migrated = loadApp({ "cetwords-user-data-v1": JSON.stringify(v9) }).app.storage.loadUserData();
-    assert.equal(migrated.version, 13);
+    assert.equal(migrated.version, 14);
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyReviews)), {});
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.reviewRecovery)), {});
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyGroupPlans)), {});
@@ -372,9 +373,9 @@ if (!WORKER_ONLY) {
     assert.equal(migrated.preferences.learningOrder, "random");
   });
 
-  await test("v1-v13 remain accepted backup versions", () => {
+  await test("v1-v14 remain accepted backup versions", () => {
     const source = fs.readFileSync(path.join(ROOT, "js/backup-service.js"), "utf8");
-    assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13\]/);
+    assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\]/);
   });
 
   await test("a representative maximum payload stays within the 800-2500 token target", () => {

@@ -1,6 +1,16 @@
 # 拾词 · 四六级背单词
 
-当前本地数据版本：`13`。第 16.1 阶段把长期 SRS 改为浏览器本地自然日窗口，同时保留 L0 与所有短期随机窗口的精确时间语义。
+当前本地数据版本：`14`。第 16.3 阶段把“全部到期积压”和“今日正式复习任务”分开管理，并加入手动掌握、今日暂缓与复习分段休息。
+
+## 第 16.3 阶段结果
+
+- 每本词书可设置每日正式复习上限（60/100/120/150/200/不限，默认 120）；今日任务按原复习优先级生成并持久化，刷新或重开后顺序稳定，任务外积压仍保持到期状态。
+- 完成今日正式复习任务后，即使仍有积压也不会阻塞新词；Recovery 保持独立优先级且不占每日上限。极老的逾期词只获得防饿死加成，不改变 SRS 间隔。
+- “已掌握”独立于 L5：清除该词的 SRS 与 Recovery，但保留等级、收藏、错词和历史数据，也不记作答对；支持单词、详情页和最多 20 词快速清理，并提供撤销。
+- “今天不复习”只计入今日已处理，不修改熟练度、SRS 或答题统计，次日重新进入候选；“稍后再学”只把当前词移至今日任务末尾。
+- 每处理 20 个今日任务项显示一次分段页；可独立休息 3 分钟、直接继续或结束本次学习。休息使用真实时间并可在刷新后恢复。
+- 至少 5 个本地有效耗时样本后显示模糊剩余时间；AI 等待时间不计入学习速度。
+- v13 → v14 无损迁移，备份导入支持 v1～v14；本阶段未修改 Worker、正式词库、频率层级、学习顺序或复习间隔。
 
 ## 第 16.1 阶段结果
 
@@ -9,7 +19,7 @@
 - L0 仍使用精确的 10 分钟 `nextReviewTime`。new-word reinforcement、choice retry 与 Recovery 的题数/时间随机窗口和 Level 状态机均未改动。
 - 长期状态使用 `nextReviewDate`、`lastLongTermAnchorAt`、`earliestReviewAt`；日期通过本地年月日与 `Date#setDate` 日历加法生成，不使用 UTC 日期切片或固定毫秒日数。
 - v12 → v13 保留旧 `nextReviewTime` 的本地目标日期；旧 L1 优先采用最近的真实学习/复习时间，缺失时才用旧目标时间减 24 小时推断锚点。
-- 备份导入支持 v1～v13；`dailyGroupPlans`、Recovery、每日复盘、smart/random/neutral、收藏和错词状态继续保留。
+- v12 → v13 的迁移规则继续保留；当前备份导入支持 v1～v14，`dailyGroupPlans`、Recovery、每日复盘、smart/random/neutral、收藏和错词状态继续保留。
 
 ## 第 16 阶段结果
 
@@ -134,7 +144,7 @@ python scripts/build-vocabulary.py --source-dir <json-sentence目录>
 ## 本地数据与备份
 
 - 存储键保持 `cetwords-user-data-v1`。
-- 数据版本为 `version: 13`，支持导入并迁移 `version: 1` 至 `version: 13`。
+- 数据版本为 `version: 14`，支持导入并迁移 `version: 1` 至 `version: 14`。
 - 迁移保留正确/错误/partial 次数、熟练度、首次学习日期、长期自然日复习字段、L0 精确复习时间、收藏、错词、每日统计、新词队列、当日巩固状态、AI 设置、`vocabularyScope` 和 `studyMode`。
 - 完整词库正文不会写入 `localStorage` 或学习备份。
 - 个人代理 Token 使用独立本地键保存，不进入学习备份；DeepSeek API Key 只存在 Cloudflare Worker Secret 中。
@@ -155,9 +165,10 @@ js/ai-judge.js                         本地判定与 Worker 请求
 js/smart-learning-order.js            真题分层混抽、同档随机与只读词频加载
 js/new-word-learning.js               四选一门槛与当日释义巩固状态机
 js/review-recovery.js                 正式复习 Recovery 随机窗口与会话状态机
+js/review-workload.js                 每日复习上限、任务分段与本地速度估算
 js/daily-review-service.js             本地复盘统计、薄弱词筛选与请求白名单
 js/daily-group-service.js              每日分组校验、fallback、边界与 Worker 请求
-js/storage.js                          本地数据 v13 迁移与持久化
+js/storage.js                          本地数据 v14 迁移与持久化
 worker/src/index.js                    DeepSeek 多义词判题与每日复盘代理
 ```
 

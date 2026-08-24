@@ -39,6 +39,13 @@
       onContinueGroup,
       onStopDailyGroups,
       onDailyGroupStarted,
+      onReviewTaskStarted,
+      onManualMaster,
+      onUndoManualMaster,
+      onDeferToday,
+      onStartReviewBreak,
+      onContinueReviewTask,
+      onStopReviewSession,
     }) {
       this.onExit = onExit;
       this.onAnswer = onAnswer;
@@ -56,6 +63,13 @@
       this.onContinueGroup = onContinueGroup;
       this.onStopDailyGroups = onStopDailyGroups;
       this.onDailyGroupStarted = onDailyGroupStarted;
+      this.onReviewTaskStarted = onReviewTaskStarted;
+      this.onManualMaster = onManualMaster;
+      this.onUndoManualMaster = onUndoManualMaster;
+      this.onDeferToday = onDeferToday;
+      this.onStartReviewBreak = onStartReviewBreak;
+      this.onContinueReviewTask = onContinueReviewTask;
+      this.onStopReviewSession = onStopReviewSession;
       this.sessions = new Map();
       this.activeSession = null;
       this.isActive = false;
@@ -85,6 +99,11 @@
         meaningInput: document.querySelector("#meaning-answer-input"),
         meaningStatus: document.querySelector("#meaning-answer-status"),
         meaningSubmit: document.querySelector("#meaning-submit-button"),
+        reviewQuestionActions: document.querySelector("#review-question-actions"),
+        reviewManualMaster: document.querySelector("#review-manual-master-button"),
+        reviewMoreActions: document.querySelector("#review-more-actions"),
+        reviewLater: document.querySelector("#review-later-button"),
+        reviewDefer: document.querySelector("#review-defer-button"),
         feedback: document.querySelector("#answer-feedback"),
         feedbackIcon: document.querySelector("#feedback-icon"),
         feedbackTitle: document.querySelector("#feedback-title"),
@@ -131,6 +150,17 @@
         groupBreakMessage: document.querySelector("#group-break-message"),
         groupBreakContinue: document.querySelector("#group-break-continue"),
         groupBreakStop: document.querySelector("#group-break-stop"),
+        reviewSegmentScreen: document.querySelector("#review-segment-screen"),
+        reviewSegmentTotal: document.querySelector("#review-segment-total"),
+        reviewSegmentCurrent: document.querySelector("#review-segment-current"),
+        reviewSegmentStartBreak: document.querySelector("#review-segment-start-break"),
+        reviewSegmentContinue: document.querySelector("#review-segment-continue"),
+        reviewSegmentStop: document.querySelector("#review-segment-stop"),
+        reviewBreakScreen: document.querySelector("#review-break-screen"),
+        reviewBreakTimer: document.querySelector("#review-break-timer"),
+        reviewBreakMessage: document.querySelector("#review-break-message"),
+        reviewBreakContinue: document.querySelector("#review-break-continue"),
+        reviewBreakStop: document.querySelector("#review-break-stop"),
       };
 
       this.breakTimer = null;
@@ -166,6 +196,14 @@
       this.elements.manualCorrect.addEventListener("click", () => this.applyManualJudgement("correct"));
       this.elements.manualWrong.addEventListener("click", () => this.applyManualJudgement("wrong"));
       this.elements.manualLater.addEventListener("click", () => this.deferAiQuestion());
+      this.elements.reviewManualMaster.addEventListener("click", () => this.manualMasterCurrentWord());
+      this.elements.reviewLater.addEventListener("click", () => this.moveCurrentReviewLater());
+      this.elements.reviewDefer.addEventListener("click", () => this.deferCurrentReviewToday());
+      this.elements.reviewSegmentStartBreak.addEventListener("click", () => this.startReviewBreak());
+      this.elements.reviewSegmentContinue.addEventListener("click", () => this.continueReviewTask());
+      this.elements.reviewSegmentStop.addEventListener("click", () => this.stopReviewSession());
+      this.elements.reviewBreakContinue.addEventListener("click", () => this.continueReviewTask());
+      this.elements.reviewBreakStop.addEventListener("click", () => this.stopReviewSession());
       document.addEventListener("keydown", (event) => this.handleKeyboard(event));
     }
 
@@ -195,6 +233,8 @@
           aiPending: false,
           resultScrollHandled: false,
           wasPresented: false,
+          presentedAt: null,
+          interactionDurationMs: null,
         })),
         currentIndex: 0,
         correctCount: 0,
@@ -228,6 +268,16 @@
       this.elements.resultScreen.hidden = true;
       this.elements.groupCompleteScreen.hidden = true;
       this.elements.groupBreakScreen.hidden = true;
+      this.elements.reviewSegmentScreen.hidden = true;
+      this.elements.reviewBreakScreen.hidden = true;
+      if (book.reviewTaskSummary?.breakStartedAt) {
+        this.showReviewBreak(book);
+        return;
+      }
+      if (book.reviewTaskSummary?.pendingBreak) {
+        this.showReviewSegmentComplete(book);
+        return;
+      }
       this.renderQuestion();
     }
 
@@ -284,6 +334,10 @@
       if (!session || !question || question.wasPresented) return;
       const wordId = question.word.word;
       question.wasPresented = true;
+      question.presentedAt = Date.now();
+      if (question.learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE) {
+        this.onReviewTaskStarted?.(session.book.id, wordId);
+      }
       if (
         session.sessionMode === "normal"
         && question.learningPhase === newWordLearning.LEARNING_PHASES.INTRO
@@ -371,6 +425,8 @@
       this.elements.resultScreen.hidden = true;
       this.elements.groupCompleteScreen.hidden = true;
       this.elements.groupBreakScreen.hidden = true;
+      this.elements.reviewSegmentScreen.hidden = true;
+      this.elements.reviewBreakScreen.hidden = true;
       this.elements.questionNumber.textContent = `第 ${session.currentIndex + 1} / ${session.questions.length} 词`;
       const isAiSubjective = question.studyMode === "ai-meaning";
       this.elements.questionMode.textContent = isAiSubjective
@@ -398,6 +454,7 @@
       this.renderFavoriteState();
       this.renderProgress();
       this.renderAnswerArea(question);
+      this.renderReviewQuestionActions(question);
 
       if (question.selectedIndex === null) {
         this.elements.feedback.hidden = true;
@@ -567,6 +624,7 @@
     }
 
     renderAnswerArea(question) {
+      this.renderReviewQuestionActions(question);
       const isSubjective = question.studyMode === "ai-meaning";
       const isFinalSubjectiveResult = isSubjective && activeRecallResult.isFinalResult(question);
       this.elements.options.hidden = isSubjective;
@@ -610,6 +668,15 @@
       }
     }
 
+    renderReviewQuestionActions(question = this.getCurrentQuestion()) {
+      const isFormal = question?.learningPhase === reviewRecovery.FORMAL_REVIEW_PHASE;
+      const isRecovery = question?.learningPhase === reviewRecovery.RECOVERY_PHASE;
+      const visible = Boolean((isFormal || isRecovery) && question.selectedIndex === null && !question.aiPending);
+      this.elements.reviewQuestionActions.hidden = !visible;
+      this.elements.reviewMoreActions.hidden = !isFormal;
+      if (!visible) this.elements.reviewMoreActions.open = false;
+    }
+
     answer(selectedIndex) {
       const session = this.activeSession;
       const question = this.getCurrentQuestion();
@@ -629,6 +696,7 @@
         taskType: question.taskType,
         learningPhase: question.learningPhase,
         studySessionId: session.studySessionId,
+        interactionDurationMs: this.getInteractionDuration(question),
       });
       question.answerResult = result;
       session.normalSessionAnswerSequence = result.answerSequence;
@@ -636,6 +704,10 @@
       session.book.pendingReinforcementCount = result.pendingReinforcementCount
         ?? session.book.pendingReinforcementCount;
       session.book.reviewCompletedToday = result.daily.reviewWords;
+      if (result.reviewTaskSummary) {
+        session.book.reviewTaskSummary = result.reviewTaskSummary;
+        session.book.reviewCompletedToday = result.reviewTaskSummary.handledCount;
+      }
       if (result.groupPlan) session.book.groupPlan = result.groupPlan;
       if (result.groupProgress) session.book.groupProgress = result.groupProgress;
       this.syncReinforcementQueue(question, result);
@@ -664,6 +736,7 @@
         return;
       }
       question.userAnswer = userAnswer;
+      question.interactionDurationMs = this.getInteractionDuration(question);
       const localResult = aiJudge.localMeaningJudge(question.word, userAnswer);
       if (localResult.decision === "judged") {
         this.applySubjectiveJudgement(localResult.result, localResult);
@@ -710,6 +783,7 @@
         taskType: question.taskType,
         learningPhase: question.learningPhase,
         studySessionId: session.studySessionId,
+        interactionDurationMs: question.interactionDurationMs,
       });
       question.answerResult = result;
       session.normalSessionAnswerSequence = result.answerSequence;
@@ -717,6 +791,10 @@
       session.book.pendingReinforcementCount = result.pendingReinforcementCount
         ?? session.book.pendingReinforcementCount;
       session.book.reviewCompletedToday = result.daily.reviewWords;
+      if (result.reviewTaskSummary) {
+        session.book.reviewTaskSummary = result.reviewTaskSummary;
+        session.book.reviewCompletedToday = result.reviewTaskSummary.handledCount;
+      }
       if (result.groupPlan) session.book.groupPlan = result.groupPlan;
       if (result.groupProgress) session.book.groupProgress = result.groupProgress;
       this.syncReinforcementQueue(question, result);
@@ -724,6 +802,11 @@
       this.renderAnswerArea(question);
       this.renderProgress();
       this.renderFeedback(question);
+    }
+
+    getInteractionDuration(question = this.getCurrentQuestion()) {
+      if (!question?.presentedAt) return null;
+      return Math.max(1, Date.now() - question.presentedAt);
     }
 
     showAiUnavailable(question, message) {
@@ -772,6 +855,104 @@
       this.elements.nextButton.hidden = false;
       this.updateNextButtonLabel();
       this.renderProgress();
+    }
+
+    applyReviewTaskSummary(summary) {
+      if (!summary || !this.activeSession) return;
+      this.activeSession.book.reviewTaskSummary = summary;
+      this.activeSession.book.reviewCompletedToday = summary.handledCount;
+      this.activeSession.book.reviewTarget = summary.target;
+    }
+
+    continueAfterReviewAction() {
+      const session = this.activeSession;
+      if (!session) return;
+      const summary = session.book.reviewTaskSummary;
+      if (summary?.pendingBreak) {
+        this.showReviewSegmentComplete(session.book);
+        return;
+      }
+      if (session.currentIndex >= session.questions.length || !session.questions.length) {
+        this.completeSession();
+        return;
+      }
+      this.renderQuestion();
+    }
+
+    manualMasterCurrentWord() {
+      const session = this.activeSession;
+      const question = this.getCurrentQuestion();
+      if (!session || !question || question.selectedIndex !== null) return;
+      if (![reviewRecovery.FORMAL_REVIEW_PHASE, reviewRecovery.RECOVERY_PHASE].includes(question.learningPhase)) return;
+      const questionIndex = session.currentIndex;
+      const result = this.onManualMaster?.({
+        bookId: session.book.id,
+        wordId: question.word.word,
+        durationMs: this.getInteractionDuration(question),
+      });
+      if (!result?.changed) return;
+      session.questions.splice(questionIndex, 1);
+      this.applyReviewTaskSummary(result.reviewTaskSummary);
+      this.onMessage("已标记为已掌握，已退出常规复习", {
+        actionLabel: "撤销",
+        duration: 8000,
+        onAction: () => {
+          const restored = this.onUndoManualMaster?.(result.undo);
+          if (!restored) return;
+          const restoredQuestion = {
+            ...question,
+            selectedIndex: null,
+            answerResult: null,
+            judgement: null,
+            aiPending: false,
+            wasPresented: false,
+            presentedAt: null,
+            interactionDurationMs: null,
+          };
+          session.questions.splice(Math.min(questionIndex, session.questions.length), 0, restoredQuestion);
+          session.currentIndex = Math.min(questionIndex, session.questions.length - 1);
+          this.applyReviewTaskSummary(restored.reviewTaskSummary);
+          this.renderQuestion();
+        },
+      });
+      this.continueAfterReviewAction();
+    }
+
+    deferCurrentReviewToday() {
+      const session = this.activeSession;
+      const question = this.getCurrentQuestion();
+      if (!session || !question || question.selectedIndex !== null) return;
+      if (question.learningPhase !== reviewRecovery.FORMAL_REVIEW_PHASE) return;
+      const result = this.onDeferToday?.({
+        bookId: session.book.id,
+        wordId: question.word.word,
+        durationMs: this.getInteractionDuration(question),
+      });
+      if (!result?.changed) return;
+      session.questions.splice(session.currentIndex, 1);
+      this.applyReviewTaskSummary(result.reviewTaskSummary);
+      this.onMessage("已跳过今天，原复习日期和熟练度均未修改");
+      this.elements.reviewMoreActions.open = false;
+      this.continueAfterReviewAction();
+    }
+
+    moveCurrentReviewLater() {
+      const session = this.activeSession;
+      const question = this.getCurrentQuestion();
+      if (!session || !question || question.selectedIndex !== null) return;
+      if (question.learningPhase !== reviewRecovery.FORMAL_REVIEW_PHASE) return;
+      if (session.questions.length - session.currentIndex < 2) {
+        this.onMessage("今天任务中只剩这个词，无法再后移");
+        return;
+      }
+      const [moved] = session.questions.splice(session.currentIndex, 1);
+      moved.wasPresented = false;
+      moved.presentedAt = null;
+      moved.interactionDurationMs = null;
+      session.questions.push(moved);
+      this.elements.reviewMoreActions.open = false;
+      this.onMessage("已移到今日任务队尾");
+      this.renderQuestion();
     }
 
     syncReinforcementQueue(question, result) {
@@ -1012,6 +1193,11 @@
       const question = this.getCurrentQuestion();
       if (!session || !question || question.selectedIndex === null) return;
 
+      if (session.book.reviewTaskSummary?.pendingBreak) {
+        this.showReviewSegmentComplete(session.book);
+        return;
+      }
+
       if (session.sessionMode === "normal" && session.book.groupProgress?.awaitingNextGroup) {
         this.showGroupComplete(session.book);
         return;
@@ -1040,6 +1226,8 @@
 
       this.elements.questionScreen.hidden = true;
       this.elements.resultScreen.hidden = false;
+      this.elements.reviewSegmentScreen.hidden = true;
+      this.elements.reviewBreakScreen.hidden = true;
       this.elements.resultTitle.textContent = session.waitingForReinforcement
         ? "本轮学习已完成"
         : titleByMode[session.sessionMode] || "本轮学习完成";
@@ -1049,7 +1237,9 @@
           ? `待巩固 ${session.book.pendingReinforcementCount || 0} · 已同时保留题数与时间间隔`
           : `今日新词 ${session.book.completedToday} / ${session.book.dailyGoal} · 待巩固 ${session.book.pendingReinforcementCount || 0}`
         : session.sessionMode === "review"
-          ? `本轮到期复习 · 今日完成 ${session.book.reviewCompletedToday} 个`
+          ? session.book.reviewTaskSummary
+            ? `今日任务 ${session.book.reviewTaskSummary.handledCount} / ${session.book.reviewTaskSummary.target} · 正常复习 ${session.book.reviewTaskSummary.answeredCount} · 已掌握 ${session.book.reviewTaskSummary.manualMasteredCount} · 今日跳过 ${session.book.reviewTaskSummary.deferredTodayCount}`
+            : `本轮到期复习 · 今日完成 ${session.book.reviewCompletedToday} 个`
           : "本轮主动练习单词";
       this.elements.resultCorrect.textContent = session.correctCount;
       this.elements.resultWrong.textContent = session.wrongCount;
@@ -1095,6 +1285,8 @@
       this.elements.resultScreen.hidden = true;
       this.elements.groupBreakScreen.hidden = true;
       this.elements.groupCompleteScreen.hidden = false;
+      this.elements.reviewSegmentScreen.hidden = true;
+      this.elements.reviewBreakScreen.hidden = true;
       this.elements.groupCompleteTitle.textContent = `第${group.index + 1}组完成`;
       this.elements.groupCompleteTotal.textContent = `${progress.completedNewWords} / ${book.dailyGoal}`;
       this.elements.groupCompletePercent.textContent = `今日完成 ${Math.round((progress.completedNewWords / book.dailyGoal) * 100)}%`;
@@ -1139,6 +1331,8 @@
       this.elements.resultScreen.hidden = true;
       this.elements.groupCompleteScreen.hidden = true;
       this.elements.groupBreakScreen.hidden = false;
+      this.elements.reviewSegmentScreen.hidden = true;
+      this.elements.reviewBreakScreen.hidden = true;
       this.renderBreakTimer();
       if (this.getBreakRemainingMs() > 0) {
         this.breakTimer = window.setInterval(() => this.renderBreakTimer(), 1000);
@@ -1165,6 +1359,95 @@
       this.clearBreakTimer();
       this.isActive = false;
       this.onStopDailyGroups?.();
+    }
+
+    showReviewSegmentComplete(book = this.activeSession?.book) {
+      if (!book?.reviewTaskSummary) return;
+      this.clearBreakTimer();
+      if (this.activeSession) this.activeSession.book = book;
+      this.isActive = true;
+      const summary = book.reviewTaskSummary;
+      this.renderProgress();
+      this.elements.bookBadge.textContent = `${book.shortName} · 复习间歇`;
+      this.elements.questionScreen.hidden = true;
+      this.elements.resultScreen.hidden = true;
+      this.elements.groupCompleteScreen.hidden = true;
+      this.elements.groupBreakScreen.hidden = true;
+      this.elements.reviewBreakScreen.hidden = true;
+      this.elements.reviewSegmentScreen.hidden = false;
+      this.elements.reviewSegmentTotal.textContent = `${summary.handledCount} / ${summary.target}`;
+      this.elements.reviewSegmentCurrent.textContent = `本段：${summary.segmentHandledCount} / ${summary.segmentTarget}`;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    getReviewBreakRemainingMs(now = Date.now()) {
+      const summary = this.activeSession?.book?.reviewTaskSummary;
+      if (!summary?.breakStartedAt) return 0;
+      return Math.max(0, summary.breakStartedAt + (summary.breakMinutes || 3) * 60 * 1000 - now);
+    }
+
+    renderReviewBreakTimer() {
+      const remaining = this.getReviewBreakRemainingMs();
+      const totalSeconds = Math.ceil(remaining / 1000);
+      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      this.elements.reviewBreakTimer.textContent = `${minutes}:${seconds}`;
+      const ended = remaining <= 0;
+      this.elements.reviewBreakMessage.textContent = ended ? "可以继续复习了" : "喝口水、看看远处";
+      this.elements.reviewBreakContinue.textContent = ended ? "继续复习" : "提前继续";
+      if (ended) this.clearBreakTimer();
+    }
+
+    showReviewBreak(book = this.activeSession?.book) {
+      if (!book?.reviewTaskSummary) return;
+      this.clearBreakTimer();
+      if (this.activeSession) this.activeSession.book = book;
+      this.isActive = true;
+      this.elements.bookBadge.textContent = `${book.shortName} · 复习间歇`;
+      this.elements.questionScreen.hidden = true;
+      this.elements.resultScreen.hidden = true;
+      this.elements.groupCompleteScreen.hidden = true;
+      this.elements.groupBreakScreen.hidden = true;
+      this.elements.reviewSegmentScreen.hidden = true;
+      this.elements.reviewBreakScreen.hidden = false;
+      this.renderReviewBreakTimer();
+      if (this.getReviewBreakRemainingMs() > 0) {
+        this.breakTimer = window.setInterval(() => this.renderReviewBreakTimer(), 1000);
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    startReviewBreak() {
+      const book = this.activeSession?.book;
+      if (!book) return;
+      const result = this.onStartReviewBreak?.(book.id);
+      if (result?.reviewTaskSummary) this.applyReviewTaskSummary(result.reviewTaskSummary);
+      this.showReviewBreak(book);
+    }
+
+    continueReviewTask() {
+      const book = this.activeSession?.book;
+      if (!book) return;
+      this.clearBreakTimer();
+      const result = this.onContinueReviewTask?.(book.id);
+      if (result?.reviewTaskSummary) this.applyReviewTaskSummary(result.reviewTaskSummary);
+      this.elements.reviewSegmentScreen.hidden = true;
+      this.elements.reviewBreakScreen.hidden = true;
+      const question = this.getCurrentQuestion();
+      if (question?.selectedIndex !== null && this.activeSession.currentIndex < this.activeSession.questions.length - 1) {
+        this.activeSession.currentIndex += 1;
+      } else if (question?.selectedIndex !== null) {
+        this.completeSession();
+        return;
+      }
+      if (this.getCurrentQuestion()) this.renderQuestion();
+      else this.completeSession();
+    }
+
+    stopReviewSession() {
+      this.clearBreakTimer();
+      this.isActive = false;
+      this.onStopReviewSession?.();
     }
 
     restart() {

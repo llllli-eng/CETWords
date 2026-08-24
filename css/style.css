@@ -1071,6 +1071,331 @@ a:focus-visible {
   }
 }
 
+/* Phase 16.3 · 每日复习负担与手动掌握 */
+.review-workload-summary {
+  display: grid;
+  gap: 8px;
+  margin-top: -8px;
+  padding: 12px 13px;
+  border: 1px solid color-mix(in srgb, var(--purple) 16%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--purple) 4%, var(--surface));
+}
+
+.review-workload-summary__meta,
+.review-workload-summary__breakdown,
+.review-workload-summary__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+}
+
+.review-workload-summary__meta span,
+.review-workload-summary__breakdown span,
+.review-workload-summary p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 10px;
+}
+
+.review-workload-summary__meta strong,
+.review-workload-summary__breakdown strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-workload-summary__breakdown {
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+}
+
+.review-workload-summary__actions {
+  justify-content: flex-start;
+}
+
+.review-workload-summary__actions .text-button {
+  min-height: 32px;
+  padding: 0;
+  font-size: 10px;
+}
+
+.review-time-estimate {
+  color: var(--purple) !important;
+  font-weight: 800;
+}
+
+.review-question-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.review-question-actions[hidden] {
+  display: none;
+}
+
+.review-manual-master-button {
+  width: auto;
+  min-height: 48px;
+}
+
+.review-more-actions {
+  position: relative;
+}
+
+.review-more-actions summary {
+  min-height: 48px;
+  padding: 14px 13px;
+  cursor: pointer;
+  color: var(--text-soft);
+  font-size: 12px;
+  list-style: none;
+}
+
+.review-more-actions summary::-webkit-details-marker {
+  display: none;
+}
+
+.review-more-actions > div {
+  position: absolute;
+  right: 0;
+  z-index: 4;
+  display: grid;
+  min-width: 150px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  box-shadow: 0 14px 32px rgba(25, 55, 48, 0.14);
+}
+
+.review-more-actions button {
+  min-height: 44px;
+  text-align: left;
+}
+
+.settings-card--review-limit {
+  border-color: color-mix(in srgb, var(--purple) 20%, var(--line));
+}
+
+.settings-card--review-limit .settings-card__icon {
+  background: color-mix(in srgb, var(--purple) 10%, var(--surface));
+  color: var(--purple);
+}
+
+.word-detail-actions:has(.word-detail-manual-mastery:not([hidden])) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.word-detail-manual-mastery.is-mastered {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--line));
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.review-adjust-dialog,
+.quick-cleanup-dialog {
+  width: min(calc(100% - 28px), 560px);
+  max-height: min(88vh, 760px);
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  border-radius: 22px;
+  background: transparent;
+  color: var(--text);
+}
+
+.review-adjust-dialog::backdrop,
+.quick-cleanup-dialog::backdrop {
+  background: rgba(20, 38, 34, 0.48);
+  backdrop-filter: blur(4px);
+}
+
+.review-dialog-card {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 27px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 24px 70px rgba(20, 38, 34, 0.24);
+}
+
+.review-dialog-card h2,
+.review-dialog-card p {
+  margin: 0;
+}
+
+.review-dialog-card > label {
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.review-dialog-card select {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font: inherit;
+}
+
+.quick-cleanup-list {
+  display: grid;
+  gap: 8px;
+  max-height: min(52vh, 430px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.quick-cleanup-item {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.quick-cleanup-item > label {
+  display: grid;
+  place-items: center;
+  min-width: 48px;
+  min-height: 54px;
+  cursor: pointer;
+}
+
+.quick-cleanup-item input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary);
+}
+
+.quick-cleanup-item details {
+  min-width: 0;
+  border-left: 1px solid var(--line);
+}
+
+.quick-cleanup-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 54px;
+  padding: 8px 13px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.quick-cleanup-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.quick-cleanup-item strong,
+.quick-cleanup-item small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-cleanup-item small {
+  color: var(--text-faint);
+}
+
+.quick-cleanup-item p {
+  padding: 0 13px 12px;
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.quick-cleanup-status {
+  min-height: 18px;
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.toast.is-visible {
+  pointer-events: auto;
+}
+
+.toast__action {
+  min-height: 34px;
+  padding: 0 8px;
+  cursor: pointer;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+}
+
+@media (max-width: 620px) {
+  .review-workload-summary__meta,
+  .review-workload-summary__breakdown {
+    justify-content: space-between;
+  }
+
+  .review-workload-summary__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .review-workload-summary__actions .text-button,
+  .toast__action {
+    min-height: 44px;
+  }
+
+  .review-question-actions {
+    align-items: stretch;
+  }
+
+  .review-manual-master-button {
+    flex: 1 1 auto;
+  }
+
+  .review-more-actions summary,
+  .review-more-actions button {
+    min-height: 50px;
+  }
+
+  .word-detail-actions:has(.word-detail-manual-mastery:not([hidden])) {
+    grid-template-columns: 1fr;
+  }
+
+  .review-dialog-card {
+    padding: 24px 17px 18px;
+  }
+
+  .quick-cleanup-dialog {
+    width: calc(100% - 18px);
+  }
+
+  .quick-cleanup-item > label,
+  .quick-cleanup-item summary {
+    min-height: 56px;
+  }
+
+  .review-segment-card .group-complete-actions button,
+  #review-break-screen .group-complete-actions button {
+    min-height: 52px;
+  }
+}
+
 /* ==============================
    第 3 阶段 · 收藏、错词与设置
    ============================== */
