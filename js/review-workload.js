@@ -301,9 +301,10 @@
 
   function getQuickCleanupWordIds(taskSummary, orderedDueWordIds, limit = QUICK_CLEANUP_LIMIT) {
     const maximum = Math.max(1, toNonNegativeInteger(limit) || QUICK_CLEANUP_LIMIT);
+    const handled = new Set(normalizeIds(taskSummary?.handledWordIds));
     return normalizeIds([
       ...(taskSummary?.pendingTaskWordIds || []),
-      ...normalizeIds(orderedDueWordIds),
+      ...normalizeIds(orderedDueWordIds).filter((wordId) => !handled.has(wordId)),
     ]).slice(0, maximum);
   }
 

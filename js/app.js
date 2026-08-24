@@ -39,7 +39,13 @@ const appState = {
   },
   dailyReview: { generating: false, session: null },
   dailyGroup: { generating: false, promise: null },
-  quickCleanup: { candidateIds: [], confirmPending: false },
+  quickCleanup: {
+    candidateIds: [],
+    confirmPending: false,
+    source: "home",
+    bookId: null,
+    sessionMode: null,
+  },
   books: {
     cet4: {
       id: "cet4",
@@ -676,11 +682,26 @@ function confirmTodayReviewAdjustment() {
   showToast(message);
 }
 
-function closeQuickCleanupDialog() {
+function closeQuickCleanupDialog(options = {}) {
+  const context = { ...appState.quickCleanup };
   if (typeof elements.quickCleanupDialog.close === "function" && elements.quickCleanupDialog.open) {
     elements.quickCleanupDialog.close();
   } else elements.quickCleanupDialog.removeAttribute("open");
-  appState.quickCleanup = { candidateIds: [], confirmPending: false };
+  appState.quickCleanup = {
+    candidateIds: [],
+    confirmPending: false,
+    source: "home",
+    bookId: null,
+    sessionMode: null,
+  };
+  if (options.resume !== false && context.source === "review-segment" && context.bookId) {
+    const book = appState.books[context.bookId];
+    if (book) {
+      studyController.applyReviewSegmentQuickCleanup({
+        reviewTaskSummary: storage.getDailyReviewSummary(book.id, getAllBookWordIds(book)),
+      });
+    }
+  }
 }
 
 function getQuickCleanupSelectedIds() {
@@ -696,11 +717,18 @@ function updateQuickCleanupSelection() {
   elements.quickCleanupStatus.textContent = count ? `已选 ${count} 个，未勾选词不会改变。` : "";
 }
 
-function openQuickCleanupDialog() {
-  const book = getActiveBook();
+function openQuickCleanupDialog(options = {}) {
+  const source = options.source === "review-segment" ? "review-segment" : "home";
+  const book = appState.books[options.bookId] || getActiveBook();
   const candidates = storage.getQuickCleanupCandidates(book.id, getAllBookWordIds(book));
   const wordMap = new Map(book.words.map((word) => [word.word, word]));
-  appState.quickCleanup = { candidateIds: candidates.map((entry) => entry.wordId), confirmPending: false };
+  appState.quickCleanup = {
+    candidateIds: candidates.map((entry) => entry.wordId),
+    confirmPending: false,
+    source,
+    bookId: book.id,
+    sessionMode: options.sessionMode || null,
+  };
   elements.quickCleanupList.replaceChildren(...candidates.map((entry) => {
     const word = wordMap.get(entry.wordId);
     const row = createElement("article", "quick-cleanup-item");
@@ -719,7 +747,9 @@ function openQuickCleanupDialog() {
     return row;
   }));
   elements.quickCleanupStatus.textContent = candidates.length
-    ? `展示优先级最高的 ${candidates.length} 个候选词。`
+    ? source === "review-segment"
+      ? `优先展示今日剩余任务，共 ${candidates.length} 个候选词。`
+      : `展示优先级最高的 ${candidates.length} 个候选词。`
     : "当前没有可快速清理的到期词。";
   elements.quickCleanupConfirm.disabled = true;
   elements.quickCleanupConfirm.textContent = "请先勾选单词";
@@ -736,12 +766,22 @@ function confirmQuickCleanup() {
     elements.quickCleanupConfirm.textContent = `确认标记 ${selectedIds.length} 个`;
     return;
   }
-  const book = getActiveBook();
+  const context = { ...appState.quickCleanup };
+  const book = appState.books[context.bookId] || getActiveBook();
   const result = storage.markWordsManualMastered(book.id, selectedIds);
-  closeQuickCleanupDialog();
-  studyController.clearSessions(book.id);
+  const reviewTaskSummary = storage.getDailyReviewSummary(book.id, getAllBookWordIds(book));
+  closeQuickCleanupDialog({ resume: false });
+  if (context.source === "review-segment") {
+    studyController.applyReviewSegmentQuickCleanup({
+      reviewTaskSummary,
+      wordIds: result.wordIds,
+    });
+  } else studyController.clearSessions(book.id);
   updateDashboard();
-  showToast(`已标记 ${result.changedCount} 个为已掌握`, {
+  const reviewTaskCompleted = reviewTaskSummary.remainingCount === 0;
+  showToast(reviewTaskCompleted && context.source === "review-segment"
+    ? `已标记 ${result.changedCount} 个为已掌握，今日正式复习任务已完成`
+    : `已标记 ${result.changedCount} 个为已掌握`, {
     actionLabel: "撤销本批次",
     duration: 9000,
     onAction: () => {
@@ -749,6 +789,9 @@ function confirmQuickCleanup() {
       studyController.clearSessions(book.id);
       updateDashboard();
       showToast(`已撤销本批次，恢复 ${restored} 个词的原状态`);
+      if (context.source === "review-segment") {
+        void showStudy(context.sessionMode || "normal", { forceNew: true, skipGroupPlan: true });
+      }
     },
   });
 }
@@ -1099,6 +1142,14 @@ function handleDeferToday({ bookId, wordId, durationMs }) {
   };
 }
 
+function handleOpenReviewSegmentQuickCleanup({ bookId, sessionMode }) {
+  openQuickCleanupDialog({
+    source: "review-segment",
+    bookId,
+    sessionMode,
+  });
+}
+
 function handleStartReviewBreak(bookId) {
   storage.startDailyReviewBreak(bookId);
   const book = appState.books[bookId];
@@ -1299,6 +1350,7 @@ const studyController = new StudyController({
   onManualMaster: handleManualMaster,
   onUndoManualMaster: handleUndoManualMaster,
   onDeferToday: handleDeferToday,
+  onOpenQuickCleanup: handleOpenReviewSegmentQuickCleanup,
   onStartReviewBreak: handleStartReviewBreak,
   onContinueReviewTask: handleContinueReviewTask,
   onStopReviewSession: showHome,

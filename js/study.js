@@ -43,6 +43,7 @@
       onManualMaster,
       onUndoManualMaster,
       onDeferToday,
+      onOpenQuickCleanup,
       onStartReviewBreak,
       onContinueReviewTask,
       onStopReviewSession,
@@ -67,6 +68,7 @@
       this.onManualMaster = onManualMaster;
       this.onUndoManualMaster = onUndoManualMaster;
       this.onDeferToday = onDeferToday;
+      this.onOpenQuickCleanup = onOpenQuickCleanup;
       this.onStartReviewBreak = onStartReviewBreak;
       this.onContinueReviewTask = onContinueReviewTask;
       this.onStopReviewSession = onStopReviewSession;
@@ -153,8 +155,14 @@
         reviewSegmentScreen: document.querySelector("#review-segment-screen"),
         reviewSegmentTotal: document.querySelector("#review-segment-total"),
         reviewSegmentCurrent: document.querySelector("#review-segment-current"),
+        reviewSegmentAnswered: document.querySelector("#review-segment-answered"),
+        reviewSegmentManualMastered: document.querySelector("#review-segment-manual-mastered"),
+        reviewSegmentDeferred: document.querySelector("#review-segment-deferred"),
+        reviewSegmentRemaining: document.querySelector("#review-segment-remaining"),
+        reviewSegmentBacklog: document.querySelector("#review-segment-backlog"),
         reviewSegmentStartBreak: document.querySelector("#review-segment-start-break"),
         reviewSegmentContinue: document.querySelector("#review-segment-continue"),
+        reviewSegmentQuickCleanup: document.querySelector("#review-segment-quick-cleanup"),
         reviewSegmentStop: document.querySelector("#review-segment-stop"),
         reviewBreakScreen: document.querySelector("#review-break-screen"),
         reviewBreakTimer: document.querySelector("#review-break-timer"),
@@ -201,6 +209,7 @@
       this.elements.reviewDefer.addEventListener("click", () => this.deferCurrentReviewToday());
       this.elements.reviewSegmentStartBreak.addEventListener("click", () => this.startReviewBreak());
       this.elements.reviewSegmentContinue.addEventListener("click", () => this.continueReviewTask());
+      this.elements.reviewSegmentQuickCleanup.addEventListener("click", () => this.openReviewSegmentQuickCleanup());
       this.elements.reviewSegmentStop.addEventListener("click", () => this.stopReviewSession());
       this.elements.reviewBreakContinue.addEventListener("click", () => this.continueReviewTask());
       this.elements.reviewBreakStop.addEventListener("click", () => this.stopReviewSession());
@@ -1377,7 +1386,54 @@
       this.elements.reviewSegmentScreen.hidden = false;
       this.elements.reviewSegmentTotal.textContent = `${summary.handledCount} / ${summary.target}`;
       this.elements.reviewSegmentCurrent.textContent = `本段：${summary.segmentHandledCount} / ${summary.segmentTarget}`;
+      this.elements.reviewSegmentAnswered.textContent = summary.answeredCount;
+      this.elements.reviewSegmentManualMastered.textContent = summary.manualMasteredCount;
+      this.elements.reviewSegmentDeferred.textContent = summary.deferredTodayCount;
+      this.elements.reviewSegmentRemaining.textContent = summary.remainingCount;
+      this.elements.reviewSegmentBacklog.textContent = summary.backlogCount;
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    openReviewSegmentQuickCleanup() {
+      const session = this.activeSession;
+      if (!session?.book?.reviewTaskSummary) return;
+      this.onOpenQuickCleanup?.({
+        bookId: session.book.id,
+        sessionMode: session.sessionMode,
+      });
+    }
+
+    applyReviewSegmentQuickCleanup({ reviewTaskSummary, wordIds = [] } = {}) {
+      const session = this.activeSession;
+      if (!session || !reviewTaskSummary) return;
+      const selected = new Set(Array.isArray(wordIds) ? wordIds : []);
+      if (selected.size) {
+        const removedBeforeCurrent = session.questions
+          .slice(0, session.currentIndex)
+          .filter((question) => selected.has(question.word.word)).length;
+        session.questions = session.questions.filter((question) => !selected.has(question.word.word));
+        session.currentIndex = Math.max(0, session.currentIndex - removedBeforeCurrent);
+        session.currentIndex = Math.min(session.currentIndex, Math.max(0, session.questions.length - 1));
+      }
+      this.applyReviewTaskSummary(reviewTaskSummary);
+      const taskCompleted = reviewTaskSummary.remainingCount === 0;
+      if (!taskCompleted) {
+        this.showReviewSegmentComplete(session.book);
+        return;
+      }
+
+      this.elements.reviewSegmentScreen.hidden = true;
+      const question = this.getCurrentQuestion();
+      if (question?.selectedIndex !== null && session.currentIndex < session.questions.length - 1) {
+        session.currentIndex += 1;
+      } else if (question?.selectedIndex !== null) {
+        this.onMessage("今日正式复习任务已完成，可以继续今天的新词");
+        this.completeSession();
+        return;
+      }
+      this.onMessage("今日正式复习任务已完成，可以继续今天的新词");
+      if (this.getCurrentQuestion()) this.renderQuestion();
+      else this.completeSession();
     }
 
     getReviewBreakRemainingMs(now = Date.now()) {

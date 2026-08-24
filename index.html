@@ -593,10 +593,18 @@
               <strong id="review-segment-total">20 / 120</strong>
               <span id="review-segment-current">本段：20</span>
             </div>
+            <div class="review-segment-stats" aria-label="今日复习最新统计">
+              <div><span>正常复习</span><strong id="review-segment-answered">20</strong></div>
+              <div><span>已掌握</span><strong id="review-segment-manual-mastered">0</strong></div>
+              <div><span>今日跳过</span><strong id="review-segment-deferred">0</strong></div>
+              <div><span>剩余任务</span><strong id="review-segment-remaining">100</strong></div>
+              <div><span>任务外积压</span><strong id="review-segment-backlog">0</strong></div>
+            </div>
             <p class="group-break-suggestion">建议休息 3 分钟</p>
             <div class="group-complete-actions">
               <button class="primary-button" id="review-segment-start-break" type="button">休息一下</button>
               <button class="secondary-button" id="review-segment-continue" type="button">直接继续</button>
+              <button class="secondary-button review-segment-cleanup" id="review-segment-quick-cleanup" type="button">⚡ 快速清理简单词</button>
               <button class="text-button" id="review-segment-stop" type="button">今天先到这里</button>
             </div>
           </section>
