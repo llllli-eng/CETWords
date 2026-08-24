@@ -442,6 +442,33 @@
               </div>
             </div>
 
+            <aside class="confusion-detected" id="study-confusion-detected" role="status" hidden>
+              <div class="confusion-detected__status">
+                <span class="confusion-detected__icon" id="study-confusion-icon" aria-hidden="true">⇄</span>
+                <div>
+                  <strong id="study-confusion-title">你可能混淆了这两个词</strong>
+                  <p id="study-confusion-count" hidden></p>
+                </div>
+              </div>
+              <div class="confusion-detected__compare" aria-label="易混词对比">
+                <div>
+                  <strong id="study-confusion-current-word"></strong>
+                  <span id="study-confusion-current-meaning"></span>
+                </div>
+                <span class="confusion-detected__join" aria-hidden="true">⇄</span>
+                <div>
+                  <strong id="study-confusion-word"></strong>
+                  <span id="study-confusion-meaning"></span>
+                </div>
+              </div>
+              <p class="confusion-detected__note" id="study-confusion-note"></p>
+              <div class="confusion-detected__actions">
+                <button class="secondary-button" id="study-confusion-add" type="button">加入我的易混词</button>
+                <button class="primary-button" id="study-confusion-practice" type="button">做3题辨析</button>
+                <button class="secondary-button" id="study-confusion-view" type="button" hidden>查看区别</button>
+              </div>
+            </aside>
+
             <button class="secondary-button study-confusable-button" id="study-confusable-button" type="button" hidden>
               ⇄ 看易混词
             </button>
@@ -469,13 +496,6 @@
                 <p class="example-translation" id="detail-translation">他放弃了原来的计划。</p>
               </div>
             </article>
-
-            <aside class="confusion-detected" id="study-confusion-detected" role="status" hidden>
-              <span aria-hidden="true">⇄</span>
-              <p>你刚才的释义更像 <strong id="study-confusion-word"></strong>。</p>
-              <button class="text-button" id="study-confusion-add" type="button">加入易混词</button>
-              <button class="text-button" id="study-confusion-practice" type="button">做3题辨析</button>
-            </aside>
 
             <button class="primary-button next-word-button" id="next-word-button" type="button" hidden>
               <span>下一词</span>
@@ -1217,6 +1237,7 @@
         </div>
         <section class="confusable-practice-result" id="confusable-practice-result" hidden>
           <strong id="confusable-practice-score">3 / 3</strong>
+          <p class="confusable-practice-message" id="confusable-practice-message"></p>
           <div id="confusable-practice-summary"></div>
           <p>记忆提示：先抓住两个词的核心义，再留意拼写或用法差异。</p>
           <div class="confusable-dialog__actions">

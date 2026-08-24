@@ -69,6 +69,8 @@
       wrongCount,
       lastPracticeCorrectCount: Math.min(3, toCount(raw.lastPracticeCorrectCount)),
       lastPracticeWrongCount: Math.min(3, toCount(raw.lastPracticeWrongCount)),
+      confusionCount: toCount(raw.confusionCount),
+      lastConfusedAt: normalizeTimestamp(raw.lastConfusedAt),
     };
   }
 
@@ -103,6 +105,8 @@
       wrongCount: 0,
       lastPracticeCorrectCount: 0,
       lastPracticeWrongCount: 0,
+      confusionCount: options.initialConfusion ? 1 : 0,
+      lastConfusedAt: options.initialConfusion ? (options.confusedAt || options.now || Date.now()) : null,
     });
     pairs[pairKey] = pair;
     return { pairs, pair, changed: true, error: "" };
@@ -138,8 +142,22 @@
     }, pair.pairKey);
   }
 
+  function recordConfusion(rawPair, now = Date.now()) {
+    const pair = normalizePair(rawPair, rawPair?.pairKey);
+    if (!pair) return null;
+    return normalizePair({
+      ...pair,
+      confusionCount: pair.confusionCount + 1,
+      lastConfusedAt: now,
+    }, pair.pairKey);
+  }
+
   function sortPairs(rawPairs) {
     return Object.values(normalizePairs(rawPairs)).sort((left, right) => {
+      const leftConfused = left.lastConfusedAt || 0;
+      const rightConfused = right.lastConfusedAt || 0;
+      if (leftConfused !== rightConfused) return rightConfused - leftConfused;
+      if (left.confusionCount !== right.confusionCount) return right.confusionCount - left.confusionCount;
       const leftNever = left.practiceCount === 0 ? 1 : 0;
       const rightNever = right.practiceCount === 0 ? 1 : 0;
       if (leftNever !== rightNever) return rightNever - leftNever;
@@ -436,6 +454,7 @@
     removePair,
     getPairsForWord,
     recordPractice,
+    recordConfusion,
     sortPairs,
     normalizeRecent,
     recordRecent,

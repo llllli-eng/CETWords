@@ -1895,6 +1895,17 @@
     return deepClone(updated);
   }
 
+  function recordConfusableConfusion(pairKey, now = Date.now()) {
+    const pairs = getMutableData().confusablePairs;
+    const pair = pairs[pairKey];
+    if (!pair) return null;
+    const updated = confusableWords.recordConfusion(pair, now);
+    if (!updated) return null;
+    pairs[pairKey] = updated;
+    persist();
+    return deepClone(updated);
+  }
+
   function recordRecentEncounteredWord(wordId, now = Date.now()) {
     const before = getMutableData().recentEncounteredWordIds;
     const next = confusableWords.recordRecent(before, wordId, now);
@@ -2082,6 +2093,7 @@
     addConfusablePair,
     removeConfusablePair,
     recordConfusablePractice,
+    recordConfusableConfusion,
     recordRecentEncounteredWord,
     getRecentEncounteredWords,
     getConfusableSuggestionCache,

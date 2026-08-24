@@ -58,7 +58,9 @@ const appState = {
     practiceQuestions: [],
     practiceIndex: 0,
     practiceCorrect: 0,
+    practiceRecorded: false,
     generating: false,
+    recordedConfusionEvents: new Set(),
   },
   books: {
     cet4: {
@@ -313,6 +315,7 @@ const elements = {
   confusablePracticeFeedback: document.querySelector("#confusable-practice-feedback"),
   confusablePracticeResult: document.querySelector("#confusable-practice-result"),
   confusablePracticeScore: document.querySelector("#confusable-practice-score"),
+  confusablePracticeMessage: document.querySelector("#confusable-practice-message"),
   confusablePracticeSummary: document.querySelector("#confusable-practice-summary"),
   confusablePracticeAgain: document.querySelector("#confusable-practice-again"),
   confusablePracticeReturn: document.querySelector("#confusable-practice-return"),
@@ -1415,8 +1418,9 @@ const studyController = new StudyController({
   onOpenConfusable: openConfusableDialog,
   onDetectConfusion: detectStudyConfusion,
   onCreateConfusablePair: createConfusablePair,
-  onStartConfusablePractice: (pairKey) => {
+  onStartConfusablePractice: (pairKey, options = {}) => {
     appState.confusables.returnDialog = null;
+    if (options.source === "study-result") appState.confusables.returnScrollY = window.scrollY;
     startConfusablePractice(pairKey);
   },
 });
@@ -2314,6 +2318,9 @@ function createConfusablePair(currentWord, otherWord, options = {}) {
     getConfusableWordId(otherWord),
     options,
   );
+  if (result.pair && options.initialConfusion && options.confusionEventId) {
+    appState.confusables.recordedConfusionEvents.add(`${options.confusionEventId}:${result.pair.pairKey}`);
+  }
   if (result.changed) {
     updateDashboard();
     if (appState.currentView === "confusables") renderConfusableList();
@@ -2561,6 +2568,7 @@ function startConfusablePractice(pairKey) {
   appState.confusables.practiceQuestions = questions;
   appState.confusables.practiceIndex = 0;
   appState.confusables.practiceCorrect = 0;
+  appState.confusables.practiceRecorded = false;
   renderConfusablePractice();
   showConfusableModal(elements.confusablePracticeDialog);
 }
@@ -2575,8 +2583,16 @@ function renderConfusablePractice() {
   elements.confusablePracticeQuestion.hidden = complete;
   elements.confusablePracticeResult.hidden = !complete;
   if (complete) {
-    storage.recordConfusablePractice(pair.pairKey, state.practiceCorrect);
+    if (!state.practiceRecorded) {
+      storage.recordConfusablePractice(pair.pairKey, state.practiceCorrect);
+      state.practiceRecorded = true;
+    }
     elements.confusablePracticeScore.textContent = `${state.practiceCorrect} / 3`;
+    elements.confusablePracticeMessage.textContent = state.practiceCorrect === 3
+      ? "这组区分得很好。"
+      : state.practiceCorrect <= 1
+        ? "这组仍容易混，之后遇到时系统会继续提醒。"
+        : "已经有进步，再练一次会更稳。";
     elements.confusablePracticeSummary.replaceChildren(
       createConfusableText(left),
       createConfusableText(right),
@@ -2655,13 +2671,22 @@ function renderConfusableList() {
     words.append(leftBox, join, rightBox);
     const totalAnswers = pair.correctCount + pair.wrongCount;
     const errorRate = totalAnswers ? Math.round((pair.wrongCount / totalAnswers) * 100) : null;
-    content.append(words, createConfusableTypeTags(pair.types), createElement(
-      "p",
-      "confusable-pair-card__meta",
-      errorRate === null
-        ? "尚未练习"
-        : `最近辨析 ${pair.lastPracticeCorrectCount}/3 · 累计 ${pair.practiceCount} 轮 · 错误率 ${errorRate}%`,
-    ));
+    const stats = createElement("div", "confusable-pair-card__meta");
+    stats.append(
+      createElement(
+        "span",
+        "",
+        `实际混淆：${pair.confusionCount}次 · 最近混淆：${pair.lastConfusedAt ? formatStudyTime(pair.lastConfusedAt) : "—"}`,
+      ),
+      createElement(
+        "span",
+        "",
+        errorRate === null
+          ? "辨析练习：0轮"
+          : `辨析练习：${pair.practiceCount}轮 · 最近 ${pair.lastPracticeCorrectCount}/3 · 错误率 ${errorRate}%`,
+      ),
+    );
+    content.append(words, createConfusableTypeTags(pair.types), stats);
     const actions = createElement("div", "confusable-pair-card__actions");
     const practice = createElement("button", "primary-button", "练 3 题");
     practice.type = "button";
@@ -2693,10 +2718,26 @@ function recordConfusableEncounter(word) {
   if (wordId) storage.recordRecentEncounteredWord(wordId);
 }
 
-function detectStudyConfusion({ word, userAnswer }) {
-  return confusableWords.detectMeaningConfusion(word, userAnswer, getConfusableVocabulary(), {
+function detectStudyConfusion({ word, userAnswer, judgement, answerEventId }) {
+  const candidate = confusableWords.detectMeaningConfusion(word, userAnswer, getConfusableVocabulary(), {
     recentWordIds: storage.getRecentEncounteredWords().map((entry) => entry.wordId),
   });
+  if (!candidate) return null;
+  const pairKey = confusableWords.getPairKey(getConfusableWordId(word), candidate.wordId);
+  const existingPair = storage.getConfusablePairs()[pairKey] || null;
+  let pair = existingPair;
+  const dedupKey = answerEventId && pairKey ? `${answerEventId}:${pairKey}` : "";
+  if (
+    pair
+    && judgement === "wrong"
+    && dedupKey
+    && !appState.confusables.recordedConfusionEvents.has(dedupKey)
+  ) {
+    appState.confusables.recordedConfusionEvents.add(dedupKey);
+    pair = storage.recordConfusableConfusion(pairKey) || pair;
+    renderConfusableList();
+  }
+  return { ...candidate, pair, pairKey };
 }
 
 async function initializeWordBooks() {
