@@ -1202,6 +1202,18 @@
       window.requestAnimationFrame(() => {
         if (this.getCurrentQuestion() !== question || !activeRecallResult.isFinalResult(question)) return;
         activeRecallResult.scrollFeedbackIntoViewIfNeeded(this.elements.feedback, question);
+        const { rect } = activeRecallResult.getVisibility(this.elements.confusableButton);
+        if (
+          this.elements.confusableButton.hidden
+          || !rect
+          || (Number(rect.top) >= 0 && Number(rect.bottom) <= window.innerHeight)
+        ) return;
+        const reducedMotion = typeof window.matchMedia === "function"
+          && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        this.elements.confusableButton.scrollIntoView({
+          behavior: reducedMotion ? "auto" : "smooth",
+          block: "nearest",
+        });
       });
     }
 

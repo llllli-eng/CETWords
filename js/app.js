@@ -51,6 +51,7 @@ const appState = {
   confusables: {
     currentWordId: null,
     returnDialog: null,
+    returnScrollY: null,
     query: "",
     aiCandidates: [],
     practicePairKey: null,
@@ -2223,6 +2224,15 @@ function closeConfusableModal(dialog) {
   setConfusableModalState();
 }
 
+function restoreConfusableStudyScroll() {
+  const returnScrollY = appState.confusables.returnScrollY;
+  appState.confusables.returnScrollY = null;
+  if (!Number.isFinite(returnScrollY)) return;
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: returnScrollY, behavior: "auto" });
+  });
+}
+
 function createConfusableText(word) {
   const wrapper = createElement("div");
   wrapper.append(
@@ -2392,6 +2402,7 @@ function openConfusableDialog(word, options = {}) {
   if (!word || !getConfusableWordId(word)) return;
   appState.confusables.currentWordId = getConfusableWordId(word);
   appState.confusables.aiCandidates = [];
+  appState.confusables.returnScrollY = options.source === "study-result" ? window.scrollY : null;
   if (options.source === "word-detail" || elements.wordDetailDialog.open) {
     appState.confusables.returnDialog = "word-detail";
     closeWordDetail();
@@ -2407,7 +2418,9 @@ function closeMainConfusableDialog({ restore = true } = {}) {
   if (restore && appState.confusables.returnDialog === "word-detail" && getDetailWord()) {
     appState.confusables.returnDialog = null;
     openWordDetail(appState.wordList.detailWordId);
+    return;
   }
+  restoreConfusableStudyScroll();
 }
 
 async function requestConfusableSuggestions() {
@@ -2602,7 +2615,9 @@ function closeConfusablePractice({ restore = true } = {}) {
   if (destination === "word-detail" && getDetailWord()) {
     appState.confusables.returnDialog = null;
     openWordDetail(appState.wordList.detailWordId);
+    return;
   }
+  restoreConfusableStudyScroll();
 }
 
 function practiceFirstCurrentPair() {
