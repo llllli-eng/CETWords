@@ -47,6 +47,11 @@
       onStartReviewBreak,
       onContinueReviewTask,
       onStopReviewSession,
+      onEncounterWord,
+      onOpenConfusable,
+      onDetectConfusion,
+      onCreateConfusablePair,
+      onStartConfusablePractice,
     }) {
       this.onExit = onExit;
       this.onAnswer = onAnswer;
@@ -72,6 +77,11 @@
       this.onStartReviewBreak = onStartReviewBreak;
       this.onContinueReviewTask = onContinueReviewTask;
       this.onStopReviewSession = onStopReviewSession;
+      this.onEncounterWord = onEncounterWord;
+      this.onOpenConfusable = onOpenConfusable;
+      this.onDetectConfusion = onDetectConfusion;
+      this.onCreateConfusablePair = onCreateConfusablePair;
+      this.onStartConfusablePractice = onStartConfusablePractice;
       this.sessions = new Map();
       this.activeSession = null;
       this.isActive = false;
@@ -125,6 +135,11 @@
         detailExample: document.querySelector("#detail-example"),
         detailTranslation: document.querySelector("#detail-translation"),
         detailSpeakButton: document.querySelector("#detail-speak-button"),
+        confusableButton: document.querySelector("#study-confusable-button"),
+        confusionDetected: document.querySelector("#study-confusion-detected"),
+        confusionWord: document.querySelector("#study-confusion-word"),
+        confusionAdd: document.querySelector("#study-confusion-add"),
+        confusionPractice: document.querySelector("#study-confusion-practice"),
         nextButton: document.querySelector("#next-word-button"),
         resultScreen: document.querySelector("#result-screen"),
         resultTitle: document.querySelector("#result-title"),
@@ -181,6 +196,12 @@
       this.elements.favoriteButton.addEventListener("click", () => this.toggleCurrentFavorite());
       this.elements.speakButton.addEventListener("click", () => this.speakCurrentWord());
       this.elements.detailSpeakButton.addEventListener("click", () => this.speakCurrentWord());
+      this.elements.confusableButton.addEventListener("click", () => {
+        const question = this.getCurrentQuestion();
+        if (question?.selectedIndex !== null) this.onOpenConfusable?.(question.word, { source: "study-result" });
+      });
+      this.elements.confusionAdd.addEventListener("click", () => this.addDetectedConfusion());
+      this.elements.confusionPractice.addEventListener("click", () => this.practiceDetectedConfusion());
       this.elements.nextButton.addEventListener("click", () => this.nextQuestion());
       this.elements.resultHomeButton.addEventListener("click", () => this.exit());
       this.elements.restartButton.addEventListener("click", () => this.restart());
@@ -244,6 +265,7 @@
           wasPresented: false,
           presentedAt: null,
           interactionDurationMs: null,
+          confusionCandidate: null,
         })),
         currentIndex: 0,
         correctCount: 0,
@@ -358,6 +380,10 @@
       session.lastPresentedWordId = wordId;
       session.recentWordIds.push(wordId);
       session.recentWordIds = session.recentWordIds.slice(-3);
+      this.onEncounterWord?.(question.word, {
+        learningPhase: question.learningPhase,
+        sessionMode: session.sessionMode,
+      });
     }
 
     isAiSubjectiveQuestion(question) {
@@ -470,6 +496,8 @@
         this.elements.aiFeedbackDetails.hidden = true;
         this.elements.manualActions.hidden = true;
         this.elements.details.hidden = true;
+        this.elements.confusableButton.hidden = true;
+        this.elements.confusionDetected.hidden = true;
         this.elements.nextButton.hidden = true;
       } else {
         this.renderFeedback(question);
@@ -808,6 +836,14 @@
       if (result.groupProgress) session.book.groupProgress = result.groupProgress;
       this.syncReinforcementQueue(question, result);
       this.syncRecoveryQueue(question, result);
+      if (judgement === "wrong") {
+        question.confusionCandidate = this.onDetectConfusion?.({
+          word: question.word,
+          userAnswer: question.userAnswer,
+          learningPhase: question.learningPhase,
+          sessionMode: session.sessionMode,
+        }) || null;
+      }
       this.renderAnswerArea(question);
       this.renderProgress();
       this.renderFeedback(question);
@@ -1100,6 +1136,7 @@
       this.elements.aiFeedbackDetails.hidden = true;
       this.elements.manualActions.hidden = true;
       this.renderWordDetails(question);
+      this.renderConfusableActions(question);
       this.elements.nextButton.hidden = false;
       this.updateNextButtonLabel();
     }
@@ -1154,6 +1191,7 @@
       );
       this.elements.manualActions.hidden = true;
       this.renderWordDetails(question);
+      this.renderConfusableActions(question);
       this.elements.nextButton.hidden = false;
       this.updateNextButtonLabel();
       this.scheduleFeedbackVisibility(question);
@@ -1188,6 +1226,52 @@
       this.elements.detailTranslation.textContent = primaryExample?.translation || "";
       this.elements.detailTranslation.hidden = !primaryExample?.translation;
       this.elements.details.hidden = false;
+    }
+
+    renderConfusableActions(question) {
+      const answered = question?.selectedIndex !== null;
+      this.elements.confusableButton.hidden = !answered;
+      this.elements.confusableButton.textContent = question?.learningPhase === newWordLearning.LEARNING_PHASES.INTRO
+        ? "⇄ 看易混词"
+        : "⇄ 易混词";
+      const candidate = answered ? question?.confusionCandidate : null;
+      this.elements.confusionDetected.hidden = !candidate;
+      if (candidate) {
+        this.elements.confusionWord.textContent = candidate.word?.word || "";
+        this.elements.confusionAdd.disabled = false;
+        this.elements.confusionAdd.textContent = "加入易混词";
+        this.elements.confusionPractice.disabled = false;
+      }
+    }
+
+    addDetectedConfusion() {
+      const question = this.getCurrentQuestion();
+      const candidate = question?.confusionCandidate;
+      if (!question || !candidate) return;
+      const result = this.onCreateConfusablePair?.(question.word, candidate.word, {
+        source: "wrong_answer_detected",
+        types: ["meaning"],
+        reason: `释义回答更接近 ${candidate.word.word}`,
+      });
+      if (result?.changed) {
+        this.elements.confusionAdd.disabled = true;
+        this.elements.confusionAdd.textContent = "已加入";
+      } else if (result?.error) {
+        this.onMessage?.(result.error);
+      }
+    }
+
+    practiceDetectedConfusion() {
+      const question = this.getCurrentQuestion();
+      const candidate = question?.confusionCandidate;
+      if (!question || !candidate) return;
+      const result = this.onCreateConfusablePair?.(question.word, candidate.word, {
+        source: "wrong_answer_detected",
+        types: ["meaning"],
+        reason: `释义回答更接近 ${candidate.word.word}`,
+      });
+      if (result?.pair?.pairKey) this.onStartConfusablePractice?.(result.pair.pairKey);
+      else if (result?.error) this.onMessage?.(result.error);
     }
 
     updateNextButtonLabel() {

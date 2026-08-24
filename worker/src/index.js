@@ -3,6 +3,7 @@ const MAX_BODY_BYTES = 16 * 1024;
 const MAX_MEANINGS = 12;
 const MAX_DAILY_REVIEW_BODY_BYTES = 24 * 1024;
 const MAX_DAILY_GROUP_BODY_BYTES = 8 * 1024;
+const MAX_CONFUSABLE_BODY_BYTES = 4 * 1024;
 const MAX_DAILY_WEAK_WORDS = 10;
 const MAX_DAILY_CORRECTED_WORDS = 5;
 const REQUEST_TIMEOUT_MS = 12 * 1000;
@@ -16,6 +17,9 @@ const DAILY_GROUP_FIELDS = new Set([
   "yesterdayTotalAnswers", "yesterdayActiveRecallPerformance", "recentCompletionRate",
   "recentAverageAnswers",
 ]);
+const CONFUSABLE_SUGGEST_FIELDS = new Set(["word", "coreMeaning", "meanings"]);
+const CONFUSABLE_FIND_FIELDS = new Set(["currentWord", "description"]);
+const CONFUSABLE_TYPES = new Set(["spelling", "meaning", "usage"]);
 
 const SYSTEM_PROMPT = `你是大学英语四六级单词中文释义判题器。
 
@@ -81,6 +85,27 @@ const DAILY_GROUP_SYSTEM_PROMPT = `你是大学英语四六级每日新词分组
 
 JSON 格式：
 {"groupSizes":[10,10,10],"breakMinutes":5,"reason":""}`;
+
+const CONFUSABLE_SUGGEST_SYSTEM_PROMPT = `你是大学英语四六级易混词辅助器。
+
+只推荐现代标准英语中，四六级学习场景真正容易因为拼写、词义或用法发生混淆的词。
+不要为了凑数推荐弱相关词，不要推荐极罕见、专业、古旧义。
+返回 0～4 个高质量候选；types 只能使用 spelling、meaning、usage，每项最多两个类型。
+reason 不超过 120 个字符，difference 不超过 160 个字符。
+只输出合法 JSON，不输出 Markdown 或额外文字。
+
+JSON 格式：
+{"items":[{"word":"","types":["spelling"],"reason":"","difference":""}]}`;
+
+const CONFUSABLE_FIND_SYSTEM_PROMPT = `根据用户对一个忘记拼写的四六级单词的描述，给出最可能的候选。
+
+描述可能包含中文意思、首字母、大概拼写、发音印象、与当前词相似等。
+只给 1～5 个最可能的现代常用候选；没有可靠候选时允许返回空数组。
+不要为了凑数返回弱相关词，不要输出极罕见、专业或古旧词。
+reason 不超过 120 个字符。只输出合法 JSON，不输出 Markdown 或额外文字。
+
+JSON 格式：
+{"items":[{"word":"","reason":""}]}`;
 
 function getAllowedOrigins(env) {
   return new Set(String(env.ALLOWED_ORIGINS || "")
@@ -198,6 +223,37 @@ function validatePayload(raw) {
       userAnswer: userAnswer.value,
     },
   };
+}
+
+function validateConfusableSuggestPayload(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "请求体必须是 JSON 对象" };
+  const unexpected = Object.keys(raw).find((key) => !CONFUSABLE_SUGGEST_FIELDS.has(key));
+  if (unexpected) return { error: `不允许的字段：${unexpected}` };
+  const word = validateString(raw.word, "word", 100);
+  const coreMeaning = validateString(raw.coreMeaning, "coreMeaning", 300);
+  if (word.error || coreMeaning.error) return { error: word.error || coreMeaning.error };
+  if (!Array.isArray(raw.meanings) || raw.meanings.length > 8) return { error: "meanings 格式不正确" };
+  const meanings = [];
+  let totalLength = 0;
+  for (const entry of raw.meanings) {
+    if (typeof entry !== "string" || entry.length > 180) return { error: "meanings 格式不正确" };
+    const value = entry.trim();
+    if (!value) continue;
+    totalLength += value.length;
+    if (totalLength > 1200) return { error: "meanings 总长度超出限制" };
+    meanings.push(value);
+  }
+  return { value: { word: word.value, coreMeaning: coreMeaning.value, meanings } };
+}
+
+function validateConfusableFindPayload(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "请求体必须是 JSON 对象" };
+  const unexpected = Object.keys(raw).find((key) => !CONFUSABLE_FIND_FIELDS.has(key));
+  if (unexpected) return { error: `不允许的字段：${unexpected}` };
+  const currentWord = validateString(raw.currentWord, "currentWord", 100);
+  const description = validateString(raw.description, "description", 500);
+  if (currentWord.error || description.error) return { error: currentWord.error || description.error };
+  return { value: { currentWord: currentWord.value, description: description.value } };
 }
 
 function validateCount(value, field, maximum = 100000) {
@@ -376,6 +432,50 @@ function normalizeDailyGroupModelResult(content, dailyTarget) {
   return { groupSizes, breakMinutes, reason };
 }
 
+function parseJsonObject(content) {
+  if (typeof content !== "string" || !content.trim()) return null;
+  try {
+    const parsed = JSON.parse(content);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeConfusableSuggestModelResult(content) {
+  const parsed = parseJsonObject(content);
+  if (!parsed || Object.keys(parsed).some((key) => key !== "items") || !Array.isArray(parsed.items) || parsed.items.length > 4) return null;
+  const items = [];
+  for (const raw of parsed.items) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    if (Object.keys(raw).some((key) => !["word", "types", "reason", "difference"].includes(key))) return null;
+    const word = typeof raw.word === "string" ? raw.word.trim() : "";
+    const reason = typeof raw.reason === "string" ? raw.reason.trim() : "";
+    const difference = typeof raw.difference === "string" ? raw.difference.trim() : "";
+    if (!word || word.length > 100 || !reason || reason.length > 120 || !difference || difference.length > 160) return null;
+    if (!Array.isArray(raw.types) || !raw.types.length || raw.types.length > 2) return null;
+    const types = [...new Set(raw.types)];
+    if (types.some((type) => !CONFUSABLE_TYPES.has(type))) return null;
+    items.push({ word, types, reason, difference });
+  }
+  return { items };
+}
+
+function normalizeConfusableFindModelResult(content) {
+  const parsed = parseJsonObject(content);
+  if (!parsed || Object.keys(parsed).some((key) => key !== "items") || !Array.isArray(parsed.items) || parsed.items.length > 5) return null;
+  const items = [];
+  for (const raw of parsed.items) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    if (Object.keys(raw).some((key) => !["word", "reason"].includes(key))) return null;
+    const word = typeof raw.word === "string" ? raw.word.trim() : "";
+    const reason = typeof raw.reason === "string" ? raw.reason.trim() : "";
+    if (!word || word.length > 100 || !reason || reason.length > 120) return null;
+    items.push({ word, reason });
+  }
+  return { items };
+}
+
 function normalizeModelResult(content) {
   if (typeof content !== "string" || !content.trim()) return null;
   let parsed;
@@ -466,6 +566,36 @@ function buildDailyGroupDeepSeekBody(payload) {
   };
 }
 
+function buildConfusableSuggestDeepSeekBody(payload) {
+  return {
+    model: "deepseek-v4-flash",
+    messages: [
+      { role: "system", content: CONFUSABLE_SUGGEST_SYSTEM_PROMPT },
+      { role: "user", content: `请只输出合法 JSON，为以下单词推荐易混词：\n${JSON.stringify(payload)}` },
+    ],
+    thinking: { type: "disabled" },
+    response_format: { type: "json_object" },
+    stream: false,
+    temperature: 0.1,
+    max_tokens: 560,
+  };
+}
+
+function buildConfusableFindDeepSeekBody(payload) {
+  return {
+    model: "deepseek-v4-flash",
+    messages: [
+      { role: "system", content: CONFUSABLE_FIND_SYSTEM_PROMPT },
+      { role: "user", content: `请只输出合法 JSON，根据以下线索查找单词：\n${JSON.stringify(payload)}` },
+    ],
+    thinking: { type: "disabled" },
+    response_format: { type: "json_object" },
+    stream: false,
+    temperature: 0.1,
+    max_tokens: 360,
+  };
+}
+
 async function callDeepSeek(payload, env, fetchImpl, options = {}) {
   const bodyBuilder = options.bodyBuilder || buildDeepSeekBody;
   const resultNormalizer = options.resultNormalizer || normalizeModelResult;
@@ -539,7 +669,13 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     if (request.method !== "GET") return errorResponse(request, 405, "METHOD_NOT_ALLOWED", "请求方法不允许");
     return jsonResponse(request, { ok: true, service: "shi-ci-ai", model: "deepseek-v4-flash" });
   }
-  if (!["/api/judge-meaning", "/api/daily-review", "/api/daily-group-plan"].includes(url.pathname)) {
+  if (![
+    "/api/judge-meaning",
+    "/api/daily-review",
+    "/api/daily-group-plan",
+    "/api/confusable-suggest",
+    "/api/confusable-find",
+  ].includes(url.pathname)) {
     return errorResponse(request, 404, "NOT_FOUND", "接口不存在");
   }
   if (request.method !== "POST") {
@@ -553,7 +689,9 @@ async function handleRequest(request, env, fetchImpl = fetch) {
   const declaredLength = Number(request.headers.get("Content-Length"));
   const maximumBodyBytes = url.pathname === "/api/daily-review"
     ? MAX_DAILY_REVIEW_BODY_BYTES
-    : url.pathname === "/api/daily-group-plan" ? MAX_DAILY_GROUP_BODY_BYTES : MAX_BODY_BYTES;
+    : url.pathname === "/api/daily-group-plan"
+      ? MAX_DAILY_GROUP_BODY_BYTES
+      : url.pathname.startsWith("/api/confusable-") ? MAX_CONFUSABLE_BODY_BYTES : MAX_BODY_BYTES;
   if (Number.isFinite(declaredLength) && declaredLength > maximumBodyBytes) {
     return errorResponse(request, 413, "PAYLOAD_TOO_LARGE", "请求体过大");
   }
@@ -571,7 +709,11 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     ? validateDailyReviewPayload(rawPayload)
     : url.pathname === "/api/daily-group-plan"
       ? validateDailyGroupPayload(rawPayload)
-      : validatePayload(rawPayload);
+      : url.pathname === "/api/confusable-suggest"
+        ? validateConfusableSuggestPayload(rawPayload)
+        : url.pathname === "/api/confusable-find"
+          ? validateConfusableFindPayload(rawPayload)
+          : validatePayload(rawPayload);
   if (validation.error) return errorResponse(request, 400, "INVALID_INPUT", validation.error);
 
   try {
@@ -592,6 +734,18 @@ async function handleRequest(request, env, fetchImpl = fetch) {
       } catch {
         result = { ...createFallbackDailyGroupPlan(validation.value.dailyTarget), source: "local", fallback: true, usage: { promptTokens: 0, completionTokens: 0 } };
       }
+    } else if (url.pathname === "/api/confusable-suggest") {
+      result = await callDeepSeek(validation.value, env, fetchImpl, {
+        bodyBuilder: buildConfusableSuggestDeepSeekBody,
+        resultNormalizer: normalizeConfusableSuggestModelResult,
+        maxAttempts: 1,
+      });
+    } else if (url.pathname === "/api/confusable-find") {
+      result = await callDeepSeek(validation.value, env, fetchImpl, {
+        bodyBuilder: buildConfusableFindDeepSeekBody,
+        resultNormalizer: normalizeConfusableFindModelResult,
+        maxAttempts: 1,
+      });
     } else {
       result = await callDeepSeek(validation.value, env, fetchImpl);
     }
@@ -606,6 +760,10 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     const message = code === "AI_INVALID_RESPONSE"
       ? url.pathname === "/api/daily-review"
         ? "AI 返回了无法识别的复盘结果"
+        : url.pathname === "/api/confusable-suggest"
+          ? "AI 返回了无法识别的易混词结果"
+          : url.pathname === "/api/confusable-find"
+            ? "AI 返回了无法识别的找词结果"
         : "AI 返回了无法识别的判定结果"
       : code === "AI_TIMEOUT"
         ? "AI 判断超时，请稍后再试"
@@ -615,6 +773,8 @@ async function handleRequest(request, env, fetchImpl = fetch) {
 }
 
 export {
+  buildConfusableFindDeepSeekBody,
+  buildConfusableSuggestDeepSeekBody,
   buildDailyGroupDeepSeekBody,
   buildDailyReviewDeepSeekBody,
   buildDeepSeekBody,
@@ -622,9 +782,13 @@ export {
   handleRequest,
   normalizeDailyGroupModelResult,
   normalizeDailyReviewModelResult,
+  normalizeConfusableFindModelResult,
+  normalizeConfusableSuggestModelResult,
   normalizeModelResult,
   validateDailyGroupPayload,
   validateDailyReviewPayload,
+  validateConfusableFindPayload,
+  validateConfusableSuggestPayload,
   validatePayload,
 };
 

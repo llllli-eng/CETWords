@@ -28,7 +28,7 @@ const PROTECTED_HASHES = {
   "js/review-scheduler.js": "b65b22be281665c1633c9859efb9c5c5cd7adff996d51ec60d933280c94fe4f7",
   "js/review-recovery.js": "050a8dff4e21b9be018f7631610cde9ef8c39e47fa97bd08f628f9e17c91bf05",
   "js/daily-group-service.js": "502275f89f546d34ae085f9fb769faa119903a5ff68cc10a4c5282d828d4f013",
-  "worker/src/index.js": "6fa1dacf44c84ce74c0206db73bdad4667a6cac1b3e9a4bd6df014fd07c40f5d",
+  "worker/src/index.js": "f68d152589c9de0b2533ab4a6f2f8351437d83976d5927dd26189dc7e13b5611",
 };
 
 const books = Object.fromEntries(
@@ -160,14 +160,14 @@ await test("smart random and neutral configuration is unchanged", () => {
   }
 });
 
-await test("SRS Recovery Phase16 grouping and Worker are unchanged", () => {
+await test("SRS Recovery Phase16 grouping and Phase16.4 Worker baseline are unchanged", () => {
   for (const relative of ["js/review-scheduler.js", "js/review-recovery.js", "js/daily-group-service.js", "worker/src/index.js"]) {
     assert.equal(sha256(fs.readFileSync(path.join(ROOT, relative))), PROTECTED_HASHES[relative]);
   }
 });
 
-await test("storage schema is upgraded to v14", () => {
-  assert.match(fs.readFileSync(path.join(ROOT, "js/storage.js"), "utf8"), /const DATA_VERSION = 14/);
+await test("storage schema is upgraded to v15", () => {
+  assert.match(fs.readFileSync(path.join(ROOT, "js/storage.js"), "utf8"), /const DATA_VERSION = 15/);
 });
 
 await test("neutral words keep raw frequency tiers but receive audited meanings", () => {

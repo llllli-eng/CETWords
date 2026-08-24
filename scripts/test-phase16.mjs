@@ -37,7 +37,7 @@ function loadApp(initialStorage = {}) {
   });
   [
     "js/review-scheduler.js", "js/review-workload.js", "js/smart-learning-order.js", "js/review-recovery.js",
-    "js/new-word-learning.js", "js/daily-group-service.js", "js/storage.js", "js/backup-service.js",
+    "js/new-word-learning.js", "js/daily-group-service.js", "js/confusable-words.js", "js/storage.js", "js/backup-service.js",
   ].forEach((file) => vm.runInContext(fs.readFileSync(path.join(ROOT, file), "utf8"), context, { filename: file }));
   return { app: window.CETWords, localStorage };
 }
@@ -244,7 +244,7 @@ if (!WORKER_ONLY) {
     assert.equal(progress.allComplete, true);
   });
 
-  await test("storage v11 migrates losslessly through v14 with empty dailyGroupPlans", () => {
+  await test("storage v11 migrates losslessly through v15 with empty dailyGroupPlans", () => {
     const v11 = {
       version: 11, currentBook: "cet6",
       preferences: { dailyNewWordGoals: { cet4: 30, cet6: 50 }, vocabularyScope: { cet4: "all", cet6: "core" }, studyMode: "zh-to-en", learningOrder: "random", aiJudge: { enabled: true, proxyUrl: "https://worker.example" } },
@@ -254,7 +254,7 @@ if (!WORKER_ONLY) {
       },
     };
     const migrated = loadApp({ "cetwords-user-data-v1": JSON.stringify(v11) }).app.storage.loadUserData();
-    assert.equal(migrated.version, 14);
+    assert.equal(migrated.version, 15);
     assert.deepEqual(JSON.parse(JSON.stringify(migrated.books.cet4.dailyGroupPlans)), {});
     assert.equal(migrated.books.cet4.words.keep.masteryLevel, 4);
     assert.equal(migrated.books.cet4.words.keep.nextReviewDate, app.reviewScheduler.getLocalDateKey(1893456000000));
@@ -330,9 +330,9 @@ if (!WORKER_ONLY) {
     assert.deepEqual(Array.from(adjusted.plan.groupSizes), [10, 10, 10]);
   });
 
-  await test("v1-v14 backup import remains accepted", () => {
+  await test("v1-v15 backup import remains accepted", () => {
     const source = fs.readFileSync(path.join(ROOT, "js/backup-service.js"), "utf8");
-    assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\]/);
+    assert.match(source, /\[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15\]/);
   });
 
   const appSource = fs.readFileSync(path.join(ROOT, "js/app.js"), "utf8");

@@ -44,7 +44,7 @@ function loadApp(initialStorage = {}) {
   [
     "js/review-scheduler.js", "js/review-workload.js", "js/smart-learning-order.js",
     "js/review-recovery.js", "js/new-word-learning.js", "js/daily-group-service.js",
-    "js/storage.js", "js/backup-service.js", "js/word-library.js", "js/daily-review-service.js",
+    "js/confusable-words.js", "js/storage.js", "js/backup-service.js", "js/word-library.js", "js/daily-review-service.js",
   ].forEach((file) => vm.runInContext(fs.readFileSync(path.join(ROOT, file), "utf8"), context, { filename: file }));
   return { app: window.CETWords, localStorage };
 }
@@ -497,7 +497,7 @@ await test("54 limit adjustment never reorders retained task IDs", () => {
 });
 
 // 55–60 迁移与备份
-await test("55 v13 migrates losslessly to v14", () => {
+await test("55 v13 migrates losslessly to v15", () => {
   const seed = loadApp().app.storage.loadUserData();
   seed.version = 13;
   delete seed.preferences.dailyReviewLimits;
@@ -506,7 +506,7 @@ await test("55 v13 migrates losslessly to v14", () => {
   seed.books.cet4.words.keep = dueProgress(0, { favorite: true, inWrongBook: true });
   const loaded = loadApp({ [STORAGE_KEY]: JSON.stringify(seed) });
   const progress = loaded.app.storage.getWordProgress("cet4", "keep");
-  assert.equal(loaded.app.storage.getStatus().version, 14);
+  assert.equal(loaded.app.storage.getStatus().version, 15);
   assert.equal(progress.favorite, true);
   assert.equal(progress.inWrongBook, true);
 });
@@ -545,9 +545,9 @@ await test("59 v13 migration preserves Phase16.1 calendar SRS fields", () => {
   assert.equal(loaded.app.storage.getWordProgress("cet4", "keep").nextReviewDate, dueProgress().nextReviewDate);
 });
 
-await test("60 backups accept every data version from v1 through v14", () => {
+await test("60 backups accept every data version from v1 through v15", () => {
   const { backupService } = loadApp().app;
-  for (let version = 1; version <= 14; version += 1) {
+  for (let version = 1; version <= 15; version += 1) {
     const data = { version, books: { cet4: { words: {}, daily: {} }, cet6: { words: {}, daily: {} } } };
     assert.equal(backupService.validateBackup(data).valid, true, `v${version}`);
   }
@@ -576,8 +576,8 @@ await test("65 Phase16.1 scheduler intervals are byte-for-byte unchanged", () =>
   assert.equal(sha256("js/review-scheduler.js"), "b65b22be281665c1633c9859efb9c5c5cd7adff996d51ec60d933280c94fe4f7");
 });
 
-await test("66 Phase16.3 did not modify the user's existing Worker content", () => {
-  assert.equal(sha256("worker/src/index.js"), "6fa1dacf44c84ce74c0206db73bdad4667a6cac1b3e9a4bd6df014fd07c40f5d");
+await test("66 Worker matches the intentional Phase16.4 API baseline", () => {
+  assert.equal(sha256("worker/src/index.js"), "f68d152589c9de0b2533ab4a6f2f8351437d83976d5927dd26189dc7e13b5611");
 });
 
 await test("67 review workload allocation contains no AI or network call", () => {
@@ -605,10 +605,10 @@ await test("69 desktop and 375px mobile UI expose workload controls without fixe
   assert.doesNotMatch(css, /quick-cleanup[^\{]*\{[^}]*width:\s*(?:[6-9]\d\d|[1-9]\d{3,})px/);
 });
 
-await test("70 storage is v14 and independent review state is present", () => {
+await test("70 storage is v15 and independent review state is present", () => {
   const loaded = loadApp();
   const data = loaded.app.storage.loadUserData();
-  assert.equal(loaded.app.storage.getStatus().version, 14);
+  assert.equal(loaded.app.storage.getStatus().version, 15);
   assert.equal(Object.keys(data.books.cet4.dailyReviewTasks).length, 0);
   assert.equal(data.preferences.dailyReviewLimits.cet4, 120);
 });

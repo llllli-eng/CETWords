@@ -1,5 +1,5 @@
 /**
- * 拾词 · 本地学习数据服务 v14
+ * 拾词 · 本地学习数据服务 v15
  * 保持原有 localStorage key，只保存用户状态，不复制词库正文。
  */
 
@@ -11,9 +11,10 @@
     newWordLearning,
     smartLearningOrder,
     dailyGroupService,
+    confusableWords,
   } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
-  const DATA_VERSION = 14;
+  const DATA_VERSION = 15;
   const AI_PROXY_TOKEN_KEY = "shi-ci-ai-proxy-token";
   const DEFAULT_STUDY_MODE = "en-to-zh";
   const DEFAULT_LEARNING_ORDER = "smart";
@@ -133,6 +134,9 @@
         lastExportTime: null,
       },
       aiStats: deepClone(EMPTY_AI_STATS),
+      confusablePairs: {},
+      confusableSuggestionCache: {},
+      recentEncounteredWordIds: [],
       books: {
         cet4: createEmptyBookData(),
         cet6: createEmptyBookData(),
@@ -367,6 +371,24 @@
     return Number.isFinite(Date.parse(value)) ? value : null;
   }
 
+  function normalizeConfusableSuggestionCache(raw) {
+    const result = {};
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return result;
+    Object.entries(raw).forEach(([wordId, record]) => {
+      if (typeof wordId !== "string" || !wordId.trim() || !record || typeof record !== "object" || Array.isArray(record)) return;
+      const generatedAt = normalizeTimestamp(record.generatedAt);
+      if (!generatedAt || !Array.isArray(record.items)) return;
+      const items = record.items.slice(0, 4).map((item) => ({
+        wordId: typeof item?.wordId === "string" ? item.wordId.trim() : "",
+        types: confusableWords.normalizeTypes(item?.types),
+        reason: String(item?.reason || "").trim().slice(0, 120),
+        difference: String(item?.difference || "").trim().slice(0, 160),
+      })).filter((item) => item.wordId);
+      result[wordId.trim()] = { items, generatedAt };
+    });
+    return result;
+  }
+
   function normalizeWordProgress(raw, sourceVersion = DATA_VERSION, migrationNow = Date.now()) {
     const value = raw && typeof raw === "object" ? raw : {};
     const learned = Boolean(value.learned);
@@ -594,6 +616,15 @@
         lastExportTime: normalizeIsoTime(raw.preferences?.lastExportTime),
       },
       aiStats: normalizeAiStats(raw.aiStats),
+      confusablePairs: sourceVersion >= 15
+        ? confusableWords.normalizePairs(raw.confusablePairs)
+        : {},
+      confusableSuggestionCache: sourceVersion >= 15
+        ? normalizeConfusableSuggestionCache(raw.confusableSuggestionCache)
+        : {},
+      recentEncounteredWordIds: sourceVersion >= 15
+        ? confusableWords.normalizeRecent(raw.recentEncounteredWordIds)
+        : [],
       books: {
         cet4: normalizeBookData(raw.books?.cet4, sourceVersion, migrationNow),
         cet6: normalizeBookData(raw.books?.cet6, sourceVersion, migrationNow),
@@ -1826,6 +1857,79 @@
     };
   }
 
+  function getConfusablePairs() {
+    return deepClone(getMutableData().confusablePairs);
+  }
+
+  function getConfusablePairsForWord(wordId) {
+    return deepClone(confusableWords.getPairsForWord(getMutableData().confusablePairs, wordId));
+  }
+
+  function addConfusablePair(wordIdA, wordIdB, options = {}) {
+    const result = confusableWords.upsertPair(
+      getMutableData().confusablePairs,
+      wordIdA,
+      wordIdB,
+      options,
+    );
+    getMutableData().confusablePairs = result.pairs;
+    if (result.changed) persist();
+    return { ...result, pairs: deepClone(result.pairs), pair: result.pair ? deepClone(result.pair) : null };
+  }
+
+  function removeConfusablePair(wordIdA, wordIdB) {
+    const result = confusableWords.removePair(getMutableData().confusablePairs, wordIdA, wordIdB);
+    getMutableData().confusablePairs = result.pairs;
+    if (result.changed) persist();
+    return { ...result, pairs: deepClone(result.pairs) };
+  }
+
+  function recordConfusablePractice(pairKey, correctCount, now = Date.now()) {
+    const pairs = getMutableData().confusablePairs;
+    const pair = pairs[pairKey];
+    if (!pair) return null;
+    const updated = confusableWords.recordPractice(pair, correctCount, now);
+    if (!updated) return null;
+    pairs[pairKey] = updated;
+    persist();
+    return deepClone(updated);
+  }
+
+  function recordRecentEncounteredWord(wordId, now = Date.now()) {
+    const before = getMutableData().recentEncounteredWordIds;
+    const next = confusableWords.recordRecent(before, wordId, now);
+    getMutableData().recentEncounteredWordIds = next;
+    persist();
+    return deepClone(next);
+  }
+
+  function getRecentEncounteredWords(limit = confusableWords.RECENT_LIMIT) {
+    return deepClone(confusableWords.normalizeRecent(getMutableData().recentEncounteredWordIds, limit));
+  }
+
+  function getConfusableSuggestionCache(wordId) {
+    const record = getMutableData().confusableSuggestionCache[wordId];
+    return record ? deepClone(record) : null;
+  }
+
+  function saveConfusableSuggestionCache(wordId, items, now = Date.now()) {
+    if (typeof wordId !== "string" || !wordId.trim()) return null;
+    const normalized = normalizeConfusableSuggestionCache({
+      [wordId]: { items, generatedAt: now },
+    })[wordId];
+    if (!normalized) return null;
+    getMutableData().confusableSuggestionCache[wordId] = normalized;
+    persist();
+    return deepClone(normalized);
+  }
+
+  function clearConfusableSuggestionCache(wordId) {
+    if (!getMutableData().confusableSuggestionCache[wordId]) return false;
+    delete getMutableData().confusableSuggestionCache[wordId];
+    persist();
+    return true;
+  }
+
   function getBookSummary(bookId, validWordIds) {
     const book = ensureBook(bookId);
     const wordIds = Array.isArray(validWordIds) ? validWordIds : Object.keys(book.words);
@@ -1859,6 +1963,21 @@
   function clearBook(bookId) {
     ensureBook(bookId);
     getMutableData().books[bookId] = createEmptyBookData();
+    const prefix = `${bookId}-`;
+    Object.keys(getMutableData().confusablePairs).forEach((pairKey) => {
+      const pair = getMutableData().confusablePairs[pairKey];
+      if (pair.wordIdA.startsWith(prefix) || pair.wordIdB.startsWith(prefix)) delete getMutableData().confusablePairs[pairKey];
+    });
+    Object.keys(getMutableData().confusableSuggestionCache).forEach((wordId) => {
+      if (wordId.startsWith(prefix)) delete getMutableData().confusableSuggestionCache[wordId];
+    });
+    getMutableData().recentEncounteredWordIds = getMutableData().recentEncounteredWordIds
+      .filter((entry) => !entry.wordId.startsWith(prefix));
+    Object.keys(getMutableData().confusableSuggestionCache).forEach((wordId) => {
+      if (wordId.startsWith(prefix)) delete getMutableData().confusableSuggestionCache[wordId];
+    });
+    getMutableData().recentEncounteredWordIds = getMutableData().recentEncounteredWordIds
+      .filter((entry) => !entry.wordId.startsWith(prefix));
     persist();
   }
 
@@ -1958,6 +2077,16 @@
     getFavoriteWords,
     getDueWords,
     getDailyReviewSummary,
+    getConfusablePairs,
+    getConfusablePairsForWord,
+    addConfusablePair,
+    removeConfusablePair,
+    recordConfusablePractice,
+    recordRecentEncounteredWord,
+    getRecentEncounteredWords,
+    getConfusableSuggestionCache,
+    saveConfusableSuggestionCache,
+    clearConfusableSuggestionCache,
     getBookSummary,
     isWordMastered,
     clearBook,

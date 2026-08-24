@@ -1071,6 +1071,413 @@ a:focus-visible {
   }
 }
 
+/* ==============================
+   Phase 16.4 · 个人易混词
+   ============================== */
+
+body.has-modal-open {
+  overflow: hidden;
+}
+
+.study-confusable-button {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+}
+
+.confusion-detected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--gold) 9%, var(--surface));
+}
+
+.confusion-detected p {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.confusion-detected .text-button {
+  min-height: 44px;
+  flex: 0 0 auto;
+}
+
+.confusable-list-shell {
+  width: min(calc(100% - 48px), 920px);
+  padding-bottom: 48px;
+}
+
+.confusable-list-search {
+  margin-bottom: 18px;
+}
+
+.confusable-pair-list {
+  display: grid;
+  gap: 12px;
+}
+
+.confusable-pair-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 15px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 0 7px 23px rgba(30, 64, 55, 0.04);
+}
+
+.confusable-pair-card__words {
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
+  gap: 9px;
+}
+
+.confusable-pair-word {
+  min-width: 0;
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: var(--surface-soft);
+}
+
+.confusable-pair-word strong,
+.confusable-pair-word span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.confusable-pair-word strong {
+  font-family: Georgia, serif;
+  font-size: 20px;
+}
+
+.confusable-pair-word span,
+.confusable-pair-card__meta {
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.confusable-pair-join {
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  align-self: center;
+  place-items: center;
+  color: var(--purple);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.confusable-pair-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confusable-pair-card__actions button {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.confusable-type-tags {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.confusable-type-tags em {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--purple) 12%, var(--surface));
+  color: var(--purple);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.word-detail-confusables {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.word-detail-confusables__heading,
+.confusable-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.word-detail-confusables h3,
+.confusable-dialog h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.word-detail-confusable-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.word-detail-confusable-row,
+.confusable-existing-row,
+.confusable-candidate-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-soft);
+}
+
+.word-detail-confusable-row > div,
+.confusable-existing-row > div,
+.confusable-candidate-row > div {
+  min-width: 0;
+}
+
+.word-detail-confusable-row strong,
+.confusable-existing-row strong,
+.confusable-candidate-row strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.word-detail-confusable-row span,
+.confusable-existing-row span,
+.confusable-candidate-row span {
+  display: block;
+  color: var(--text-soft);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.word-detail-confusable-row button,
+.confusable-existing-row button,
+.confusable-candidate-row button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 11px;
+}
+
+.word-detail-confusable-row > div:last-child,
+.confusable-existing-row > div:last-child {
+  display: flex;
+  gap: 5px;
+}
+
+.word-detail-confusables > p {
+  margin: 10px 0 0;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.confusable-dialog {
+  width: min(calc(100% - 32px), 620px);
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 25px;
+  background: var(--surface);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.3);
+  color: var(--text);
+}
+
+.confusable-dialog::backdrop {
+  background: rgba(10, 24, 20, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.confusable-dialog__card {
+  position: relative;
+  padding: 28px;
+}
+
+.confusable-dialog h2 {
+  margin: 4px 54px 4px 0;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 28px;
+}
+
+.confusable-dialog section {
+  margin-top: 22px;
+}
+
+.confusable-dialog__meaning,
+.confusable-status,
+.confusable-practice-result > p {
+  margin: 6px 0 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.confusable-existing-list,
+.confusable-candidate-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.confusable-dialog__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.confusable-dialog__actions button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.confusable-field {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.confusable-field input,
+.confusable-field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  outline: none;
+  background: var(--surface-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.confusable-field input:focus,
+.confusable-field textarea:focus {
+  border-color: var(--primary);
+}
+
+.confusable-ai-find > .secondary-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 10px;
+}
+
+.confusable-practice-progress {
+  margin: 18px 0 4px;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.confusable-practice-dialog h3 {
+  margin-top: 8px;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 23px;
+}
+
+.confusable-practice-options {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.confusable-practice-options button {
+  width: 100%;
+  min-height: 54px;
+  padding: 11px 14px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-align: left;
+}
+
+.confusable-practice-options button:hover {
+  border-color: var(--primary);
+}
+
+.confusable-practice-result > strong {
+  display: block;
+  margin-top: 20px;
+  color: var(--primary-dark);
+  font-family: Georgia, serif;
+  font-size: 38px;
+}
+
+.confusable-practice-result #confusable-practice-summary {
+  display: grid;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+@media (max-width: 620px) {
+  .confusable-list-shell {
+    width: min(calc(100% - 24px), 520px);
+  }
+
+  .confusable-pair-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .confusable-pair-card__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .confusable-dialog__card {
+    padding: 24px 16px 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .confusable-list-shell {
+    width: calc(100% - 18px);
+  }
+
+  .confusable-pair-card__words {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .confusable-pair-word {
+    padding: 9px;
+  }
+
+  .confusable-dialog__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .confusion-detected {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
 /* Phase 16.3 · 每日复习负担与手动掌握 */
 .review-workload-summary {
   display: grid;

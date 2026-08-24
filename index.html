@@ -18,10 +18,12 @@
     <script src="js/new-word-learning.js" defer></script>
     <script src="js/active-recall-result.js" defer></script>
     <script src="js/daily-group-service.js" defer></script>
+    <script src="js/confusable-words.js" defer></script>
     <script src="js/storage.js" defer></script>
     <script src="js/word-utils.js" defer></script>
     <script src="js/study-modes.js" defer></script>
     <script src="js/ai-judge.js" defer></script>
+    <script src="js/confusable-ai.js" defer></script>
     <script src="js/daily-review-service.js" defer></script>
     <script src="js/speech.js" defer></script>
     <script src="js/word-library.js" defer></script>
@@ -249,6 +251,16 @@
               <span class="quick-card__arrow" aria-hidden="true">›</span>
             </button>
 
+            <button class="quick-card" type="button" data-page="confusables">
+              <span class="quick-card__icon quick-card__icon--purple" aria-hidden="true">⇄</span>
+              <span class="quick-card__text">
+                <strong>我的易混词</strong>
+                <small>集中辨析容易混淆的单词</small>
+              </span>
+              <span class="quick-card__count" id="confusable-pair-count">0</span>
+              <span class="quick-card__arrow" aria-hidden="true">›</span>
+            </button>
+
             <button class="quick-card" type="button" data-page="words">
               <span class="quick-card__icon quick-card__icon--blue" aria-hidden="true">Aa</span>
               <span class="quick-card__text">
@@ -453,6 +465,17 @@
                 <p class="example-translation" id="detail-translation">他放弃了原来的计划。</p>
               </div>
             </article>
+
+            <aside class="confusion-detected" id="study-confusion-detected" role="status" hidden>
+              <span aria-hidden="true">⇄</span>
+              <p>你刚才的释义更像 <strong id="study-confusion-word"></strong>。</p>
+              <button class="text-button" id="study-confusion-add" type="button">加入易混词</button>
+              <button class="text-button" id="study-confusion-practice" type="button">做3题辨析</button>
+            </aside>
+
+            <button class="secondary-button study-confusable-button" id="study-confusable-button" type="button" hidden>
+              ⇄ 看易混词
+            </button>
 
             <button class="primary-button next-word-button" id="next-word-button" type="button" hidden>
               <span>下一词</span>
@@ -744,6 +767,37 @@
             <span id="word-list-page-label">第 1 / 1 页</span>
             <button class="secondary-button" id="word-list-next" type="button">下一页</button>
           </nav>
+        </main>
+      </div>
+    </section>
+
+    <section class="view confusable-list-view" id="confusable-list-view" aria-label="我的易混词" hidden>
+      <div class="subpage-shell confusable-list-shell">
+        <header class="subpage-topbar">
+          <button class="back-button" id="confusable-list-back" type="button">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+          <span class="study-book-badge">PERSONAL</span>
+        </header>
+        <main>
+          <section class="collection-hero confusable-list-hero">
+            <div>
+              <p class="section-kicker">CONFUSABLE WORDS</p>
+              <h1>我的易混词</h1>
+              <p id="confusable-list-count">共 0 组</p>
+            </div>
+          </section>
+          <label class="search-field confusable-list-search" for="confusable-list-query">
+            <span aria-hidden="true">⌕</span>
+            <input id="confusable-list-query" type="search" autocomplete="off" placeholder="搜索英文或中文释义" />
+          </label>
+          <div class="confusable-pair-list" id="confusable-pair-list"></div>
+          <section class="empty-state" id="confusable-list-empty" hidden>
+            <span class="empty-state__icon" aria-hidden="true">⇄</span>
+            <h2>还没有易混词</h2>
+            <p>可在答题结果或单词详情中添加。</p>
+          </section>
         </main>
       </div>
     </section>
@@ -1079,6 +1133,15 @@
           <p id="word-detail-frequency-note"></p>
         </section>
 
+        <section class="word-detail-confusables" aria-labelledby="word-detail-confusables-title">
+          <div class="word-detail-confusables__heading">
+            <h3 id="word-detail-confusables-title">⇄ 易混词</h3>
+            <button class="text-button" id="word-detail-add-confusable" type="button">添加</button>
+          </div>
+          <div class="word-detail-confusable-list" id="word-detail-confusable-list"></div>
+          <p id="word-detail-confusable-empty">暂未添加易混词。</p>
+        </section>
+
         <div class="word-detail-actions">
           <button class="secondary-button" id="word-detail-favorite" type="button" aria-pressed="false">☆ 收藏</button>
           <button class="secondary-button" id="word-detail-wrong-book" type="button" aria-pressed="false">加入错词本</button>
@@ -1086,6 +1149,81 @@
             ✓ 我已掌握
           </button>
         </div>
+      </article>
+    </dialog>
+
+    <dialog class="confusable-dialog" id="confusable-dialog" aria-labelledby="confusable-dialog-title">
+      <article class="confusable-dialog__card">
+        <button class="dialog-close-button" id="confusable-dialog-close" type="button" aria-label="关闭">&times;</button>
+        <p class="section-kicker">PERSONAL CONFUSABLES</p>
+        <h2 id="confusable-dialog-title">易混词</h2>
+        <p class="confusable-dialog__meaning" id="confusable-current-meaning"></p>
+        <section aria-labelledby="confusable-existing-title">
+          <h3 id="confusable-existing-title">已添加</h3>
+          <div class="confusable-existing-list" id="confusable-existing-list"></div>
+          <p id="confusable-existing-empty">还没有添加易混词。</p>
+        </section>
+        <section aria-labelledby="confusable-suggest-title">
+          <div class="confusable-section-heading">
+            <h3 id="confusable-suggest-title">候选词</h3>
+            <button class="text-button" id="confusable-refresh-suggest" type="button">✨ 推荐易混词</button>
+          </div>
+          <div class="confusable-candidate-list" id="confusable-candidate-list"></div>
+          <p class="confusable-status" id="confusable-suggest-status" role="status">可搜索词库，或按需使用 AI 推荐。</p>
+        </section>
+        <div class="confusable-dialog__actions">
+          <button class="secondary-button" id="confusable-open-finder" type="button">＋ 添加易混词</button>
+          <button class="primary-button" id="confusable-practice-current" type="button" disabled>开始 3 题辨析</button>
+        </div>
+      </article>
+    </dialog>
+
+    <dialog class="confusable-dialog" id="confusable-finder-dialog" aria-labelledby="confusable-finder-title">
+      <article class="confusable-dialog__card">
+        <button class="dialog-close-button" id="confusable-finder-close" type="button" aria-label="关闭">&times;</button>
+        <p class="section-kicker">FIND A WORD</p>
+        <h2 id="confusable-finder-title">添加易混词</h2>
+        <label class="confusable-field" for="confusable-search-input">
+          <span>搜索正式词库</span>
+          <input id="confusable-search-input" type="search" autocomplete="off" placeholder="英文、中文释义或大概拼写" />
+        </label>
+        <div class="confusable-candidate-list" id="confusable-search-results"></div>
+        <section class="confusable-recent" aria-labelledby="confusable-recent-title">
+          <h3 id="confusable-recent-title">最近遇到</h3>
+          <div class="confusable-candidate-list" id="confusable-recent-list"></div>
+        </section>
+        <section class="confusable-ai-find" aria-labelledby="confusable-ai-find-title">
+          <h3 id="confusable-ai-find-title">记得意思但忘了词？</h3>
+          <label class="confusable-field" for="confusable-description">
+            <span>描述你记得的线索（不会保存）</span>
+            <textarea id="confusable-description" rows="3" maxlength="500" placeholder="例如：表示‘影响’，好像以 e 开头"></textarea>
+          </label>
+          <button class="secondary-button" id="confusable-ai-find" type="button">✨ 我记不清怎么拼，帮我找</button>
+          <p class="confusable-status" id="confusable-find-status" role="status"></p>
+        </section>
+      </article>
+    </dialog>
+
+    <dialog class="confusable-dialog confusable-practice-dialog" id="confusable-practice-dialog" aria-labelledby="confusable-practice-title">
+      <article class="confusable-dialog__card">
+        <button class="dialog-close-button" id="confusable-practice-close" type="button" aria-label="关闭">&times;</button>
+        <p class="section-kicker">3-QUESTION PRACTICE</p>
+        <h2 id="confusable-practice-title">易混词辨析</h2>
+        <div id="confusable-practice-question">
+          <p class="confusable-practice-progress" id="confusable-practice-progress">第 1 / 3 题</p>
+          <h3 id="confusable-practice-prompt"></h3>
+          <div class="confusable-practice-options" id="confusable-practice-options"></div>
+          <p class="confusable-status" id="confusable-practice-feedback" role="status"></p>
+        </div>
+        <section class="confusable-practice-result" id="confusable-practice-result" hidden>
+          <strong id="confusable-practice-score">3 / 3</strong>
+          <div id="confusable-practice-summary"></div>
+          <p>记忆提示：先抓住两个词的核心义，再留意拼写或用法差异。</p>
+          <div class="confusable-dialog__actions">
+            <button class="secondary-button" id="confusable-practice-again" type="button">再练一次</button>
+            <button class="primary-button" id="confusable-practice-return" type="button">返回</button>
+          </div>
+        </section>
       </article>
     </dialog>
 

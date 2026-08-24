@@ -44,7 +44,7 @@ function loadApp({ initialStorage = {}, includeStorage = true } = {}) {
   const localStorage = createLocalStorage(initialStorage);
   const window = { CETWords: {}, localStorage, fetch: () => Promise.reject(new Error("not mocked")) };
   const context = vm.createContext({ window, console, URL, Map, Set, Date, Math, Intl });
-  const files = ["js/review-scheduler.js", "js/review-workload.js", "js/smart-learning-order.js", "js/review-recovery.js", "js/new-word-learning.js", "js/daily-group-service.js"];
+  const files = ["js/review-scheduler.js", "js/review-workload.js", "js/smart-learning-order.js", "js/review-recovery.js", "js/new-word-learning.js", "js/daily-group-service.js", "js/confusable-words.js"];
   if (includeStorage) files.push("js/storage.js");
   files.forEach((file) => vm.runInContext(fs.readFileSync(path.join(ROOT, file), "utf8"), context, { filename: file }));
   return { app: window.CETWords, localStorage };
@@ -389,7 +389,7 @@ test("v8 migration defaults learning order to smart and assumes pending gate pas
   };
   const { app } = loadApp({ initialStorage: { "cetwords-user-data-v1": JSON.stringify(old) } });
   const data = app.storage.loadUserData();
-  assert.equal(data.version, 14);
+  assert.equal(data.version, 15);
   assert.equal(data.preferences.learningOrder, "smart");
   assert.equal(data.books.cet4.newWordLearning.legacy.choiceGatePassed, true);
   assert.equal(data.books.cet4.newWordLearning.legacy.phase, learning.LEARNING_PHASES.AI_REINFORCEMENT);
