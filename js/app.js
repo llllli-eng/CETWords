@@ -61,6 +61,7 @@ const appState = {
     practiceRecorded: false,
     generating: false,
     recordedConfusionEvents: new Set(),
+    candidatePairStates: new Map(),
   },
   books: {
     cet4: {
@@ -2292,26 +2293,64 @@ function createCandidateRow(item, options = {}) {
   details.append(createConfusableTypeTags(item.types));
   const add = createElement("button", "text-button", "添加");
   add.type = "button";
+  const currentAtRender = findConfusableWord(appState.confusables.currentWordId);
+  const pairKeyAtRender = confusableWords.getPairKey(
+    getConfusableWordId(currentAtRender),
+    getConfusableWordId(word),
+  );
+  const existingAtRender = pairKeyAtRender && storage.getConfusablePairs()[pairKeyAtRender];
+  const candidateState = pairKeyAtRender
+    ? appState.confusables.candidatePairStates.get(pairKeyAtRender)
+    : "";
+  if (candidateState === "added") {
+    add.disabled = true;
+    add.textContent = "✓ 已添加";
+  } else if (existingAtRender) {
+    add.disabled = true;
+    add.textContent = "✓ 已在易混词中";
+  }
   add.addEventListener("click", () => {
     const current = findConfusableWord(appState.confusables.currentWordId);
-    const result = createConfusablePair(current, word, {
-      source: options.source || "manual",
-      types: item.types?.length ? item.types : ["meaning"],
-      reason: item.reason,
-      difference: item.difference,
-    });
-    if (result.changed) {
-      add.disabled = true;
-      add.textContent = "已添加";
-      renderConfusableDialog();
-      renderConfusableFinder();
-    } else if (result.error) showToast(result.error);
+    if (!current || add.disabled) return;
+    add.disabled = true;
+    add.textContent = "添加中…";
+    try {
+      const result = createConfusablePair(current, word, {
+        source: options.source || "manual",
+        types: item.types?.length ? item.types : ["meaning"],
+        reason: item.reason,
+        difference: item.difference,
+      }, { candidateFeedback: true });
+      if (!result.pair) {
+        add.disabled = false;
+        add.textContent = "添加";
+        showToast(result.error || "添加失败，请稍后重试");
+      }
+    } catch (error) {
+      add.disabled = false;
+      add.textContent = "添加";
+      showToast(error?.message || "添加失败，请稍后重试");
+    }
   });
   row.append(details, add);
   return row;
 }
 
-function createConfusablePair(currentWord, otherWord, options = {}) {
+function refreshConfusableSurfaces(pair, options = {}) {
+  updateDashboard();
+  renderConfusableDialog();
+  renderConfusableFinder();
+  renderConfusableList();
+  if (getDetailWord()) renderWordDetail();
+  if (pair) {
+    studyController.syncConfusablePairState?.(pair, {
+      removed: Boolean(options.removed),
+      confirmationState: options.confirmationState || "",
+    });
+  }
+}
+
+function createConfusablePair(currentWord, otherWord, options = {}, uiOptions = {}) {
   if (!currentWord || !otherWord) return { changed: false, error: "没有找到正式词库中的单词" };
   const result = storage.addConfusablePair(
     getConfusableWordId(currentWord),
@@ -2321,11 +2360,19 @@ function createConfusablePair(currentWord, otherWord, options = {}) {
   if (result.pair && options.initialConfusion && options.confusionEventId) {
     appState.confusables.recordedConfusionEvents.add(`${options.confusionEventId}:${result.pair.pairKey}`);
   }
+  if (result.pair && uiOptions.candidateFeedback) {
+    appState.confusables.candidatePairStates.set(
+      result.pair.pairKey,
+      result.changed ? "added" : "existing",
+    );
+  }
+  if (result.pair) {
+    refreshConfusableSurfaces(result.pair, {
+      confirmationState: result.changed ? "added" : "existing",
+    });
+  }
   if (result.changed) {
-    updateDashboard();
-    if (appState.currentView === "confusables") renderConfusableList();
-    if (getDetailWord()) renderWordDetail();
-    showToast(`已将 ${currentWord.word} 与 ${otherWord.word} 加入易混词`);
+    showToast(`✓ ${otherWord.word} 已加入我的易混词`, { duration: 1800 });
   }
   return result;
 }
@@ -2335,10 +2382,8 @@ function removeConfusablePair(pair) {
   const right = findConfusableWord(pair.wordIdB);
   const result = storage.removeConfusablePair(pair.wordIdA, pair.wordIdB);
   if (result.changed) {
-    renderConfusableDialog();
-    renderConfusableList();
-    if (getDetailWord()) renderWordDetail();
-    updateDashboard();
+    appState.confusables.candidatePairStates.delete(pair.pairKey);
+    refreshConfusableSurfaces(pair, { removed: true });
     showToast(`已删除 ${left?.word || "该词"} ⇄ ${right?.word || "该词"}，学习记录未改变`);
   }
 }
@@ -2347,7 +2392,6 @@ function renderConfusableDialog() {
   const current = findConfusableWord(appState.confusables.currentWordId);
   if (!current) return;
   const currentId = getConfusableWordId(current);
-  const allPairs = storage.getConfusablePairs();
   const pairs = storage.getConfusablePairsForWord(currentId);
   elements.confusableDialogTitle.textContent = `${current.word} 的易混词`;
   elements.confusableCurrentMeaning.textContent = `核心义：${getConfusableMeaning(current)}`;
@@ -2379,19 +2423,17 @@ function renderConfusableDialog() {
   const cachedItems = (cached?.items || []).map((item) => ({
     ...item,
     word: findConfusableWord(item.wordId),
-  })).filter((item) => item.word && !allPairs[confusableWords.getPairKey(currentId, item.wordId)]);
+  })).filter((item) => item.word);
   const localItems = confusableWords.searchWords(getConfusableVocabulary(), current.word, {
     excludeWordId: currentId,
     excludeWord: current.word,
     anchorWord: current.word,
     preferredBook: current.book,
     limit: 4,
-  }).filter((item) => !allPairs[confusableWords.getPairKey(currentId, item.wordId)])
-    .map((item) => ({ word: item.word, types: ["spelling"], reason: "本地词库中的相似拼写" }));
+  }).map((item) => ({ word: item.word, types: ["spelling"], reason: "本地词库中的相似拼写" }));
   const candidates = (appState.confusables.aiCandidates.length
     ? appState.confusables.aiCandidates
-    : cachedItems.length ? cachedItems : localItems)
-    .filter((item) => !allPairs[confusableWords.getPairKey(currentId, getConfusableWordId(item.word))]);
+    : cachedItems.length ? cachedItems : localItems);
   elements.confusableCandidateList.replaceChildren(...candidates.map((item) => createCandidateRow(item, {
     source: item.reason === "本地词库中的相似拼写" ? "manual" : "ai_suggested",
   })));
@@ -2409,6 +2451,7 @@ function openConfusableDialog(word, options = {}) {
   if (!word || !getConfusableWordId(word)) return;
   appState.confusables.currentWordId = getConfusableWordId(word);
   appState.confusables.aiCandidates = [];
+  appState.confusables.candidatePairStates.clear();
   appState.confusables.returnScrollY = options.source === "study-result" ? window.scrollY : null;
   if (options.source === "word-detail" || elements.wordDetailDialog.open) {
     appState.confusables.returnDialog = "word-detail";
@@ -2484,12 +2527,10 @@ function renderConfusableFinder() {
     reason: item.matchType === "meaning" ? "中文释义匹配" : `英文${item.matchType}匹配`,
   })));
 
-  const existing = storage.getConfusablePairs();
   const recent = storage.getRecentEncounteredWords(10)
     .map((entry) => findConfusableWord(entry.wordId))
     .filter((word) => word
-      && getConfusableWordId(word) !== getConfusableWordId(current)
-      && !existing[confusableWords.getPairKey(getConfusableWordId(current), getConfusableWordId(word))])
+      && getConfusableWordId(word) !== getConfusableWordId(current))
     .slice(0, 8);
   elements.confusableRecentList.replaceChildren(...recent.map((word) => createCandidateRow({
     word,

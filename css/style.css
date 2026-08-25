@@ -1388,6 +1388,7 @@ body.has-modal-open {
   min-width: 44px;
   min-height: 44px;
   padding: 0 11px;
+  white-space: nowrap;
 }
 
 .word-detail-confusable-row > div:last-child,

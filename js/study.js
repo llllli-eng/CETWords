@@ -10,6 +10,7 @@
     reviewRecovery,
     activeRecallResult,
     aiJudge,
+    confusableWords,
   } = app;
   const OPTION_LABELS = ["A", "B", "C", "D"];
 
@@ -1362,6 +1363,24 @@
       const question = this.getCurrentQuestion();
       if (!question?.confusionCandidate?.pair) return;
       this.onOpenConfusable?.(question.word, { source: "study-result" });
+    }
+
+    syncConfusablePairState(pair, options = {}) {
+      const question = this.getCurrentQuestion();
+      const candidate = question?.confusionCandidate;
+      if (!question || !candidate || !pair?.pairKey) return false;
+      const candidatePairKey = candidate.pairKey || confusableWords.getPairKey(
+        confusableWords.getWordId(question.word),
+        confusableWords.getWordId(candidate.word),
+      );
+      if (candidatePairKey !== pair.pairKey) return false;
+      question.confusionCandidate = {
+        ...candidate,
+        pair: options.removed ? null : pair,
+        confirmationState: options.removed ? "" : options.confirmationState,
+      };
+      this.renderConfusableActions(question);
+      return true;
     }
 
     updateNextButtonLabel() {
