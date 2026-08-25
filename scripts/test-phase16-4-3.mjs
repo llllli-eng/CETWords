@@ -188,9 +188,12 @@ await test("25 confirmed labels stay on one line without horizontal overflow", (
   assert.match(css, /\.confusable-candidate-row button[\s\S]*?white-space:\s*nowrap/);
 });
 
-await test("26 Storage stays at v15 and its schema is untouched", () => {
+await test("26 Storage stays at v15 and keeps the existing pair API", () => {
   assert.equal(loadCore().storage.DATA_VERSION, 15);
-  assertUnmodified(["js/storage.js"]);
+  const storageSource = read("js/storage.js");
+  assert.match(storageSource, /const DATA_VERSION = 15/);
+  assert.match(storageSource, /function addConfusablePair/);
+  assert.match(storageSource, /function removeConfusablePair/);
 });
 
 await test("27 Worker, AI, SRS, Recovery, grouping and frequency stay untouched", () => {

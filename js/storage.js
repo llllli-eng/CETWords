@@ -53,6 +53,7 @@
     completedNewWords: 0,
     newWordIds: [],
     completedNewWordIds: [],
+    verifiedManualMasteredNewWordIds: [],
     reviewedWordIds: [],
     scheduledNewWordIds: [],
     normalSessionAnswerSequence: 0,
@@ -358,6 +359,7 @@
         toNonNegativeInteger(raw.completedGroupCount),
         validation.value.groupSizes.length,
       ),
+      assignedNewWordIds: normalizeStringIds(raw.assignedNewWordIds).slice(0, target),
       breakStartedAt: normalizeTimestamp(raw.breakStartedAt),
       usage: {
         promptTokens: toNonNegativeInteger(raw.usage?.promptTokens),
@@ -469,14 +471,22 @@
     const completedNewWordIds = sourceVersion < 5
       ? [...newWordIds]
       : normalizeStringIds(value.completedNewWordIds);
+    const verifiedManualMasteredNewWordIds = normalizeStringIds(
+      value.verifiedManualMasteredNewWordIds,
+    );
+    const handledNewWordIds = normalizeStringIds([
+      ...completedNewWordIds,
+      ...verifiedManualMasteredNewWordIds,
+    ]);
     const completedNewWords = sourceVersion < 5
-      ? Math.max(toNonNegativeInteger(value.newWords), completedNewWordIds.length)
-      : completedNewWordIds.length;
+      ? Math.max(toNonNegativeInteger(value.newWords), handledNewWordIds.length)
+      : handledNewWordIds.length;
     const reviewedWordIds = normalizeStringIds(value.reviewedWordIds);
+    const verifiedSet = new Set(verifiedManualMasteredNewWordIds);
     const scheduledNewWordIds = normalizeStringIds([
       ...normalizeStringIds(value.scheduledNewWordIds),
-      ...newWordIds,
-    ]);
+      ...newWordIds.filter((wordId) => !verifiedSet.has(wordId)),
+    ]).filter((wordId) => !verifiedSet.has(wordId));
     const manualMasteredWordIds = sourceVersion >= 14
       ? normalizeStringIds(value.manualMasteredWordIds)
       : [];
@@ -495,6 +505,7 @@
       completedNewWords,
       newWordIds,
       completedNewWordIds,
+      verifiedManualMasteredNewWordIds,
       reviewedWordIds,
       scheduledNewWordIds,
       normalSessionAnswerSequence: toNonNegativeInteger(value.normalSessionAnswerSequence),
@@ -818,17 +829,49 @@
     return true;
   }
 
+  function buildDailyGroupProgress(plan, daily) {
+    if (!plan || !daily) return null;
+    const assigned = plan.assignedNewWordIds?.length
+      ? plan.assignedNewWordIds
+      : daily.scheduledNewWordIds;
+    const normalCompleted = new Set(daily.completedNewWordIds);
+    const verified = new Set(daily.verifiedManualMasteredNewWordIds);
+    const handled = normalizeStringIds([...normalCompleted, ...verified]);
+    const progress = dailyGroupService.getGroupProgress(
+      plan,
+      assigned,
+      handled,
+      daily.newWordIds,
+    );
+    if (!progress) return null;
+    const groups = progress.groups.map((group) => ({
+      ...group,
+      normalCompletedCount: group.ids.filter((wordId) => normalCompleted.has(wordId)).length,
+      verifiedManualMasteredCount: group.ids.filter((wordId) => verified.has(wordId)).length,
+    }));
+    return {
+      ...progress,
+      groups,
+      activeGroup: groups[progress.activeGroupIndex] || null,
+      normalCompletedNewWords: groups.reduce((total, group) => total + group.normalCompletedCount, 0),
+      verifiedManualMasteredNewWords: groups.reduce(
+        (total, group) => total + group.verifiedManualMasteredCount,
+        0,
+      ),
+    };
+  }
+
+  function getDailyGroupProgress(bookId, dateKey = getLocalDateKey()) {
+    const book = ensureBook(bookId);
+    return buildDailyGroupProgress(book.dailyGroupPlans[dateKey], ensureDailyStats(bookId, dateKey));
+  }
+
   function updateDailyGroupProgress(bookId, dateKey = getLocalDateKey()) {
     const book = ensureBook(bookId);
     const plan = book.dailyGroupPlans[dateKey];
     if (!plan) return null;
     const daily = ensureDailyStats(bookId, dateKey);
-    const progress = dailyGroupService.getGroupProgress(
-      plan,
-      daily.scheduledNewWordIds,
-      daily.completedNewWordIds,
-      daily.newWordIds,
-    );
+    const progress = buildDailyGroupProgress(plan, daily);
     if (!progress) return null;
     plan.completedGroupCount = progress.completedGroupCount;
     if (progress.completedGroupCount >= plan.groupSizes.length) {
@@ -848,9 +891,13 @@
   }
 
   function markDailyGroupStarted(bookId, dateKey = getLocalDateKey(), now = Date.now()) {
-    const plan = ensureBook(bookId).dailyGroupPlans[dateKey];
+    const book = ensureBook(bookId);
+    const plan = book.dailyGroupPlans[dateKey];
     if (!plan) return null;
     if (!plan.startedAt) plan.startedAt = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    if (!plan.assignedNewWordIds?.length) {
+      plan.assignedNewWordIds = ensureDailyStats(bookId, dateKey).scheduledNewWordIds.slice(0, plan.dailyTarget);
+    }
     persist();
     return deepClone(plan);
   }
@@ -859,12 +906,7 @@
     const book = ensureBook(bookId);
     const plan = book.dailyGroupPlans[dateKey];
     if (!plan) return null;
-    const progress = dailyGroupService.getGroupProgress(
-      plan,
-      ensureDailyStats(bookId, dateKey).scheduledNewWordIds,
-      ensureDailyStats(bookId, dateKey).completedNewWordIds,
-      ensureDailyStats(bookId, dateKey).newWordIds,
-    );
+    const progress = buildDailyGroupProgress(plan, ensureDailyStats(bookId, dateKey));
     if (!progress?.activeGroup?.complete || progress.allComplete) return deepClone(plan);
     plan.activeGroupIndex = Math.min(plan.activeGroupIndex + 1, plan.groupSizes.length - 1);
     plan.completedGroupCount = Math.max(plan.completedGroupCount, plan.activeGroupIndex);
@@ -885,7 +927,7 @@
       return { action: "regenerate", plan: null };
     }
     if (target === plan.dailyTarget) return { action: "unchanged", plan: deepClone(plan) };
-    const progress = dailyGroupService.getGroupProgress(plan, daily.scheduledNewWordIds, daily.completedNewWordIds, daily.newWordIds);
+    const progress = buildDailyGroupProgress(plan, daily);
     const protectedGroupCount = Math.min(plan.groupSizes.length, (progress?.activeGroupIndex || 0) + 1);
     const protectedSizes = plan.groupSizes.slice(0, protectedGroupCount);
     const protectedTarget = protectedSizes.reduce((total, size) => total + size, 0);
@@ -1503,6 +1545,13 @@
       dailyReviewTask: book.dailyReviewTasks[dateKey] ? deepClone(book.dailyReviewTasks[dateKey]) : null,
       dailyManualMasteredWordIds: [...daily.manualMasteredWordIds],
       dailyDeferredTodayWordIds: [...daily.deferredTodayWordIds],
+      dailyNewWordIds: [...daily.newWordIds],
+      dailyCompletedNewWordIds: [...daily.completedNewWordIds],
+      dailyVerifiedManualMasteredNewWordIds: [...daily.verifiedManualMasteredNewWordIds],
+      dailyScheduledNewWordIds: [...daily.scheduledNewWordIds],
+      dailyNewWords: daily.newWords,
+      dailyCompletedNewWords: daily.completedNewWords,
+      dailyGroupPlan: book.dailyGroupPlans[dateKey] ? deepClone(book.dailyGroupPlans[dateKey]) : null,
     };
   }
 
@@ -1546,6 +1595,51 @@
     return { changedCount: undoEntries.length, wordIds: undoEntries.map((entry) => entry.wordId), undoEntries };
   }
 
+  function markNewWordVerifiedMastered(bookId, wordId, options = {}) {
+    const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
+    const dateKey = getLocalDateKey(now);
+    const book = ensureBook(bookId);
+    const progress = ensureWordProgress(bookId, wordId);
+    if (progress.learned || progress.manualMastered) {
+      return { changed: false, progress: normalizeWordProgress(progress), undo: null };
+    }
+    const undo = createManualMasterySnapshot(bookId, wordId, dateKey);
+    Object.assign(progress, {
+      learned: true,
+      masteryLevel: 0,
+      consecutiveCorrect: 0,
+      manualMastered: true,
+      manualMasteredAt: now,
+      lastStudyTime: now,
+      firstLearnDate: dateKey,
+      nextReviewTime: null,
+      nextReviewDate: null,
+      lastLongTermAnchorAt: null,
+      earliestReviewAt: null,
+    });
+    delete book.reviewRecovery[wordId];
+    delete book.newWordLearning[wordId];
+    const daily = ensureDailyStats(bookId, dateKey);
+    addUniqueId(daily.newWordIds, wordId);
+    addUniqueId(daily.manualMasteredWordIds, wordId);
+    addUniqueId(daily.verifiedManualMasteredNewWordIds, wordId);
+    daily.scheduledNewWordIds = daily.scheduledNewWordIds.filter((entry) => entry !== wordId);
+    daily.deferredTodayWordIds = daily.deferredTodayWordIds.filter((entry) => entry !== wordId);
+    daily.newWords = daily.newWordIds.length;
+    daily.completedNewWords = normalizeStringIds([
+      ...daily.completedNewWordIds,
+      ...daily.verifiedManualMasteredNewWordIds,
+    ]).length;
+    persist();
+    return {
+      changed: true,
+      progress: normalizeWordProgress(progress),
+      daily: normalizeDailyStats(daily),
+      undo,
+      completionType: "verified-manual-mastered",
+    };
+  }
+
   function undoManualMastery(snapshot, options = {}) {
     if (!snapshot || !["cet4", "cet6"].includes(snapshot.bookId) || typeof snapshot.wordId !== "string") return false;
     const book = ensureBook(snapshot.bookId);
@@ -1561,6 +1655,23 @@
     const daily = ensureDailyStats(snapshot.bookId, snapshot.dateKey);
     daily.manualMasteredWordIds = normalizeStringIds(snapshot.dailyManualMasteredWordIds);
     daily.deferredTodayWordIds = normalizeStringIds(snapshot.dailyDeferredTodayWordIds);
+    if (Array.isArray(snapshot.dailyNewWordIds)) daily.newWordIds = normalizeStringIds(snapshot.dailyNewWordIds);
+    if (Array.isArray(snapshot.dailyCompletedNewWordIds)) {
+      daily.completedNewWordIds = normalizeStringIds(snapshot.dailyCompletedNewWordIds);
+    }
+    if (Array.isArray(snapshot.dailyVerifiedManualMasteredNewWordIds)) {
+      daily.verifiedManualMasteredNewWordIds = normalizeStringIds(
+        snapshot.dailyVerifiedManualMasteredNewWordIds,
+      );
+    }
+    if (Array.isArray(snapshot.dailyScheduledNewWordIds)) {
+      daily.scheduledNewWordIds = normalizeStringIds(snapshot.dailyScheduledNewWordIds);
+    }
+    if (Number.isFinite(Number(snapshot.dailyNewWords))) daily.newWords = Number(snapshot.dailyNewWords);
+    if (Number.isFinite(Number(snapshot.dailyCompletedNewWords))) {
+      daily.completedNewWords = Number(snapshot.dailyCompletedNewWords);
+    }
+    if (snapshot.dailyGroupPlan) book.dailyGroupPlans[snapshot.dateKey] = normalizeDailyGroupPlan(snapshot.dailyGroupPlan);
     if (options.persist !== false) persist();
     return true;
   }
@@ -1774,12 +1885,17 @@
     const allowed = new Set(validIds);
     const isUnlearned = (wordId) => !normalizeWordProgress(book.words[wordId] || EMPTY_WORD_PROGRESS).learned;
 
-    // Today's assignment is immutable across refresh, scope changes, and order changes.
-    daily.scheduledNewWordIds = normalizeStringIds(daily.scheduledNewWordIds);
+    // Today's assignment is immutable except for verified/manual-mastered words,
+    // which must leave the live new-word queue immediately.
+    daily.scheduledNewWordIds = normalizeStringIds(daily.scheduledNewWordIds)
+      .filter((wordId) => !normalizeWordProgress(book.words[wordId] || EMPTY_WORD_PROGRESS).manualMastered);
     const scheduled = new Set(daily.scheduledNewWordIds);
 
     const target = Math.max(0, Math.floor(Number(requestedCount)) || 0);
-    let needed = Math.max(0, target - daily.scheduledNewWordIds.length);
+    let needed = Math.max(
+      0,
+      target - daily.scheduledNewWordIds.length - daily.verifiedManualMasteredNewWordIds.length,
+    );
     if (needed > 0) {
       let additions = [];
       if (learningOrder === "smart" && options.frequencyByWord instanceof Map) {
@@ -1809,6 +1925,14 @@
         if (addUniqueId(daily.scheduledNewWordIds, wordId)) scheduled.add(wordId);
       });
       needed -= additions.length;
+    }
+
+    const plan = book.dailyGroupPlans[dateKey];
+    if (plan?.assignedNewWordIds?.length) {
+      plan.assignedNewWordIds = normalizeStringIds([
+        ...plan.assignedNewWordIds,
+        ...daily.scheduledNewWordIds,
+      ]).slice(0, plan.dailyTarget);
     }
 
     persist();
@@ -2030,6 +2154,7 @@
     getConfiguredDailyReviewLimit,
     setDailyReviewLimit,
     getDailyGroupPlan,
+    getDailyGroupProgress,
     saveDailyGroupPlan,
     removeDailyGroupPlan,
     updateDailyGroupProgress,
@@ -2068,6 +2193,7 @@
     setWrongBookState,
     markWordManualMastered,
     markWordsManualMastered,
+    markNewWordVerifiedMastered,
     undoManualMastery,
     undoManualMasteryBatch,
     restoreWordReview,

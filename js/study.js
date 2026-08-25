@@ -28,6 +28,7 @@
       onAnswer,
       onToggleFavorite,
       getWordProgress,
+      getExamValue,
       getStudyMode,
       onStudyModeChange,
       onRestart,
@@ -43,6 +44,8 @@
       onReviewTaskStarted,
       onManualMaster,
       onUndoManualMaster,
+      onVerifiedNewWordMastery,
+      onUndoVerifiedNewWordMastery,
       onDeferToday,
       onOpenQuickCleanup,
       onStartReviewBreak,
@@ -58,6 +61,7 @@
       this.onAnswer = onAnswer;
       this.onToggleFavorite = onToggleFavorite;
       this.getWordProgress = getWordProgress;
+      this.getExamValue = getExamValue;
       this.getStudyMode = getStudyMode;
       this.onStudyModeChange = onStudyModeChange;
       this.onRestart = onRestart;
@@ -73,6 +77,8 @@
       this.onReviewTaskStarted = onReviewTaskStarted;
       this.onManualMaster = onManualMaster;
       this.onUndoManualMaster = onUndoManualMaster;
+      this.onVerifiedNewWordMastery = onVerifiedNewWordMastery;
+      this.onUndoVerifiedNewWordMastery = onUndoVerifiedNewWordMastery;
       this.onDeferToday = onDeferToday;
       this.onOpenQuickCleanup = onOpenQuickCleanup;
       this.onStartReviewBreak = onStartReviewBreak;
@@ -87,6 +93,8 @@
       this.activeSession = null;
       this.isActive = false;
       this.isComposingMeaning = false;
+      this.isComposingNewWordMastery = false;
+      this.newWordMasteryState = null;
 
       this.elements = {
         root: document.querySelector("#study-view"),
@@ -105,7 +113,14 @@
         phonetic: document.querySelector("#study-phonetic"),
         favoriteButton: document.querySelector("#study-favorite-button"),
         speakButton: document.querySelector("#study-speak-button"),
+        examValue: document.querySelector("#study-exam-value"),
+        examTier: document.querySelector("#study-exam-tier"),
+        examCoverage: document.querySelector("#study-exam-coverage"),
+        examOccurrences: document.querySelector("#study-exam-occurrences"),
+        examSource: document.querySelector("#study-exam-source"),
+        examIncomplete: document.querySelector("#study-exam-incomplete"),
         options: document.querySelector("#answer-options"),
+        newWordMasteredButton: document.querySelector("#new-word-mastered-button"),
         answerInstruction: document.querySelector("#answer-instruction"),
         keyboardHint: document.querySelector(".keyboard-hint"),
         meaningForm: document.querySelector("#meaning-answer-form"),
@@ -165,6 +180,7 @@
         groupCompleteTotal: document.querySelector("#group-complete-total"),
         groupCompletePercent: document.querySelector("#group-complete-percent"),
         groupCompleteNew: document.querySelector("#group-complete-new"),
+        groupCompleteVerified: document.querySelector("#group-complete-verified"),
         groupCompleteRecall: document.querySelector("#group-complete-recall"),
         groupCompleteCorrected: document.querySelector("#group-complete-corrected"),
         groupBreakSuggestion: document.querySelector("#group-break-suggestion"),
@@ -193,6 +209,21 @@
         reviewBreakMessage: document.querySelector("#review-break-message"),
         reviewBreakContinue: document.querySelector("#review-break-continue"),
         reviewBreakStop: document.querySelector("#review-break-stop"),
+        newWordMasteryDialog: document.querySelector("#new-word-mastery-dialog"),
+        newWordMasteryClose: document.querySelector("#new-word-mastery-close"),
+        newWordMasteryWord: document.querySelector("#new-word-mastery-word"),
+        newWordMasteryPhonetic: document.querySelector("#new-word-mastery-phonetic"),
+        newWordMasteryForm: document.querySelector("#new-word-mastery-form"),
+        newWordMasteryInput: document.querySelector("#new-word-mastery-input"),
+        newWordMasteryStatus: document.querySelector("#new-word-mastery-status"),
+        newWordMasterySubmit: document.querySelector("#new-word-mastery-submit"),
+        newWordMasteryResult: document.querySelector("#new-word-mastery-result"),
+        newWordMasteryResultTitle: document.querySelector("#new-word-mastery-result-title"),
+        newWordMasteryUserAnswer: document.querySelector("#new-word-mastery-user-answer"),
+        newWordMasteryStandard: document.querySelector("#new-word-mastery-standard"),
+        newWordMasteryJudgement: document.querySelector("#new-word-mastery-judgement"),
+        newWordMasteryResultNote: document.querySelector("#new-word-mastery-result-note"),
+        newWordMasteryResultAction: document.querySelector("#new-word-mastery-result-action"),
       };
 
       this.breakTimer = null;
@@ -213,6 +244,26 @@
       this.elements.confusionPractice.addEventListener("click", () => this.practiceDetectedConfusion());
       this.elements.confusionView.addEventListener("click", () => this.viewDetectedConfusion());
       this.elements.nextButton.addEventListener("click", () => this.nextQuestion());
+      this.elements.newWordMasteredButton.addEventListener("click", () => this.openNewWordMasteryDialog());
+      this.elements.newWordMasteryClose.addEventListener("click", () => this.closeNewWordMasteryDialog());
+      this.elements.newWordMasteryForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (this.isComposingNewWordMastery) return;
+        this.submitNewWordMasteryMeaning();
+      });
+      this.elements.newWordMasteryInput.addEventListener("compositionstart", () => {
+        this.isComposingNewWordMastery = true;
+      });
+      this.elements.newWordMasteryInput.addEventListener("compositionend", () => {
+        this.isComposingNewWordMastery = false;
+      });
+      this.elements.newWordMasteryResultAction.addEventListener("click", () => this.finishNewWordMasteryDialog());
+      this.elements.newWordMasteryDialog.addEventListener("cancel", (event) => {
+        if (this.newWordMasteryState?.result?.changed) {
+          event.preventDefault();
+          this.finishNewWordMasteryDialog();
+        }
+      });
       this.elements.resultHomeButton.addEventListener("click", () => this.exit());
       this.elements.restartButton.addEventListener("click", () => this.restart());
       this.elements.groupStartBreak.addEventListener("click", () => this.startGroupBreak());
@@ -498,6 +549,7 @@
       this.elements.questionScreen.dataset.studyMode = question.studyMode;
       this.renderModeControls(question);
       this.renderFavoriteState();
+      this.renderExamValue(question);
       this.renderProgress();
       this.renderAnswerArea(question);
       this.renderReviewQuestionActions(question);
@@ -515,6 +567,33 @@
       }
 
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    renderExamValue(question = this.getCurrentQuestion()) {
+      const session = this.activeSession;
+      const visible = Boolean(
+        session
+        && question
+        && session.sessionMode === "normal"
+        && question.learningPhase === newWordLearning.LEARNING_PHASES.INTRO,
+      );
+      this.elements.examValue.hidden = !visible;
+      if (!visible) return;
+      const value = this.getExamValue?.(session.book.id, question.word) || {};
+      this.elements.examValue.dataset.tier = value.effectiveTier || "unknown";
+      this.elements.examValue.dataset.rawTier = value.rawTier || "";
+      this.elements.examValue.title = value.neutral && value.rawTier
+        ? `原始真题频率 ${value.rawTier} 档；功能词不参与智能加权前置`
+        : "现有 2021—2025 真题语料统计";
+      this.elements.examTier.textContent = value.tierLabel || "暂无完整真题统计";
+      this.elements.examCoverage.textContent = value.coverageLabel || "";
+      this.elements.examCoverage.hidden = !value.coverageLabel;
+      this.elements.examOccurrences.textContent = value.occurrenceLabel || "";
+      this.elements.examOccurrences.hidden = !value.occurrenceLabel;
+      this.elements.examSource.textContent = value.sourceLabel || "";
+      this.elements.examSource.hidden = !value.sourceLabel;
+      this.elements.examIncomplete.textContent = value.incompleteLabel || "";
+      this.elements.examIncomplete.hidden = !value.incompleteLabel;
     }
 
     renderModeControls(question = this.getCurrentQuestion()) {
@@ -679,6 +758,7 @@
       this.elements.meaningForm.hidden = !isSubjective || isFinalSubjectiveResult;
       this.elements.keyboardHint.hidden = isSubjective;
       this.elements.questionScreen.classList.toggle("is-active-recall-result", isFinalSubjectiveResult);
+      this.renderNewWordMasteryAction(question);
       if (!isSubjective) {
         this.renderOptions(question);
         return;
@@ -713,6 +793,199 @@
             this.elements.meaningInput.focus();
           }
         }, 0);
+      }
+    }
+
+    renderNewWordMasteryAction(question = this.getCurrentQuestion()) {
+      const visible = Boolean(
+        this.activeSession?.sessionMode === "normal"
+        && question?.learningPhase === newWordLearning.LEARNING_PHASES.INTRO
+        && question.selectedIndex === null
+        && !question.aiPending
+        && !this.getWordProgress(this.activeSession.book.id, question.word.word).learned,
+      );
+      this.elements.newWordMasteredButton.hidden = !visible;
+    }
+
+    isNewWordMasteryEligible(question = this.getCurrentQuestion()) {
+      return Boolean(
+        this.activeSession?.sessionMode === "normal"
+        && question
+        && question.learningPhase === newWordLearning.LEARNING_PHASES.INTRO
+        && question.selectedIndex === null
+        && !question.aiPending
+        && !this.getWordProgress(this.activeSession.book.id, question.word.word).learned,
+      );
+    }
+
+    openNewWordMasteryDialog() {
+      const question = this.getCurrentQuestion();
+      if (!this.isNewWordMasteryEligible(question)) return;
+      this.newWordMasteryState = { question, pending: false, result: null, judgement: null };
+      this.elements.newWordMasteryWord.textContent = question.word.word;
+      this.elements.newWordMasteryPhonetic.textContent = question.word.phonetic || "";
+      this.elements.newWordMasteryPhonetic.hidden = !question.word.phonetic;
+      this.elements.newWordMasteryInput.value = "";
+      this.elements.newWordMasteryInput.disabled = false;
+      this.elements.newWordMasterySubmit.disabled = false;
+      this.elements.newWordMasterySubmit.textContent = "确认释义";
+      this.elements.newWordMasteryStatus.textContent = "";
+      this.elements.newWordMasteryStatus.classList.remove("is-error");
+      this.elements.newWordMasteryForm.hidden = false;
+      this.elements.newWordMasteryResult.hidden = true;
+      this.elements.newWordMasteryResult.classList.remove("is-error");
+      if (typeof this.elements.newWordMasteryDialog.showModal === "function") {
+        this.elements.newWordMasteryDialog.showModal();
+      } else this.elements.newWordMasteryDialog.setAttribute("open", "");
+      window.setTimeout(() => this.elements.newWordMasteryInput.focus(), 0);
+    }
+
+    closeNativeNewWordMasteryDialog() {
+      if (typeof this.elements.newWordMasteryDialog.close === "function"
+        && this.elements.newWordMasteryDialog.open) {
+        this.elements.newWordMasteryDialog.close();
+      } else this.elements.newWordMasteryDialog.removeAttribute("open");
+    }
+
+    closeNewWordMasteryDialog() {
+      if (this.newWordMasteryState?.result?.changed) {
+        this.finishNewWordMasteryDialog();
+        return;
+      }
+      this.closeNativeNewWordMasteryDialog();
+      this.newWordMasteryState = null;
+    }
+
+    async submitNewWordMasteryMeaning() {
+      const state = this.newWordMasteryState;
+      const question = this.getCurrentQuestion();
+      if (!state || state.question !== question || state.pending || !this.isNewWordMasteryEligible(question)) return;
+      const userAnswer = this.elements.newWordMasteryInput.value.trim();
+      if (!userAnswer) {
+        this.elements.newWordMasteryStatus.textContent = "请先写出你记得的中文意思";
+        this.elements.newWordMasteryStatus.classList.add("is-error");
+        this.elements.newWordMasteryInput.focus();
+        return;
+      }
+      state.userAnswer = userAnswer;
+      state.pending = true;
+      this.elements.newWordMasteryInput.disabled = true;
+      this.elements.newWordMasterySubmit.disabled = true;
+      this.elements.newWordMasterySubmit.textContent = "正在判断…";
+      this.elements.newWordMasteryStatus.textContent = "正在核对你的主动释义…";
+      this.elements.newWordMasteryStatus.classList.remove("is-error");
+      try {
+        const localResult = aiJudge.localMeaningJudge(question.word, userAnswer);
+        const judgementResult = localResult.decision === "judged"
+          ? localResult
+          : await this.onAiJudgeMeaning({ word: question.word, userAnswer });
+        if (this.newWordMasteryState !== state || this.getCurrentQuestion() !== question) return;
+        state.pending = false;
+        state.judgement = judgementResult.result;
+        state.judgementDetails = judgementResult;
+        if (judgementResult.result === "correct") {
+          state.result = this.onVerifiedNewWordMastery?.({
+            bookId: this.activeSession.book.id,
+            wordId: question.word.word,
+          }) || null;
+          if (!state.result?.changed) throw new Error("VERIFIED_MASTERY_NOT_SAVED");
+          this.applyVerifiedMasteryResultToBook(state.result);
+        }
+        this.renderNewWordMasteryResult(state);
+      } catch (error) {
+        if (this.newWordMasteryState !== state || this.getCurrentQuestion() !== question) return;
+        state.pending = false;
+        state.error = error;
+        this.renderNewWordMasteryUnavailable(state);
+      }
+    }
+
+    applyVerifiedMasteryResultToBook(result) {
+      const session = this.activeSession;
+      if (!session || !result) return;
+      if (result.daily) {
+        session.book.daily = result.daily;
+        session.book.completedToday = result.daily.completedNewWords;
+        session.book.normalCompletedToday = result.daily.completedNewWordIds?.length || 0;
+        session.book.verifiedManualMasteredToday = result.daily.verifiedManualMasteredNewWordIds?.length || 0;
+      }
+      if (result.pendingReinforcementCount !== undefined) {
+        session.book.pendingReinforcementCount = result.pendingReinforcementCount;
+      }
+      if (result.groupPlan) session.book.groupPlan = result.groupPlan;
+      if (result.groupProgress) session.book.groupProgress = result.groupProgress;
+      this.renderProgress();
+    }
+
+    renderNewWordMasteryResult(state) {
+      const judgement = state.judgement;
+      const correct = judgement === "correct" && state.result?.changed;
+      const partial = judgement === "partial";
+      this.elements.newWordMasteryForm.hidden = true;
+      this.elements.newWordMasteryResult.hidden = false;
+      this.elements.newWordMasteryResult.classList.toggle("is-error", !correct);
+      this.elements.newWordMasteryResultTitle.textContent = correct
+        ? "✓ 已确认掌握"
+        : partial ? "释义接近，但还不能跳过学习" : "释义未通过确认";
+      this.elements.newWordMasteryUserAnswer.textContent = state.userAnswer;
+      this.elements.newWordMasteryStandard.textContent = state.question.word.coreMeaning
+        || state.question.word.shortMeaning
+        || state.question.word.meaning;
+      this.elements.newWordMasteryJudgement.textContent = state.judgementDetails?.feedback
+        || (correct ? "核心意思正确" : partial ? "方向接近，但核心义不够完整" : "当前回答与核心义不匹配");
+      this.elements.newWordMasteryResultNote.textContent = correct
+        ? "已退出今日新词学习、当日巩固与长期 SRS；收藏状态保持不变，可在单词详情中恢复。"
+        : "这个词不会被标记为已掌握，请继续正常四选一学习。";
+      this.elements.newWordMasteryResultAction.textContent = correct ? "学习下一个新词" : "继续正常学习";
+    }
+
+    renderNewWordMasteryUnavailable(state) {
+      this.elements.newWordMasteryForm.hidden = true;
+      this.elements.newWordMasteryResult.hidden = false;
+      this.elements.newWordMasteryResult.classList.add("is-error");
+      this.elements.newWordMasteryResultTitle.textContent = "暂时无法确认掌握";
+      this.elements.newWordMasteryUserAnswer.textContent = state.userAnswer;
+      this.elements.newWordMasteryStandard.textContent = "未展示";
+      this.elements.newWordMasteryJudgement.textContent = "AI 暂时无法判断，本次不会标记为已掌握";
+      this.elements.newWordMasteryResultNote.textContent = "学习记录没有变化，请继续正常四选一学习。";
+      this.elements.newWordMasteryResultAction.textContent = "继续正常学习";
+    }
+
+    finishNewWordMasteryDialog() {
+      const state = this.newWordMasteryState;
+      this.closeNativeNewWordMasteryDialog();
+      this.newWordMasteryState = null;
+      if (!state?.result?.changed) return;
+      const session = this.activeSession;
+      const question = state.question;
+      const questionIndex = session?.questions.indexOf(question) ?? -1;
+      if (!session || questionIndex < 0) return;
+      session.questions.splice(questionIndex, 1);
+      session.currentIndex = Math.min(questionIndex, Math.max(0, session.questions.length - 1));
+      this.onMessage(`✓ ${question.word.word} 已确认掌握`, {
+        actionLabel: "撤销",
+        duration: 8000,
+        onAction: () => {
+          const restored = this.onUndoVerifiedNewWordMastery?.(state.result.undo);
+          if (!restored) return;
+          if (this.activeSession !== session) return;
+          this.applyVerifiedMasteryResultToBook(restored);
+          question.wasPresented = false;
+          question.presentedAt = null;
+          question.interactionDurationMs = null;
+          session.questions.splice(Math.min(questionIndex, session.questions.length), 0, question);
+          session.currentIndex = Math.min(questionIndex, session.questions.length - 1);
+          this.elements.groupCompleteScreen.hidden = true;
+          this.elements.resultScreen.hidden = true;
+          this.renderQuestion();
+        },
+      });
+      if (session.book.groupProgress?.awaitingNextGroup) {
+        this.showGroupComplete(session.book);
+      } else if (session.questions.length) {
+        this.renderQuestion();
+      } else {
+        this.completeSession();
       }
     }
 
@@ -1440,7 +1713,7 @@
       this.elements.resultNote.textContent = session.sessionMode === "normal"
         ? session.waitingForReinforcement
           ? `待巩固 ${session.book.pendingReinforcementCount || 0} · 已同时保留题数与时间间隔`
-          : `今日新词 ${session.book.completedToday} / ${session.book.dailyGoal} · 待巩固 ${session.book.pendingReinforcementCount || 0}`
+          : `今日新词 ${session.book.completedToday} / ${session.book.dailyGoal} · 正常完成 ${session.book.normalCompletedToday || 0} · 已会词确认 ${session.book.verifiedManualMasteredToday || 0} · 待巩固 ${session.book.pendingReinforcementCount || 0}`
         : session.sessionMode === "review"
           ? session.book.reviewTaskSummary
             ? `今日任务 ${session.book.reviewTaskSummary.handledCount} / ${session.book.reviewTaskSummary.target} · 正常复习 ${session.book.reviewTaskSummary.answeredCount} · 已掌握 ${session.book.reviewTaskSummary.manualMasteredCount} · 今日跳过 ${session.book.reviewTaskSummary.deferredTodayCount}`
@@ -1495,7 +1768,8 @@
       this.elements.groupCompleteTitle.textContent = `第${group.index + 1}组完成`;
       this.elements.groupCompleteTotal.textContent = `${progress.completedNewWords} / ${book.dailyGoal}`;
       this.elements.groupCompletePercent.textContent = `今日完成 ${Math.round((progress.completedNewWords / book.dailyGoal) * 100)}%`;
-      this.elements.groupCompleteNew.textContent = group.completedCount;
+      this.elements.groupCompleteNew.textContent = group.normalCompletedCount ?? group.completedCount;
+      this.elements.groupCompleteVerified.textContent = group.verifiedManualMasteredCount || 0;
       this.elements.groupCompleteRecall.textContent = recallCount;
       this.elements.groupCompleteCorrected.textContent = correctedCount;
       this.elements.groupBreakSuggestion.textContent = `建议休息 ${book.groupPlan.breakMinutes} 分钟`;
@@ -1715,6 +1989,20 @@
 
     handleKeyboard(event) {
       if (!this.isActive || event.repeat || event.altKey) return;
+      if (this.elements.newWordMasteryDialog.open) {
+        if (
+          event.key === "Enter"
+          && (event.ctrlKey || event.metaKey)
+          && !event.isComposing
+          && !this.isComposingNewWordMastery
+          && !this.newWordMasteryState?.pending
+          && !this.newWordMasteryState?.result
+        ) {
+          event.preventDefault();
+          this.submitNewWordMasteryMeaning();
+        }
+        return;
+      }
       const question = this.getCurrentQuestion();
       if (!question) return;
 

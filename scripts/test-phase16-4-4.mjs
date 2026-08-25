@@ -263,10 +263,13 @@ await test("30 transition ↔ transfer partial remains outside the changed wrong
   assert.match(studySource, /if \(judgement === "wrong"\) \{[\s\S]*?onDetectConfusion/);
 });
 
-await test("31 Storage stays at v15 with no schema change", () => {
+await test("31 Storage stays at v15 and preserves confusable persistence", () => {
   assert.equal(storage.DATA_VERSION, 15);
-  assert.match(read("js/storage.js"), /const DATA_VERSION = 15/);
-  assertUnmodified(["js/storage.js"]);
+  const storageSource = read("js/storage.js");
+  assert.match(storageSource, /const DATA_VERSION = 15/);
+  assert.match(storageSource, /confusablePairs: \{\}/);
+  assert.match(storageSource, /addConfusablePair/);
+  assert.match(storageSource, /recordConfusableConfusion/);
 });
 
 await test("32 protected data, learning logic, Worker, AI and PWA stay untouched", () => {

@@ -20,6 +20,7 @@ const {
   reviewRecovery,
   aiJudge,
   smartLearningOrder,
+  examValue,
   dailyReviewService,
   dailyGroupService,
   confusableWords,
@@ -381,7 +382,22 @@ function getScopedIntroducedNewWordCount(book, daily) {
 }
 
 function getScopedCompletedNewWordCount(book, daily) {
-  return getScopedDailyIdCount(book, daily, "completedNewWordIds", daily.completedNewWords);
+  const handled = new Set([
+    ...(Array.isArray(daily.completedNewWordIds) ? daily.completedNewWordIds : []),
+    ...(Array.isArray(daily.verifiedManualMasteredNewWordIds)
+      ? daily.verifiedManualMasteredNewWordIds
+      : []),
+  ]);
+  return handled.size || daily.completedNewWords;
+}
+
+function getExamValueForWord(bookId, word) {
+  const priority = smartLearningOrder.getLearningPriority(
+    word.word,
+    appState.frequency.maps[bookId],
+    appState.frequency.overrides,
+  );
+  return examValue.buildExamValue(word, priority);
 }
 
 function getScopeLabel(book) {
@@ -535,15 +551,9 @@ function buildDailyGroupInput(book) {
 function getDailyGroupContext(book) {
   const plan = storage.getDailyGroupPlan(book.id);
   if (!plan) return { plan: null, progress: null };
-  const daily = storage.getDailyStats(book.id);
   return {
     plan,
-    progress: dailyGroupService.getGroupProgress(
-      plan,
-      daily.scheduledNewWordIds,
-      daily.completedNewWordIds,
-      daily.newWordIds,
-    ),
+    progress: storage.getDailyGroupProgress(book.id),
   };
 }
 
@@ -975,12 +985,7 @@ function getModeStudyPlan(book, sessionMode) {
   };
   const groupPlan = sessionMode === "normal" ? storage.getDailyGroupPlan(book.id) : null;
   const groupProgress = groupPlan
-    ? dailyGroupService.getGroupProgress(
-      groupPlan,
-      scheduledNewWordIds,
-      daily.completedNewWordIds,
-      daily.newWordIds,
-    )
+    ? storage.getDailyGroupProgress(book.id)
     : null;
   const isExtra = daily.completedNewWords >= book.dailyGoal
     && dueItems.length === 0
@@ -1051,6 +1056,9 @@ async function showStudy(sessionMode = "normal", { forceNew = false, skipGroupPl
       shortName: book.shortName,
       dailyGoal: book.dailyGoal,
       completedToday: plan.daily.completedNewWords,
+      normalCompletedToday: plan.daily.completedNewWordIds.length,
+      verifiedManualMasteredToday: plan.daily.verifiedManualMasteredNewWordIds.length,
+      daily: plan.daily,
       sessionMode,
       groupPlan: plan.groupPlan,
       groupProgress: plan.groupProgress,
@@ -1191,6 +1199,38 @@ function handleUndoManualMaster(undo) {
   showToast("已撤销，原复习与 Recovery 状态已恢复");
   return {
     reviewTaskSummary: storage.getDailyReviewSummary(undo.bookId, getAllBookWordIds(book)),
+  };
+}
+
+function handleVerifiedNewWordMastery({ bookId, wordId }) {
+  const result = storage.markNewWordVerifiedMastered(bookId, wordId);
+  const book = appState.books[bookId];
+  if (!result.changed || !book) return result;
+  result.daily.completedNewWords = getScopedCompletedNewWordCount(book, result.daily);
+  const groupState = storage.updateDailyGroupProgress(bookId);
+  result.groupPlan = groupState?.plan || null;
+  result.groupProgress = groupState?.progress || null;
+  result.pendingReinforcementCount = storage.getPendingReinforcementSummary(
+    bookId,
+    getAllBookWordIds(book),
+  ).count;
+  updateDashboard(bookId);
+  return result;
+}
+
+function handleUndoVerifiedNewWordMastery(undo) {
+  if (!storage.undoManualMastery(undo)) return null;
+  const book = appState.books[undo.bookId];
+  const daily = storage.getDailyStats(undo.bookId);
+  const groupState = storage.updateDailyGroupProgress(undo.bookId);
+  updateDashboard(undo.bookId);
+  return {
+    daily: {
+      ...daily,
+      completedNewWords: getScopedCompletedNewWordCount(book, daily),
+    },
+    groupPlan: groupState?.plan || null,
+    groupProgress: groupState?.progress || null,
   };
 }
 
@@ -1395,6 +1435,7 @@ const studyController = new StudyController({
   onAnswer: handleAnswer,
   onToggleFavorite: handleToggleFavorite,
   getWordProgress: (bookId, wordId) => storage.getWordProgress(bookId, wordId),
+  getExamValue: getExamValueForWord,
   getStudyMode,
   onStudyModeChange: (mode) => setStudyMode(mode, { announce: false }),
   onRestart: (mode) => showStudy(mode, { forceNew: true }),
@@ -1410,6 +1451,8 @@ const studyController = new StudyController({
   onReviewTaskStarted: handleReviewTaskStarted,
   onManualMaster: handleManualMaster,
   onUndoManualMaster: handleUndoManualMaster,
+  onVerifiedNewWordMastery: handleVerifiedNewWordMastery,
+  onUndoVerifiedNewWordMastery: handleUndoVerifiedNewWordMastery,
   onDeferToday: handleDeferToday,
   onOpenQuickCleanup: handleOpenReviewSegmentQuickCleanup,
   onStartReviewBreak: handleStartReviewBreak,

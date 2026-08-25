@@ -14,6 +14,7 @@
     <script src="js/review-scheduler.js" defer></script>
     <script src="js/review-workload.js" defer></script>
     <script src="js/smart-learning-order.js" defer></script>
+    <script src="js/exam-value.js" defer></script>
     <script src="js/review-recovery.js" defer></script>
     <script src="js/new-word-learning.js" defer></script>
     <script src="js/active-recall-result.js" defer></script>
@@ -384,6 +385,13 @@
                 <span aria-hidden="true">🔊</span>
                 听发音
               </button>
+              <aside class="study-exam-value" id="study-exam-value" aria-label="真题学习价值" hidden>
+                <strong id="study-exam-tier">真题 S 档</strong>
+                <span id="study-exam-coverage">覆盖 10/10 场</span>
+                <span id="study-exam-occurrences">出现 120 次</span>
+                <span id="study-exam-source">CET4 核心词</span>
+                <span class="study-exam-value__incomplete" id="study-exam-incomplete" hidden>暂无完整真题统计</span>
+              </aside>
             </div>
 
             <div class="answer-area">
@@ -392,6 +400,9 @@
                 <span class="keyboard-hint">按 1–4 选择</span>
               </div>
               <div class="answer-options" id="answer-options" aria-label="答案选项"></div>
+              <button class="secondary-button new-word-mastered-button" id="new-word-mastered-button" type="button" hidden>
+                ✓ 这个词我已经会了
+              </button>
               <form class="meaning-answer-form" id="meaning-answer-form" hidden>
                 <label for="meaning-answer-input">中文释义</label>
                 <textarea
@@ -604,7 +615,8 @@
               <span id="group-complete-percent">今日完成 25%</span>
             </div>
             <div class="group-complete-stats">
-              <div><span>新词完成</span><strong id="group-complete-new">10</strong></div>
+              <div><span>正常完成</span><strong id="group-complete-new">10</strong></div>
+              <div><span>已会词确认</span><strong id="group-complete-verified">0</strong></div>
               <div><span>主动回忆</span><strong id="group-complete-recall">10</strong></div>
               <div><span>纠错通过</span><strong id="group-complete-corrected">0</strong></div>
             </div>
@@ -1308,6 +1320,40 @@
         <button class="primary-button" id="quick-cleanup-confirm" type="button" disabled>
           请先勾选单词
         </button>
+      </article>
+    </dialog>
+
+    <dialog class="new-word-mastery-dialog" id="new-word-mastery-dialog" aria-labelledby="new-word-mastery-title">
+      <article class="new-word-mastery-card">
+        <button class="dialog-close-button" id="new-word-mastery-close" type="button" aria-label="关闭">&times;</button>
+        <p class="section-kicker">VERIFY BEFORE SKIPPING</p>
+        <h2 id="new-word-mastery-title">确认你确实会这个词</h2>
+        <div class="new-word-mastery-word">
+          <strong id="new-word-mastery-word">hunt</strong>
+          <span id="new-word-mastery-phonetic">/hʌnt/</span>
+        </div>
+        <form id="new-word-mastery-form">
+          <label for="new-word-mastery-input">请主动写出中文意思</label>
+          <textarea
+            id="new-word-mastery-input"
+            rows="3"
+            maxlength="300"
+            placeholder="不查看选项，写出你记得的核心中文义"
+            autocomplete="off"
+          ></textarea>
+          <p class="new-word-mastery-status" id="new-word-mastery-status" role="status" aria-live="polite"></p>
+          <button class="primary-button" id="new-word-mastery-submit" type="submit">确认释义</button>
+        </form>
+        <section class="new-word-mastery-result" id="new-word-mastery-result" aria-live="polite" hidden>
+          <strong id="new-word-mastery-result-title">✓ 已确认掌握</strong>
+          <dl>
+            <div><dt>你的回答</dt><dd id="new-word-mastery-user-answer"></dd></div>
+            <div><dt>标准核心义</dt><dd id="new-word-mastery-standard"></dd></div>
+            <div><dt>判断说明</dt><dd id="new-word-mastery-judgement"></dd></div>
+          </dl>
+          <p id="new-word-mastery-result-note"></p>
+          <button class="primary-button" id="new-word-mastery-result-action" type="button">学习下一个新词</button>
+        </section>
       </article>
     </dialog>
 
