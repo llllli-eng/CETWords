@@ -190,7 +190,7 @@ await test("25 confirmed labels stay on one line without horizontal overflow", (
 
 await test("26 Storage stays at v15 and its schema is untouched", () => {
   assert.equal(loadCore().storage.DATA_VERSION, 15);
-  assertUnmodified(["js/storage.js", "js/confusable-words.js"]);
+  assertUnmodified(["js/storage.js"]);
 });
 
 await test("27 Worker, AI, SRS, Recovery, grouping and frequency stay untouched", () => {

@@ -211,11 +211,38 @@
       .replace(/[\s，。；、,.!！?？:：()（）\[\]【】/\\-]+/g, "");
   }
 
+  function stripMeaningPosPrefix(value) {
+    const partOfSpeech = "(?:adj|adv|n|v|vt|vi|prep|pron|conj|num|art|aux|modal|int|interj|det|abbr|phr|phrase)";
+    return String(value || "").replace(
+      new RegExp(`^(?:${partOfSpeech}(?:\\s*&\\s*${partOfSpeech})?\\.?\\s*)+`, "i"),
+      "",
+    );
+  }
+
+  function normalizeMeaningSegment(value) {
+    return stripMeaningPosPrefix(String(value || "").trim().toLocaleLowerCase("zh-CN"))
+      .replace(/[\s。.!！?？:：()（）\[\]【】"“”'‘’\\-]+/g, "");
+  }
+
+  function splitMeaningSegments(value) {
+    const segments = String(value || "")
+      .split(/[；;，,、/\\|｜\r\n]+/)
+      .map(normalizeMeaningSegment)
+      .filter(Boolean);
+    return [...new Set(segments)];
+  }
+
   function collectMeaningFields(word) {
     const fields = [];
     const push = (value, priority, source) => {
       if (typeof value !== "string" || !value.trim()) return;
-      fields.push({ value: value.trim(), normalized: compactChinese(value), priority, source });
+      fields.push({
+        value: value.trim(),
+        normalized: compactChinese(value),
+        segments: splitMeaningSegments(value),
+        priority,
+        source,
+      });
     };
     push(word?.coreMeaning, 0, "coreMeaning");
     push(word?.shortMeaning, 1, "shortMeaning");
@@ -229,6 +256,69 @@
     }
     push(word?.meaning, 4, "meaning");
     return fields;
+  }
+
+  function findIndependentMeaningMatch(word, userAnswer, maximumPriority = 3) {
+    const answerSegments = splitMeaningSegments(userAnswer);
+    if (answerSegments.length !== 1) return null;
+    const [answer] = answerSegments;
+    if (answer.length < 2) return null;
+    const answerVariants = new Set([
+      answer,
+      ...(CHINESE_SEARCH_ALIASES[answer] || []).map(normalizeMeaningSegment),
+    ]);
+    return collectMeaningFields(word)
+      .filter((field) => (
+        field.priority <= maximumPriority
+        && field.segments.some((segment) => answerVariants.has(segment))
+      ))
+      .sort((left, right) => left.priority - right.priority)[0] || null;
+  }
+
+  function detectPersonalPairMeaningConfusion(currentWord, userAnswer, words, rawPairs) {
+    if (findIndependentMeaningMatch(currentWord, userAnswer)) return null;
+    const sourceWords = Array.isArray(words) ? words : [];
+    const byId = new Map();
+    sourceWords.forEach((word) => {
+      const wordId = getWordId(word);
+      if (wordId) byId.set(wordId, word);
+    });
+    const currentId = getWordId(currentWord);
+    const currentSpelling = normalizeText(currentWord?.word);
+    if (!currentId || !currentSpelling) return null;
+    const matchesBySpelling = new Map();
+
+    Object.values(normalizePairs(rawPairs)).forEach((pair) => {
+      const wordA = byId.get(pair.wordIdA);
+      const wordB = byId.get(pair.wordIdB);
+      if (!wordA || !wordB) return;
+      const aMatches = pair.wordIdA === currentId || normalizeText(wordA.word) === currentSpelling;
+      const bMatches = pair.wordIdB === currentId || normalizeText(wordB.word) === currentSpelling;
+      if (aMatches === bMatches) return;
+      const otherWord = aMatches ? wordB : wordA;
+      const otherWordId = aMatches ? pair.wordIdB : pair.wordIdA;
+      const otherSpelling = normalizeText(otherWord.word);
+      if (!otherSpelling || otherSpelling === currentSpelling) return;
+      const meaningMatch = findIndependentMeaningMatch(otherWord, userAnswer);
+      if (!meaningMatch) return;
+      const candidate = {
+        word: otherWord,
+        wordId: otherWordId,
+        pair,
+        pairKey: pair.pairKey,
+        matchedMeaning: meaningMatch.value,
+        meaningSource: meaningMatch.source,
+        detectionSource: "personal_pair",
+        exactCurrentWordId: pair.wordIdA === currentId || pair.wordIdB === currentId,
+      };
+      const existing = matchesBySpelling.get(otherSpelling);
+      if (!existing || (!existing.exactCurrentWordId && candidate.exactCurrentWordId)) {
+        matchesBySpelling.set(otherSpelling, candidate);
+      }
+    });
+
+    const matches = [...matchesBySpelling.values()];
+    return matches.length === 1 ? matches[0] : null;
   }
 
   function damerauLevenshtein(leftValue, rightValue) {
@@ -367,6 +457,13 @@
   }
 
   function detectMeaningConfusion(currentWord, userAnswer, words, options = {}) {
+    const personalMatch = detectPersonalPairMeaningConfusion(
+      currentWord,
+      userAnswer,
+      words,
+      options.personalPairs,
+    );
+    if (personalMatch) return personalMatch;
     const answer = compactChinese(userAnswer);
     if (answer.length < 2) return null;
     if (collectMeaningFields(currentWord).some((field) => field.normalized.includes(answer))) return null;
@@ -459,6 +556,10 @@
     normalizeRecent,
     recordRecent,
     collectMeaningFields,
+    normalizeMeaningSegment,
+    splitMeaningSegments,
+    findIndependentMeaningMatch,
+    detectPersonalPairMeaningConfusion,
     damerauLevenshtein,
     searchWords,
     findExactWord,

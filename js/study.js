@@ -1362,7 +1362,10 @@
     viewDetectedConfusion() {
       const question = this.getCurrentQuestion();
       if (!question?.confusionCandidate?.pair) return;
-      this.onOpenConfusable?.(question.word, { source: "study-result" });
+      this.onOpenConfusable?.(question.word, {
+        source: "study-result",
+        pairKey: question.confusionCandidate.pair.pairKey,
+      });
     }
 
     syncConfusablePairState(pair, options = {}) {

@@ -2449,7 +2449,15 @@ function renderConfusableDialog() {
 
 function openConfusableDialog(word, options = {}) {
   if (!word || !getConfusableWordId(word)) return;
-  appState.confusables.currentWordId = getConfusableWordId(word);
+  const requestedWordId = getConfusableWordId(word);
+  const requestedSpelling = String(word.word || "").trim().toLocaleLowerCase("en-US");
+  const requestedPair = options.pairKey ? storage.getConfusablePairs()[options.pairKey] : null;
+  const canonicalPairWordId = requestedPair
+    ? [requestedPair.wordIdA, requestedPair.wordIdB].find((wordId) => (
+      String(findConfusableWord(wordId)?.word || "").trim().toLocaleLowerCase("en-US") === requestedSpelling
+    ))
+    : "";
+  appState.confusables.currentWordId = canonicalPairWordId || requestedWordId;
   appState.confusables.aiCandidates = [];
   appState.confusables.candidatePairStates.clear();
   appState.confusables.returnScrollY = options.source === "study-result" ? window.scrollY : null;
@@ -2760,12 +2768,15 @@ function recordConfusableEncounter(word) {
 }
 
 function detectStudyConfusion({ word, userAnswer, judgement, answerEventId }) {
+  const personalPairs = storage.getConfusablePairs();
   const candidate = confusableWords.detectMeaningConfusion(word, userAnswer, getConfusableVocabulary(), {
     recentWordIds: storage.getRecentEncounteredWords().map((entry) => entry.wordId),
+    personalPairs,
   });
   if (!candidate) return null;
-  const pairKey = confusableWords.getPairKey(getConfusableWordId(word), candidate.wordId);
-  const existingPair = storage.getConfusablePairs()[pairKey] || null;
+  const pairKey = candidate.pairKey
+    || confusableWords.getPairKey(getConfusableWordId(word), candidate.wordId);
+  const existingPair = personalPairs[pairKey] || candidate.pair || null;
   let pair = existingPair;
   const dedupKey = answerEventId && pairKey ? `${answerEventId}:${pairKey}` : "";
   if (
