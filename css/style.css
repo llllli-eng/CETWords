@@ -1198,7 +1198,7 @@ body.has-modal-open {
 
 .confusion-detected__actions > button {
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   padding: 9px 12px;
 }
 

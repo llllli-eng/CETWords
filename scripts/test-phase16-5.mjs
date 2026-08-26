@@ -410,11 +410,11 @@ await test("59 desktop and mobile controls remain touch-sized and fluid", () => 
   assert.match(css, /\.study-exam-value[\s\S]*max-width: 100%/);
 });
 
-await test("60 protected vocabulary, frequency, Worker and grouping algorithm files are unchanged", () => {
+await test("60 protected vocabulary, frequency and grouping algorithm files are unchanged", () => {
   execFileSync("git", [
     "diff", "--exit-code", "HEAD", "--",
     "data/cet4.json", "data/cet6.json", "data/cet4-exam-frequency.json",
-    "data/cet6-exam-frequency.json", "worker/src/index.js", "js/smart-learning-order.js",
+    "data/cet6-exam-frequency.json", "js/smart-learning-order.js",
     "js/daily-group-service.js", "js/review-scheduler.js", "js/review-recovery.js",
   ], { cwd: ROOT, stdio: "pipe" });
 });

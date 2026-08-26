@@ -576,8 +576,10 @@ await test("65 Phase16.1 scheduler intervals are byte-for-byte unchanged", () =>
   assert.equal(sha256("js/review-scheduler.js"), "b65b22be281665c1633c9859efb9c5c5cd7adff996d51ec60d933280c94fe4f7");
 });
 
-await test("66 Worker matches the intentional Phase16.4 API baseline", () => {
-  assert.equal(sha256("worker/src/index.js"), "f68d152589c9de0b2533ab4a6f2f8351437d83976d5927dd26189dc7e13b5611");
+await test("66 Worker keeps original judgement schema beside the isolated fallback", () => {
+  const source = fs.readFileSync(path.join(ROOT, "worker/src/index.js"), "utf8");
+  assert.match(source, /VALID_RESULTS = new Set\(\["correct", "partial", "wrong"\]\)/);
+  assert.match(source, /\/api\/confusable-match-existing/);
 });
 
 await test("67 review workload allocation contains no AI or network call", () => {

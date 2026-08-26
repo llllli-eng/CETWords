@@ -196,10 +196,10 @@ await test("26 Storage stays at v15 and keeps the existing pair API", () => {
   assert.match(storageSource, /function removeConfusablePair/);
 });
 
-await test("27 Worker, AI, SRS, Recovery, grouping and frequency stay untouched", () => {
+await test("27 SRS, Recovery, grouping and frequency stay untouched", () => {
   assertUnmodified([
-    "worker/src/index.js", "js/confusable-ai.js", "js/review-scheduler.js", "js/review-recovery.js",
-    "js/review-workload.js", "js/new-word-learning.js", "js/daily-group-service.js",
+    "js/review-scheduler.js", "js/review-recovery.js", "js/review-workload.js",
+    "js/new-word-learning.js", "js/daily-group-service.js",
     "js/smart-learning-order.js", "data/cet4.json", "data/cet6.json",
     "data/cet4-exam-frequency.json", "data/cet6-exam-frequency.json",
   ]);

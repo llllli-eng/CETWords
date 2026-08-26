@@ -25,7 +25,14 @@ const {
   dailyGroupService,
   confusableWords,
   confusableAi,
+  confusableDetection,
 } = window.CETWords;
+
+const studyConfusionDetector = confusableDetection.createService({
+  matchExisting: (currentWord, userAnswer, candidates) => (
+    confusableAi.matchExisting(currentWord, userAnswer, candidates)
+  ),
+});
 
 const appState = {
   activeBookId: storage.getCurrentBook(),
@@ -1461,6 +1468,7 @@ const studyController = new StudyController({
   onEncounterWord: recordConfusableEncounter,
   onOpenConfusable: openConfusableDialog,
   onDetectConfusion: detectStudyConfusion,
+  onAcceptConfusion: acceptStudyConfusion,
   onCreateConfusablePair: createConfusablePair,
   onStartConfusablePractice: (pairKey, options = {}) => {
     appState.confusables.returnDialog = null;
@@ -2812,11 +2820,21 @@ function recordConfusableEncounter(word) {
 
 function detectStudyConfusion({ word, userAnswer, judgement, answerEventId }) {
   const personalPairs = storage.getConfusablePairs();
-  const candidate = confusableWords.detectMeaningConfusion(word, userAnswer, getConfusableVocabulary(), {
+  const result = studyConfusionDetector.detect({
+    currentWord: word,
+    userAnswer,
+    judgement,
+    answerEventId,
+    words: getConfusableVocabulary(),
     recentWordIds: storage.getRecentEncounteredWords().map((entry) => entry.wordId),
     personalPairs,
   });
+  return result.immediate || result.pending;
+}
+
+function acceptStudyConfusion({ candidate, word, judgement, answerEventId }) {
   if (!candidate) return null;
+  const personalPairs = storage.getConfusablePairs();
   const pairKey = candidate.pairKey
     || confusableWords.getPairKey(getConfusableWordId(word), candidate.wordId);
   const existingPair = personalPairs[pairKey] || candidate.pair || null;

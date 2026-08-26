@@ -90,16 +90,16 @@ await test("11 closing the shared modal does not navigate away from the result",
   assert.doesNotMatch(`${closeHandler}\n${closeMain}`, /showView|location/);
 });
 
-await test("12 protected Worker, AI client and learning rules are byte-identical", () => {
+await test("12 protected learning rules stay byte-identical and AI fallback is isolated", () => {
   const expected = {
-    "js/confusable-ai.js": "d916e32a20c38e220ffbd6157358865c852e580a4f8ab20b9f461e5a5d773364",
     "js/review-scheduler.js": "b65b22be281665c1633c9859efb9c5c5cd7adff996d51ec60d933280c94fe4f7",
     "js/review-recovery.js": "050a8dff4e21b9be018f7631610cde9ef8c39e47fa97bd08f628f9e17c91bf05",
     "js/review-workload.js": "900cd488f7ced050da7b49e7d1433b636639039b4d41db8cc2c94d22cefc6d1a",
     "js/daily-group-service.js": "502275f89f546d34ae085f9fb769faa119903a5ff68cc10a4c5282d828d4f013",
-    "worker/src/index.js": "f68d152589c9de0b2533ab4a6f2f8351437d83976d5927dd26189dc7e13b5611",
   };
   Object.entries(expected).forEach(([file, hash]) => assert.equal(sha256(file), hash, file));
+  assert.match(read("js/confusable-ai.js"), /function matchExisting/);
+  assert.match(read("worker/src/index.js"), /\/api\/confusable-match-existing/);
 });
 
 await test("13 final active-recall results bring the shared entry fully into view", () => {

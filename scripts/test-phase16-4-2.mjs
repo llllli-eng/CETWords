@@ -174,8 +174,9 @@ await test("16 partial does not increment a real confusion", () => {
   assert.doesNotMatch(appSource, /judgement === "partial"[\s\S]{0,180}recordConfusableConfusion/);
 });
 
-await test("17 an unpaired candidate says possible confusion, never again", () => {
-  assert.match(studySource, /`你可能和 \$\{candidate\.word\.word\} 混淆了`/);
+await test("17 an unpaired candidate uses suspected-confusion copy, never again", () => {
+  assert.match(studySource, /`你的答案更像 \$\{candidate\.word\.word\}`/);
+  assert.match(studySource, /`你可能把 \$\{question\.word\.word\} 和 \$\{candidate\.word\.word\} 混淆了。确认后可加入个人易混词。`/);
 });
 
 await test("18 an existing pair uses the active repeated-confusion warning", () => {
@@ -357,9 +358,9 @@ await test("41 protected smart, SRS, Recovery, workload and grouping rules are b
   ]);
 });
 
-await test("42 Worker and all AI schemas remain byte-identical", () => {
-  assert.equal(sha256("worker/src/index.js"), "f68d152589c9de0b2533ab4a6f2f8351437d83976d5927dd26189dc7e13b5611");
-  assert.equal(sha256("js/confusable-ai.js"), "d916e32a20c38e220ffbd6157358865c852e580a4f8ab20b9f461e5a5d773364");
+await test("42 original AI judge schema remains unchanged beside the isolated fallback", () => {
+  assert.match(read("worker/src/index.js"), /VALID_RESULTS = new Set\(\["correct", "partial", "wrong"\]\)/);
+  assert.match(read("js/confusable-ai.js"), /\/api\/confusable-match-existing/);
 });
 
 await test("43 PWA files remain unmodified in this phase", () => {

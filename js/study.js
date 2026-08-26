@@ -54,6 +54,7 @@
       onEncounterWord,
       onOpenConfusable,
       onDetectConfusion,
+      onAcceptConfusion,
       onCreateConfusablePair,
       onStartConfusablePractice,
     }) {
@@ -87,6 +88,7 @@
       this.onEncounterWord = onEncounterWord;
       this.onOpenConfusable = onOpenConfusable;
       this.onDetectConfusion = onDetectConfusion;
+      this.onAcceptConfusion = onAcceptConfusion;
       this.onCreateConfusablePair = onCreateConfusablePair;
       this.onStartConfusablePractice = onStartConfusablePractice;
       this.sessions = new Map();
@@ -1042,7 +1044,8 @@
       const session = this.activeSession;
       const question = this.getCurrentQuestion();
       if (
-        !session
+        !this.isActive
+        || !session
         || !question
         || question.studyMode !== "ai-meaning"
         || question.selectedIndex !== null
@@ -1122,18 +1125,54 @@
       this.syncRecoveryQueue(question, result);
       question.confusionEventId = `${session.studySessionId}:${result.answerSequence}`;
       if (judgement === "wrong") {
-        question.confusionCandidate = this.onDetectConfusion?.({
+        const detectionIdentity = {
+          studySessionId: session.studySessionId,
+          answerSequence: result.answerSequence,
+          currentWordId: confusableWords.getWordId(question.word),
+        };
+        const detection = this.onDetectConfusion?.({
           word: question.word,
           userAnswer: question.userAnswer,
           judgement,
           answerEventId: question.confusionEventId,
           learningPhase: question.learningPhase,
           sessionMode: session.sessionMode,
-        }) || null;
+        });
+        if (detection && typeof detection.then === "function") {
+          question.confusionDetectionPromise = detection;
+          detection
+            .then((candidate) => this.applyConfusionDetectionResult(question, candidate, detectionIdentity))
+            .catch(() => {});
+        } else {
+          this.applyConfusionDetectionResult(question, detection || null, detectionIdentity);
+        }
       }
       this.renderAnswerArea(question);
       this.renderProgress();
       this.renderFeedback(question);
+    }
+
+    applyConfusionDetectionResult(question, candidate, identity) {
+      if (!candidate) return false;
+      const session = this.activeSession;
+      const currentQuestion = this.getCurrentQuestion();
+      if (
+        !this.isActive
+        || !session
+        || currentQuestion !== question
+        || session.studySessionId !== identity.studySessionId
+        || question.answerResult?.answerSequence !== identity.answerSequence
+        || confusableWords.getWordId(currentQuestion.word) !== identity.currentWordId
+      ) return false;
+      const accepted = this.onAcceptConfusion?.({
+        candidate,
+        word: question.word,
+        judgement: question.judgement,
+        answerEventId: question.confusionEventId,
+      }) || candidate;
+      question.confusionCandidate = accepted;
+      this.renderConfusableActions(question);
+      return true;
     }
 
     getInteractionDuration(question = this.getCurrentQuestion()) {
@@ -1565,10 +1604,10 @@
           this.elements.confusionPractice.textContent = "立即做3题辨析";
           this.elements.confusionView.hidden = false;
         } else {
-          this.elements.confusionIcon.textContent = "⇄";
-          this.elements.confusionTitle.textContent = `你可能和 ${candidate.word.word} 混淆了`;
+          this.elements.confusionIcon.textContent = "💡";
+          this.elements.confusionTitle.textContent = `你的答案更像 ${candidate.word.word}`;
           this.elements.confusionCount.hidden = true;
-          this.elements.confusionNote.textContent = `你的释义更接近 ${candidate.word.word}，确认后可加入个人易混词。`;
+          this.elements.confusionNote.textContent = `你可能把 ${question.word.word} 和 ${candidate.word.word} 混淆了。确认后可加入个人易混词。`;
           this.elements.confusionAdd.hidden = false;
           this.elements.confusionAdd.textContent = "加入我的易混词";
           this.elements.confusionPractice.textContent = "做3题辨析";

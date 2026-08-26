@@ -157,8 +157,11 @@ await test("13 adapt ↔ adopt detects adapt answered as 采用 through the exis
   assert.equal(result?.pairKey, saved.pair.pairKey);
 });
 
-await test("14 adapt → 采用 is not enabled by changing the generic global threshold", () => {
-  assert.equal(confusableWords.detectMeaningConfusion(adapt, "采用", vocabulary), null);
+await test("14 adapt → 采用 may be a new candidate without lowering the global threshold", () => {
+  const result = confusableWords.detectMeaningConfusion(adapt, "采用", vocabulary);
+  assert.equal(result?.word.word, "adopt");
+  assert.equal(result?.detectionSource, "local_new_candidate");
+  assert.equal(confusableWords.NEW_CANDIDATE_SCORE_THRESHOLD, 8);
 });
 
 await test("15 multiple pairs select the only high-confidence meaning hit", () => {
@@ -272,13 +275,13 @@ await test("31 Storage stays at v15 and preserves confusable persistence", () =>
   assert.match(storageSource, /recordConfusableConfusion/);
 });
 
-await test("32 protected data, learning logic, Worker, AI and PWA stay untouched", () => {
+await test("32 protected data, learning logic and PWA stay untouched", () => {
   assertUnmodified([
     "data/cet4.json", "data/cet6.json", "data/cet4-exam-frequency.json", "data/cet6-exam-frequency.json",
     "data/cet-frequency-report.json", "data/cet-learning-priority-overrides.json",
     "js/smart-learning-order.js", "js/review-scheduler.js", "js/review-recovery.js",
     "js/review-workload.js", "js/new-word-learning.js", "js/daily-group-service.js",
-    "js/confusable-ai.js", "worker/src/index.js", "service-worker.js", "manifest.webmanifest",
+    "service-worker.js", "manifest.webmanifest",
   ]);
 });
 
@@ -290,12 +293,13 @@ await test("33 implementation does not hard-code either acceptance case", () => 
 await test("34 the original global spelling and semantic confidence threshold is unchanged", () => {
   const core = read("js/confusable-words.js");
   const globalFallback = core.slice(
-    core.indexOf("const answer = compactChinese(userAnswer)", core.indexOf("function detectMeaningConfusion")),
-    core.indexOf("function buildPracticeQuestions"),
+    core.indexOf("function detectNewConfusableCandidate"),
+    core.indexOf("function validateExistingPairAiMatch"),
   );
   assert.match(globalFallback, /distance <= 1 \? 5 : distance === 2 \? 3 : 0/);
-  assert.match(globalFallback, /if \(score >= 8\) candidates\.push/);
-  assert.match(globalFallback, /candidates\[0\]\.score - candidates\[1\]\.score < 2/);
+  assert.match(core, /const NEW_CANDIDATE_SCORE_THRESHOLD = 8/);
+  assert.match(globalFallback, /score >= NEW_CANDIDATE_SCORE_THRESHOLD/);
+  assert.match(core, /const NEW_CANDIDATE_UNIQUENESS_GAP = 2/);
 });
 
 console.log(`\nPhase 16.4.4 tests: ${passed} passed, ${failed} failed`);

@@ -1,6 +1,6 @@
 /**
  * 拾词 · 易混词 AI 客户端
- * 仅在用户显式点击推荐或描述找词时调用 Worker。
+ * 推荐/找词由用户触发；wrong 语义兜底只检查当前词已建立的 personal pairs。
  */
 
 (function registerConfusableAi(app) {
@@ -51,6 +51,30 @@
     return {
       currentWord: String(currentWord?.word || currentWord || "").slice(0, 100),
       description: String(description || "").trim().slice(0, 500),
+    };
+  }
+
+  function buildExistingMatchPayload(currentWord, userAnswer, candidates) {
+    return {
+      currentWord: String(currentWord?.word || currentWord || "").trim().slice(0, 100),
+      userAnswer: String(userAnswer || "").trim().slice(0, 500),
+      candidates: (Array.isArray(candidates) ? candidates : []).slice(0, 8).map((candidate) => {
+        const word = candidate?.word || candidate;
+        const coreMeaning = String(word?.coreMeaning || word?.shortMeaning || word?.meaning || "").trim().slice(0, 300);
+        const shortMeaning = String(word?.shortMeaning || word?.coreMeaning || word?.meaning || "").trim().slice(0, 300);
+        const meanings = app.confusableWords.collectMeaningFields(word)
+          .filter((entry) => !["coreMeaning", "shortMeaning", "meaning"].includes(entry.source))
+          .map((entry) => entry.value)
+          .filter((value, index, values) => values.indexOf(value) === index)
+          .slice(0, 4)
+          .map((value) => value.slice(0, 180));
+        return {
+          word: String(word?.word || "").trim().slice(0, 100),
+          coreMeaning,
+          shortMeaning,
+          meanings,
+        };
+      }).filter((candidate) => candidate.word && candidate.coreMeaning),
     };
   }
 
@@ -106,13 +130,36 @@
     };
   }
 
+  async function matchExisting(currentWord, userAnswer, candidates, options = {}) {
+    const payload = buildExistingMatchPayload(currentWord, userAnswer, candidates);
+    if (!payload.currentWord || !payload.userAnswer || !payload.candidates.length) {
+      return { match: false, reason: "no_candidates" };
+    }
+    const data = await request("/api/confusable-match-existing", payload, options);
+    if (data?.match !== true) {
+      return {
+        match: false,
+        reason: ["ambiguous", "no_match", "invalid_candidate"].includes(data?.reason)
+          ? data.reason
+          : "no_match",
+      };
+    }
+    return {
+      match: true,
+      word: String(data.word || "").trim(),
+      confidence: data.confidence,
+    };
+  }
+
   app.confusableAi = {
     REQUEST_TIMEOUT_MS,
     ConfusableAIError,
     normalizeProxyUrl,
     buildSuggestPayload,
     buildFindPayload,
+    buildExistingMatchPayload,
     suggest,
     find,
+    matchExisting,
   };
 })(window.CETWords);

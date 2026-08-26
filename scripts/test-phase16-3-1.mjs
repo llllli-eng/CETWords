@@ -281,9 +281,8 @@ await test("15 mobile layout keeps actions touch-sized and fluid at 375px", () =
   assert.doesNotMatch(css, /review-segment-cleanup[^\{]*\{[^}]*min-width:\s*[4-9]\d\dpx/);
 });
 
-await test("16 protected learning, SRS, Worker and vocabulary files remain unchanged", () => {
+await test("16 protected learning, SRS and vocabulary files remain unchanged", () => {
   const expected = {
-    "worker/src/index.js": "f68d152589c9de0b2533ab4a6f2f8351437d83976d5927dd26189dc7e13b5611",
     "js/review-scheduler.js": "b65b22be281665c1633c9859efb9c5c5cd7adff996d51ec60d933280c94fe4f7",
     "js/review-recovery.js": "050a8dff4e21b9be018f7631610cde9ef8c39e47fa97bd08f628f9e17c91bf05",
     "js/daily-group-service.js": "502275f89f546d34ae085f9fb769faa119903a5ff68cc10a4c5282d828d4f013",

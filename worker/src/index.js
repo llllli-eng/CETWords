@@ -4,6 +4,7 @@ const MAX_MEANINGS = 12;
 const MAX_DAILY_REVIEW_BODY_BYTES = 24 * 1024;
 const MAX_DAILY_GROUP_BODY_BYTES = 8 * 1024;
 const MAX_CONFUSABLE_BODY_BYTES = 4 * 1024;
+const MAX_CONFUSABLE_MATCH_BODY_BYTES = 8 * 1024;
 const MAX_DAILY_WEAK_WORDS = 10;
 const MAX_DAILY_CORRECTED_WORDS = 5;
 const REQUEST_TIMEOUT_MS = 12 * 1000;
@@ -19,6 +20,7 @@ const DAILY_GROUP_FIELDS = new Set([
 ]);
 const CONFUSABLE_SUGGEST_FIELDS = new Set(["word", "coreMeaning", "meanings"]);
 const CONFUSABLE_FIND_FIELDS = new Set(["currentWord", "description"]);
+const CONFUSABLE_MATCH_EXISTING_FIELDS = new Set(["currentWord", "userAnswer", "candidates"]);
 const CONFUSABLE_TYPES = new Set(["spelling", "meaning", "usage"]);
 
 const SYSTEM_PROMPT = `你是大学英语四六级单词中文释义判题器。
@@ -106,6 +108,24 @@ reason 不超过 120 个字符。只输出合法 JSON，不输出 Markdown 或�
 
 JSON 格式：
 {"items":[{"word":"","reason":""}]}`;
+
+const CONFUSABLE_MATCH_EXISTING_SYSTEM_PROMPT = `你是大学英语四六级个人易混词语义匹配器。
+
+当前题已经被其他判题流程最终判为 wrong。你不得重新判断当前题对错。
+你只判断用户的错误中文答案，是否高置信属于所给某一个 existing personal-pair candidate 的现代、标准、常见英语义项。
+
+要求：
+1. 只能从请求中的 candidates 选择，绝不能发明或返回候选外单词。
+2. 只接受适合四六级学习的现代常见义；拒绝古义、方言、极窄专业义、罕见义、弱相关概念和牵强延伸。
+3. 同义改写可以命中，但必须语义明确且置信度高。
+4. 若多个候选都合理或无法唯一确定，返回 match=false、reason=ambiguous，不要猜。
+5. 若没有高置信候选，返回 match=false、reason=no_match。
+6. 只有唯一且高置信命中时返回 match=true，confidence 必须为 high。
+7. 只输出合法 JSON，不输出 Markdown 或额外文字。
+
+JSON 格式：
+命中：{"match":true,"word":"candidate exact spelling","confidence":"high"}
+未命中：{"match":false,"reason":"no_match|ambiguous"}`;
 
 function getAllowedOrigins(env) {
   return new Set(String(env.ALLOWED_ORIGINS || "")
@@ -254,6 +274,59 @@ function validateConfusableFindPayload(raw) {
   const description = validateString(raw.description, "description", 500);
   if (currentWord.error || description.error) return { error: currentWord.error || description.error };
   return { value: { currentWord: currentWord.value, description: description.value } };
+}
+
+function validateConfusableMatchExistingPayload(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "请求体必须是 JSON 对象" };
+  const unexpected = Object.keys(raw).find((key) => !CONFUSABLE_MATCH_EXISTING_FIELDS.has(key));
+  if (unexpected) return { error: `不允许的字段：${unexpected}` };
+  const currentWord = validateString(raw.currentWord, "currentWord", 100);
+  const userAnswer = validateString(raw.userAnswer, "userAnswer", 500);
+  if (currentWord.error || userAnswer.error) return { error: currentWord.error || userAnswer.error };
+  if (!Array.isArray(raw.candidates) || !raw.candidates.length || raw.candidates.length > 8) {
+    return { error: "candidates 格式不正确" };
+  }
+  const candidates = [];
+  const seen = new Set();
+  let totalMeaningLength = 0;
+  for (const rawCandidate of raw.candidates) {
+    if (!rawCandidate || typeof rawCandidate !== "object" || Array.isArray(rawCandidate)) {
+      return { error: "candidate 格式不正确" };
+    }
+    const allowed = new Set(["word", "coreMeaning", "shortMeaning", "meanings"]);
+    const extra = Object.keys(rawCandidate).find((key) => !allowed.has(key));
+    if (extra) return { error: `candidate 不允许的字段：${extra}` };
+    const word = validateString(rawCandidate.word, "candidate.word", 100);
+    const coreMeaning = validateString(rawCandidate.coreMeaning, "candidate.coreMeaning", 300);
+    const shortMeaning = validateString(rawCandidate.shortMeaning, "candidate.shortMeaning", 300);
+    if (word.error || coreMeaning.error || shortMeaning.error) {
+      return { error: word.error || coreMeaning.error || shortMeaning.error };
+    }
+    totalMeaningLength += coreMeaning.value.length + shortMeaning.value.length;
+    if (totalMeaningLength > 6000) return { error: "candidate 释义总长度超出限制" };
+    const normalizedWord = word.value.toLocaleLowerCase("en-US");
+    if (seen.has(normalizedWord)) return { error: "candidate.word 不能重复" };
+    seen.add(normalizedWord);
+    if (!Array.isArray(rawCandidate.meanings) || rawCandidate.meanings.length > 4) {
+      return { error: "candidate.meanings 格式不正确" };
+    }
+    const meanings = [];
+    for (const entry of rawCandidate.meanings) {
+      if (typeof entry !== "string" || entry.length > 180) return { error: "candidate.meanings 格式不正确" };
+      const value = entry.trim();
+      if (!value) continue;
+      totalMeaningLength += value.length;
+      if (totalMeaningLength > 1800) return { error: "candidate 释义总长度超出限制" };
+      meanings.push(value);
+    }
+    candidates.push({
+      word: word.value,
+      coreMeaning: coreMeaning.value,
+      shortMeaning: shortMeaning.value,
+      meanings,
+    });
+  }
+  return { value: { currentWord: currentWord.value, userAnswer: userAnswer.value, candidates } };
 }
 
 function validateCount(value, field, maximum = 100000) {
@@ -476,6 +549,20 @@ function normalizeConfusableFindModelResult(content) {
   return { items };
 }
 
+function normalizeConfusableMatchExistingModelResult(content) {
+  const parsed = parseJsonObject(content);
+  if (!parsed || typeof parsed.match !== "boolean") return null;
+  if (parsed.match === false) {
+    if (Object.keys(parsed).some((key) => !["match", "reason"].includes(key))) return null;
+    if (!["no_match", "ambiguous"].includes(parsed.reason)) return null;
+    return { match: false, reason: parsed.reason };
+  }
+  if (Object.keys(parsed).some((key) => !["match", "word", "confidence"].includes(key))) return null;
+  const word = typeof parsed.word === "string" ? parsed.word.trim() : "";
+  if (!word || word.length > 100 || parsed.confidence !== "high") return null;
+  return { match: true, word, confidence: "high" };
+}
+
 function normalizeModelResult(content) {
   if (typeof content !== "string" || !content.trim()) return null;
   let parsed;
@@ -596,6 +683,21 @@ function buildConfusableFindDeepSeekBody(payload) {
   };
 }
 
+function buildConfusableMatchExistingDeepSeekBody(payload) {
+  return {
+    model: "deepseek-v4-flash",
+    messages: [
+      { role: "system", content: CONFUSABLE_MATCH_EXISTING_SYSTEM_PROMPT },
+      { role: "user", content: `请只输出合法 JSON，在以下已建立的候选中做唯一高置信语义匹配：\n${JSON.stringify(payload)}` },
+    ],
+    thinking: { type: "disabled" },
+    response_format: { type: "json_object" },
+    stream: false,
+    temperature: 0,
+    max_tokens: 160,
+  };
+}
+
 async function callDeepSeek(payload, env, fetchImpl, options = {}) {
   const bodyBuilder = options.bodyBuilder || buildDeepSeekBody;
   const resultNormalizer = options.resultNormalizer || normalizeModelResult;
@@ -675,6 +777,7 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     "/api/daily-group-plan",
     "/api/confusable-suggest",
     "/api/confusable-find",
+    "/api/confusable-match-existing",
   ].includes(url.pathname)) {
     return errorResponse(request, 404, "NOT_FOUND", "接口不存在");
   }
@@ -691,6 +794,8 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     ? MAX_DAILY_REVIEW_BODY_BYTES
     : url.pathname === "/api/daily-group-plan"
       ? MAX_DAILY_GROUP_BODY_BYTES
+      : url.pathname === "/api/confusable-match-existing"
+        ? MAX_CONFUSABLE_MATCH_BODY_BYTES
       : url.pathname.startsWith("/api/confusable-") ? MAX_CONFUSABLE_BODY_BYTES : MAX_BODY_BYTES;
   if (Number.isFinite(declaredLength) && declaredLength > maximumBodyBytes) {
     return errorResponse(request, 413, "PAYLOAD_TOO_LARGE", "请求体过大");
@@ -713,6 +818,8 @@ async function handleRequest(request, env, fetchImpl = fetch) {
         ? validateConfusableSuggestPayload(rawPayload)
         : url.pathname === "/api/confusable-find"
           ? validateConfusableFindPayload(rawPayload)
+          : url.pathname === "/api/confusable-match-existing"
+            ? validateConfusableMatchExistingPayload(rawPayload)
           : validatePayload(rawPayload);
   if (validation.error) return errorResponse(request, 400, "INVALID_INPUT", validation.error);
 
@@ -746,6 +853,20 @@ async function handleRequest(request, env, fetchImpl = fetch) {
         resultNormalizer: normalizeConfusableFindModelResult,
         maxAttempts: 1,
       });
+    } else if (url.pathname === "/api/confusable-match-existing") {
+      result = await callDeepSeek(validation.value, env, fetchImpl, {
+        bodyBuilder: buildConfusableMatchExistingDeepSeekBody,
+        resultNormalizer: normalizeConfusableMatchExistingModelResult,
+        maxAttempts: 1,
+      });
+      if (result.match) {
+        const allowedCandidates = new Set(validation.value.candidates.map((candidate) => (
+          candidate.word.toLocaleLowerCase("en-US")
+        )));
+        if (!allowedCandidates.has(result.word.toLocaleLowerCase("en-US"))) {
+          result = { match: false, reason: "invalid_candidate", usage: result.usage };
+        }
+      }
     } else {
       result = await callDeepSeek(validation.value, env, fetchImpl);
     }
@@ -757,14 +878,13 @@ async function handleRequest(request, env, fetchImpl = fetch) {
   } catch (error) {
     const code = error?.message || "AI_UPSTREAM_UNAVAILABLE";
     const status = code === "AI_TIMEOUT" ? 504 : 502;
+    let invalidResponseMessage = "AI 返回了无法识别的判定结果";
+    if (url.pathname === "/api/daily-review") invalidResponseMessage = "AI 返回了无法识别的复盘结果";
+    else if (url.pathname === "/api/confusable-suggest") invalidResponseMessage = "AI 返回了无法识别的易混词结果";
+    else if (url.pathname === "/api/confusable-find") invalidResponseMessage = "AI 返回了无法识别的找词结果";
+    else if (url.pathname === "/api/confusable-match-existing") invalidResponseMessage = "AI 返回了无法识别的易混语义结果";
     const message = code === "AI_INVALID_RESPONSE"
-      ? url.pathname === "/api/daily-review"
-        ? "AI 返回了无法识别的复盘结果"
-        : url.pathname === "/api/confusable-suggest"
-          ? "AI 返回了无法识别的易混词结果"
-          : url.pathname === "/api/confusable-find"
-            ? "AI 返回了无法识别的找词结果"
-        : "AI 返回了无法识别的判定结果"
+      ? invalidResponseMessage
       : code === "AI_TIMEOUT"
         ? "AI 判断超时，请稍后再试"
         : "AI 服务暂时不可用";
@@ -773,6 +893,7 @@ async function handleRequest(request, env, fetchImpl = fetch) {
 }
 
 export {
+  buildConfusableMatchExistingDeepSeekBody,
   buildConfusableFindDeepSeekBody,
   buildConfusableSuggestDeepSeekBody,
   buildDailyGroupDeepSeekBody,
@@ -782,11 +903,13 @@ export {
   handleRequest,
   normalizeDailyGroupModelResult,
   normalizeDailyReviewModelResult,
+  normalizeConfusableMatchExistingModelResult,
   normalizeConfusableFindModelResult,
   normalizeConfusableSuggestModelResult,
   normalizeModelResult,
   validateDailyGroupPayload,
   validateDailyReviewPayload,
+  validateConfusableMatchExistingPayload,
   validateConfusableFindPayload,
   validateConfusableSuggestPayload,
   validatePayload,

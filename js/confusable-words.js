@@ -9,6 +9,8 @@
   const SEARCH_LIMIT = 10;
   const RECENT_LIMIT = 30;
   const PRACTICE_QUESTION_COUNT = 3;
+  const NEW_CANDIDATE_SCORE_THRESHOLD = 8;
+  const NEW_CANDIDATE_UNIQUENESS_GAP = 2;
   const CHINESE_SEARCH_ALIASES = Object.freeze({
     "采用": ["采取", "采纳"],
     "采取": ["采用", "采纳"],
@@ -275,8 +277,37 @@
       .sort((left, right) => left.priority - right.priority)[0] || null;
   }
 
-  function detectPersonalPairMeaningConfusion(currentWord, userAnswer, words, rawPairs) {
-    if (findIndependentMeaningMatch(currentWord, userAnswer)) return null;
+  function scoreModernCommonMeaning(word, userAnswer) {
+    const answerSegments = splitMeaningSegments(userAnswer);
+    if (answerSegments.length !== 1) return null;
+    const [answer] = answerSegments;
+    if (answer.length < 2) return null;
+    const answerVariants = new Set([
+      answer,
+      ...(CHINESE_SEARCH_ALIASES[answer] || []).map(normalizeMeaningSegment),
+    ]);
+    const match = collectMeaningFields(word)
+      .filter((field) => field.priority <= 3)
+      .map((field) => {
+        const exact = field.segments.some((segment) => answerVariants.has(segment));
+        const causative = !exact && field.segments.some((segment) => {
+          const withoutCausative = segment.replace(/^使(?:得)?/, "");
+          return withoutCausative !== segment && answerVariants.has(withoutCausative);
+        });
+        if (!exact && !causative) return null;
+        return { field, exact };
+      })
+      .filter(Boolean)
+      .sort((left, right) => left.field.priority - right.field.priority || Number(right.exact) - Number(left.exact))[0];
+    if (!match) return null;
+    return {
+      semanticScore: match.exact && match.field.priority <= 1 ? 4 : 3,
+      matchedMeaning: match.field.value,
+      meaningSource: match.field.source,
+    };
+  }
+
+  function getPersonalPairCandidates(currentWord, words, rawPairs) {
     const sourceWords = Array.isArray(words) ? words : [];
     const byId = new Map();
     sourceWords.forEach((word) => {
@@ -285,8 +316,8 @@
     });
     const currentId = getWordId(currentWord);
     const currentSpelling = normalizeText(currentWord?.word);
-    if (!currentId || !currentSpelling) return null;
-    const matchesBySpelling = new Map();
+    if (!currentId || !currentSpelling) return [];
+    const candidatesBySpelling = new Map();
 
     Object.values(normalizePairs(rawPairs)).forEach((pair) => {
       const wordA = byId.get(pair.wordIdA);
@@ -299,25 +330,38 @@
       const otherWordId = aMatches ? pair.wordIdB : pair.wordIdA;
       const otherSpelling = normalizeText(otherWord.word);
       if (!otherSpelling || otherSpelling === currentSpelling) return;
-      const meaningMatch = findIndependentMeaningMatch(otherWord, userAnswer);
-      if (!meaningMatch) return;
       const candidate = {
         word: otherWord,
         wordId: otherWordId,
         pair,
         pairKey: pair.pairKey,
-        matchedMeaning: meaningMatch.value,
-        meaningSource: meaningMatch.source,
         detectionSource: "personal_pair",
         exactCurrentWordId: pair.wordIdA === currentId || pair.wordIdB === currentId,
       };
-      const existing = matchesBySpelling.get(otherSpelling);
+      const existing = candidatesBySpelling.get(otherSpelling);
       if (!existing || (!existing.exactCurrentWordId && candidate.exactCurrentWordId)) {
-        matchesBySpelling.set(otherSpelling, candidate);
+        candidatesBySpelling.set(otherSpelling, candidate);
       }
     });
 
-    const matches = [...matchesBySpelling.values()];
+    return [...candidatesBySpelling.values()].sort((left, right) => (
+      Number(right.exactCurrentWordId) - Number(left.exactCurrentWordId)
+      || left.pairKey.localeCompare(right.pairKey, "en")
+    ));
+  }
+
+  function detectPersonalPairMeaningConfusion(currentWord, userAnswer, words, rawPairs) {
+    if (findIndependentMeaningMatch(currentWord, userAnswer)) return null;
+    const matches = getPersonalPairCandidates(currentWord, words, rawPairs)
+      .map((candidate) => {
+        const meaningMatch = findIndependentMeaningMatch(candidate.word, userAnswer);
+        return meaningMatch ? {
+          ...candidate,
+          matchedMeaning: meaningMatch.value,
+          meaningSource: meaningMatch.source,
+        } : null;
+      })
+      .filter(Boolean);
     return matches.length === 1 ? matches[0] : null;
   }
 
@@ -456,6 +500,70 @@
     return result;
   }
 
+  function selectUniqueCandidate(rawCandidates, minimumGap = NEW_CANDIDATE_UNIQUENESS_GAP) {
+    const candidates = [...(Array.isArray(rawCandidates) ? rawCandidates : [])]
+      .filter((candidate) => Number.isFinite(Number(candidate?.score)))
+      .sort((left, right) => Number(right.score) - Number(left.score) || Number(left.distance || 0) - Number(right.distance || 0));
+    if (!candidates.length) return null;
+    if (candidates[1] && candidates[0].score - candidates[1].score < minimumGap) return null;
+    return candidates[0];
+  }
+
+  function detectNewConfusableCandidate(currentWord, userAnswer, words, options = {}) {
+    const answer = compactChinese(userAnswer);
+    if (answer.length < 2) return null;
+    if (scoreModernCommonMeaning(currentWord, userAnswer)) return null;
+    const recent = new Set((options.recentWordIds || []).map(normalizeWordId));
+    const historical = new Set((options.historicalWordIds || []).map(normalizeWordId));
+    const currentSpelling = normalizeText(currentWord?.word);
+    const currentId = getWordId(currentWord);
+    const pairedCandidates = getPersonalPairCandidates(currentWord, words, options.personalPairs);
+    const pairedIds = new Set(pairedCandidates.map((candidate) => candidate.wordId));
+    const pairedSpellings = new Set(pairedCandidates.map((candidate) => normalizeText(candidate.word?.word)));
+    const candidates = [];
+    const seenSpellings = new Set();
+    const sourceWords = [...(Array.isArray(words) ? words : [])].sort((left, right) => (
+      Number(right?.book === currentWord?.book) - Number(left?.book === currentWord?.book)
+    ));
+    for (const word of sourceWords) {
+      const wordId = getWordId(word);
+      const spelling = normalizeText(word?.word);
+      if (!wordId || wordId === currentId || spelling === currentSpelling || seenSpellings.has(spelling)) continue;
+      if (pairedIds.has(wordId) || pairedSpellings.has(spelling)) continue;
+      seenSpellings.add(spelling);
+      const semanticMatch = scoreModernCommonMeaning(word, userAnswer);
+      if (!semanticMatch || semanticMatch.semanticScore < 3) continue;
+      const distance = damerauLevenshtein(currentSpelling, word.word);
+      const spellingSignal = distance <= 1 ? 5 : distance === 2 ? 3 : 0;
+      if (spellingSignal < 3) continue;
+      const semanticSignal = semanticMatch.semanticScore === 4 ? 6 : 5;
+      const encounterSignal = recent.has(wordId) ? 2 : historical.has(wordId) ? 2 : 0;
+      const score = semanticSignal + spellingSignal + encounterSignal;
+      if (score >= NEW_CANDIDATE_SCORE_THRESHOLD) candidates.push({
+        word,
+        wordId,
+        score,
+        confusableScore: score,
+        rationaleScore: spellingSignal + encounterSignal,
+        semanticScore: semanticMatch.semanticScore,
+        distance,
+        matchedMeaning: semanticMatch.matchedMeaning,
+        meaningSource: semanticMatch.meaningSource,
+        detectionSource: "local_new_candidate",
+      });
+    }
+    return selectUniqueCandidate(candidates);
+  }
+
+  function validateExistingPairAiMatch(result, candidates) {
+    if (!result || result.match !== true || result.confidence !== "high") return null;
+    const requestedWord = normalizeText(result.word);
+    if (!requestedWord) return null;
+    const matches = (Array.isArray(candidates) ? candidates : [])
+      .filter((candidate) => normalizeText(candidate?.word?.word) === requestedWord);
+    return matches.length === 1 ? { ...matches[0], detectionSource: "personal_pair_ai" } : null;
+  }
+
   function detectMeaningConfusion(currentWord, userAnswer, words, options = {}) {
     const personalMatch = detectPersonalPairMeaningConfusion(
       currentWord,
@@ -464,32 +572,7 @@
       options.personalPairs,
     );
     if (personalMatch) return personalMatch;
-    const answer = compactChinese(userAnswer);
-    if (answer.length < 2) return null;
-    if (collectMeaningFields(currentWord).some((field) => field.normalized.includes(answer))) return null;
-    const recent = new Set((options.recentWordIds || []).map(normalizeWordId));
-    const currentSpelling = normalizeText(currentWord?.word);
-    const currentId = getWordId(currentWord);
-    const candidates = [];
-    const seenSpellings = new Set();
-    for (const word of (Array.isArray(words) ? words : [])) {
-      const wordId = getWordId(word);
-      const spelling = normalizeText(word?.word);
-      if (!wordId || wordId === currentId || spelling === currentSpelling || seenSpellings.has(spelling)) continue;
-      seenSpellings.add(spelling);
-      const match = collectMeaningFields(word)
-        .filter((field) => field.normalized.includes(answer))
-        .sort((left, right) => left.priority - right.priority)[0];
-      if (!match || match.priority > 1) continue;
-      const distance = damerauLevenshtein(currentSpelling, word.word);
-      const spellingSignal = distance <= 1 ? 5 : distance === 2 ? 3 : 0;
-      const score = (match.priority === 0 ? 6 : 5) + spellingSignal + (recent.has(wordId) ? 2 : 0);
-      if (score >= 8) candidates.push({ word, wordId, score, distance, matchedMeaning: match.value });
-    }
-    candidates.sort((left, right) => right.score - left.score || left.distance - right.distance);
-    if (!candidates.length) return null;
-    if (candidates[1] && candidates[0].score - candidates[1].score < 2) return null;
-    return candidates[0];
+    return detectNewConfusableCandidate(currentWord, userAnswer, words, options);
   }
 
   function buildPracticeQuestions(rawPair, wordA, wordB) {
@@ -542,6 +625,8 @@
     SEARCH_LIMIT,
     RECENT_LIMIT,
     PRACTICE_QUESTION_COUNT,
+    NEW_CANDIDATE_SCORE_THRESHOLD,
+    NEW_CANDIDATE_UNIQUENESS_GAP,
     normalizeTypes,
     getWordId,
     getPairKey,
@@ -559,11 +644,16 @@
     normalizeMeaningSegment,
     splitMeaningSegments,
     findIndependentMeaningMatch,
+    scoreModernCommonMeaning,
+    getPersonalPairCandidates,
     detectPersonalPairMeaningConfusion,
     damerauLevenshtein,
     searchWords,
     findExactWord,
     validateAiSuggestions,
+    selectUniqueCandidate,
+    detectNewConfusableCandidate,
+    validateExistingPairAiMatch,
     detectMeaningConfusion,
     buildPracticeQuestions,
   };
