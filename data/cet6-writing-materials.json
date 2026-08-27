@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "aiGenerated": false,
+  "description": "基于本地 CET6 真题主题人工与规则整理的离线写作素材；当前真题素材优先，题型素材和通用安全素材随后。",
+  "common": {
+    "benefit1": [
+      { "zh": "作出更明智的决定", "en": "make better-informed decisions" },
+      { "zh": "提高解决实际问题的能力", "en": "improve their ability to solve practical problems" }
+    ],
+    "benefit2": [
+      { "zh": "为长期发展打下坚实基础", "en": "lay a solid foundation for long-term development" },
+      { "zh": "更从容地应对未来挑战", "en": "cope with future challenges more confidently" }
+    ],
+    "example": [
+      { "zh": "一名大学生把这一做法用于日常学习，并逐步取得稳定进步", "en": "a college student applied this approach to daily study and gradually made steady progress" }
+    ],
+    "action": [
+      { "zh": "从小而可行的行动开始，并长期坚持", "en": "start with small practical steps and keep them up over time" }
+    ],
+    "positiveResult": [
+      { "zh": "把认识转化为真正的进步", "en": "turn awareness into meaningful progress" }
+    ],
+    "conclusion": [
+      { "zh": "个人、家庭、学校与社会应共同采取务实行动", "en": "individuals, families, schools and society should take practical action together" }
+    ]
+  },
+  "types": {
+    "opinion": {
+      "opinion": [
+        { "zh": "这一主题值得持续重视并落实到行动中", "en": "this issue deserves lasting attention and practical action" },
+        { "zh": "它对个人成长和社会进步都很重要", "en": "it matters to both personal growth and social progress" }
+      ],
+      "reason1": [
+        { "zh": "它回应了学习、工作和生活中的真实需要", "en": "it responds to real needs in study, work and everyday life" }
+      ],
+      "reason2": [
+        { "zh": "它能培养面向未来的习惯与能力", "en": "it develops habits and abilities needed for the future" }
+      ]
+    },
+    "problem-solution": {
+      "position": [
+        { "zh": "这一现象需要理性看待并及时改善", "en": "this phenomenon should be viewed rationally and addressed in time" }
+      ],
+      "cause1": [
+        { "zh": "相关知识与判断训练不足", "en": "people lack relevant knowledge and judgement training" }
+      ],
+      "effect1": [
+        { "zh": "这可能妨碍青少年形成独立而理性的判断", "en": "this may prevent young people from forming independent and rational judgement" }
+      ],
+      "measure1": [
+        { "zh": "学校与家庭提供清晰、持续的引导", "en": "schools and families should provide clear and consistent guidance" }
+      ],
+      "result1": [
+        { "zh": "帮助年轻人识别风险并作出负责任的选择", "en": "help young people recognize risks and make responsible choices" }
+      ],
+      "measure2": [
+        { "zh": "个人在行动前核实信息并反思后果", "en": "individuals should verify information and consider the consequences before acting" }
+      ],
+      "example": [
+        { "zh": "学校可以通过真实案例开展短期实践训练", "en": "schools can use real cases in short practical workshops" }
+      ]
+    },
+    "chart": {
+      "trend": [
+        { "zh": "图表显示相关指标在所示时期总体显著上升", "en": "the chart shows a marked overall rise in the relevant indicator during the period shown" }
+      ],
+      "achievement": [
+        { "zh": "这一变化体现了中国在该领域取得的持续进展", "en": "the change reflects China's sustained progress in this field" }
+      ],
+      "reason1": [
+        { "zh": "长期政策支持扩大了公共服务与发展机会", "en": "long-term policy support has expanded public services and development opportunities" }
+      ],
+      "outcome1": [
+        { "zh": "让更多人分享发展成果", "en": "allow more people to share the benefits of development" }
+      ],
+      "reason2": [
+        { "zh": "基础设施和人才投入提升了执行能力", "en": "investment in infrastructure and human resources has strengthened implementation" }
+      ],
+      "outcome2": [
+        { "zh": "推动更均衡、更可持续的发展", "en": "promote more balanced and sustainable development" }
+      ],
+      "example": [
+        { "zh": "图中连续多年的变化说明进步并非偶然", "en": "the year-by-year change in the chart shows that the progress was not accidental" }
+      ],
+      "action": [
+        { "zh": "继续完善政策并把发展质量放在重要位置", "en": "continue improving policy while giving priority to the quality of development" }
+      ]
+    }
+  },
+  "profiles": {
+    "trust": {
+      "label": "信任关系",
+      "topic": [{ "zh": "相互信任", "en": "mutual trust" }],
+      "reason1": [{ "zh": "坦诚沟通能够减少误解", "en": "open communication reduces misunderstanding" }],
+      "reason2": [{ "zh": "可靠的承诺能建立稳定预期", "en": "reliable commitments create stable expectations" }],
+      "example": [{ "zh": "师生明确目标并及时反馈，合作会更加顺畅", "en": "teachers and students set clear goals and exchange timely feedback, making cooperation smoother" }],
+      "action": [{ "zh": "保持诚实、尊重，并用行动兑现承诺", "en": "remain honest and respectful and honor promises through action" }]
+    },
+    "balance": {
+      "label": "工作生活平衡",
+      "topic": [{ "zh": "工作与个人生活的健康平衡", "en": "a healthy balance between work and personal life" }],
+      "reason1": [{ "zh": "清晰的优先级能避免时间被无效占用", "en": "clear priorities prevent time from being wasted" }],
+      "reason2": [{ "zh": "适度休息能够恢复专注力和创造力", "en": "proper rest restores concentration and creativity" }],
+      "example": [{ "zh": "按计划完成核心任务后安排运动和兴趣活动", "en": "a worker completes key tasks on schedule and then makes time for exercise and personal interests" }],
+      "action": [{ "zh": "制定可执行的时间边界并定期调整", "en": "set workable time boundaries and review them regularly" }]
+    },
+    "workplace-team": {
+      "label": "团队协作",
+      "topic": [{ "zh": "团队精神与有效沟通", "en": "team spirit and effective communication" }],
+      "reason1": [{ "zh": "成员共享信息可以减少重复劳动", "en": "sharing information among members reduces duplicated work" }],
+      "reason2": [{ "zh": "不同观点能够互补并改进方案", "en": "different perspectives complement one another and improve solutions" }],
+      "example": [{ "zh": "项目组分工明确并及时同步进度，最终按期完成任务", "en": "a project team divided responsibilities clearly, shared progress promptly and finished on time" }],
+      "action": [{ "zh": "主动倾听、清楚表达并共同承担责任", "en": "listen actively, communicate clearly and share responsibility" }]
+    },
+    "relationships": {
+      "label": "人际理解",
+      "topic": [{ "zh": "相互理解与尊重", "en": "mutual understanding and respect" }],
+      "reason1": [{ "zh": "换位思考能够减少不必要的冲突", "en": "seeing matters from another person's perspective reduces unnecessary conflict" }],
+      "reason2": [{ "zh": "尊重差异能建立持久的合作关系", "en": "respecting differences builds lasting cooperative relationships" }],
+      "example": [{ "zh": "同学先倾听彼此理由，再共同寻找折中方案", "en": "classmates listened to each other's reasons before finding a workable compromise" }],
+      "action": [{ "zh": "在表达观点前先认真倾听并确认理解", "en": "listen carefully and confirm understanding before expressing a view" }]
+    },
+    "learning": {
+      "label": "学习能力",
+      "topic": [{ "zh": "有效而独立的学习", "en": "effective and independent learning" }],
+      "reason1": [{ "zh": "明确目标和方法能提高学习效率", "en": "clear goals and sound methods improve learning efficiency" }],
+      "reason2": [{ "zh": "持续反思能帮助学习者发现并弥补薄弱点", "en": "regular reflection helps learners identify and address weaknesses" }],
+      "example": [{ "zh": "学生把大目标拆成每周任务，并根据反馈调整方法", "en": "a student divided a major goal into weekly tasks and adjusted methods according to feedback" }],
+      "action": [{ "zh": "打好基础、主动练习并定期复盘", "en": "build a solid foundation, practise actively and review progress regularly" }]
+    },
+    "responsibility": {
+      "label": "社会责任",
+      "topic": [{ "zh": "社会与社区责任感", "en": "a sense of social and community responsibility" }],
+      "reason1": [{ "zh": "个人选择会影响周围的人和公共环境", "en": "individual choices affect other people and the shared environment" }],
+      "reason2": [{ "zh": "主动承担责任能够增强社区互信", "en": "taking responsibility strengthens trust within a community" }],
+      "example": [{ "zh": "居民参与志愿服务并共同维护公共空间", "en": "residents volunteered and worked together to maintain public spaces" }],
+      "action": [{ "zh": "从遵守规则和帮助身边的人做起", "en": "begin by following shared rules and helping people nearby" }]
+    },
+    "goals": {
+      "label": "目标与坚持",
+      "topic": [{ "zh": "现实目标、专注行动与长期坚持", "en": "realistic goals, focused action and persistence" }],
+      "reason1": [{ "zh": "具体目标能把努力引向清晰方向", "en": "specific goals direct effort towards a clear purpose" }],
+      "reason2": [{ "zh": "持续行动能够把小进步积累成长期成果", "en": "persistent action turns small gains into long-term results" }],
+      "example": [{ "zh": "学生每天完成一项可衡量任务，最终达成学期目标", "en": "a student completed one measurable task each day and eventually reached the semester goal" }],
+      "action": [{ "zh": "设定可实现的阶段目标并坚持完成", "en": "set achievable milestones and work on them consistently" }]
+    },
+    "values": {
+      "label": "精神价值",
+      "topic": [{ "zh": "品格与精神财富", "en": "good character and intellectual wealth" }],
+      "reason1": [{ "zh": "内在品质比外在条件更能决定长期选择", "en": "inner qualities shape long-term choices more than outward conditions" }],
+      "reason2": [{ "zh": "知识、善意和正直能够持续影响他人", "en": "knowledge, kindness and integrity create lasting influence on others" }],
+      "example": [{ "zh": "一名志愿者用耐心与专业帮助他人，而不是追求外在回报", "en": "a volunteer helped others with patience and skill instead of seeking outward rewards" }],
+      "action": [{ "zh": "通过阅读、反思和服务他人丰富内心", "en": "enrich the mind through reading, reflection and service to others" }]
+    },
+    "growth": {
+      "label": "成长与挑战",
+      "topic": [{ "zh": "在探索与挑战中成长", "en": "personal growth through exploration and challenges" }],
+      "reason1": [{ "zh": "真实挑战能暴露不足并促使人学习", "en": "real challenges reveal weaknesses and motivate people to learn" }],
+      "reason2": [{ "zh": "自主选择能够增强责任感和自信", "en": "making independent choices strengthens responsibility and confidence" }],
+      "example": [{ "zh": "大学生尝试新项目，在解决困难的过程中找到适合自己的方向", "en": "a college student tried a new project and found a suitable direction while solving difficulties" }],
+      "action": [{ "zh": "主动尝试、接受反馈并从错误中学习", "en": "try new things, accept feedback and learn from mistakes" }]
+    },
+    "communication": {
+      "label": "沟通讨论",
+      "topic": [{ "zh": "有效沟通与理性讨论", "en": "effective communication and reasoned discussion" }],
+      "reason1": [{ "zh": "清楚表达能减少信息偏差", "en": "clear expression reduces information gaps" }],
+      "reason2": [{ "zh": "友好讨论能把分歧转化为更好的方案", "en": "friendly discussion turns disagreement into better solutions" }],
+      "example": [{ "zh": "小组先列出共同目标，再用证据比较不同观点", "en": "a group identified a shared goal before comparing different views with evidence" }],
+      "action": [{ "zh": "倾听、核实理解并以事实支持观点", "en": "listen, check understanding and support views with evidence" }]
+    },
+    "creativity": {
+      "label": "创造力",
+      "topic": [{ "zh": "创造力与独立思考", "en": "creativity and independent thinking" }],
+      "reason1": [{ "zh": "好奇心促使人提出新的问题", "en": "curiosity encourages people to ask new questions" }],
+      "reason2": [{ "zh": "多样经验能帮助人重新组合知识并产生新想法", "en": "diverse experiences help people recombine knowledge and generate new ideas" }],
+      "example": [{ "zh": "学生比较多种解法后设计出更简单的项目方案", "en": "students compared several approaches and designed a simpler project solution" }],
+      "action": [{ "zh": "保护独立思考时间，并把工具用于启发而非替代思考", "en": "protect time for independent thought and use tools to inspire rather than replace thinking" }]
+    },
+    "online-information": {
+      "label": "网络信息判断",
+      "issue": [{ "zh": "年轻人难以辨别网络信息真伪", "en": "many young people struggle to distinguish reliable online information from false content" }],
+      "cause1": [{ "zh": "平台传播速度快，而媒介素养训练不足", "en": "online content spreads rapidly while media-literacy training remains insufficient" }],
+      "effect1": [{ "zh": "虚假信息会误导判断并被继续传播", "en": "false information can mislead judgement and be shared further" }],
+      "measure1": [{ "zh": "学校教授来源核验、交叉检查和证据判断", "en": "schools should teach source checking, cross-verification and evidence evaluation" }],
+      "measure2": [{ "zh": "用户转发前查看作者、日期和可靠来源", "en": "users should check the author, date and reliable sources before sharing" }],
+      "example": [{ "zh": "学生比较官方资料与多个独立来源后再下结论", "en": "students compared official material with several independent sources before reaching a conclusion" }]
+    },
+    "idol-culture": {
+      "label": "理性追星",
+      "issue": [{ "zh": "部分青少年过度模仿偶像并投入过多金钱时间", "en": "some teenagers imitate idols blindly and spend excessive time and money on star chasing" }],
+      "cause1": [{ "zh": "同伴压力和商业宣传放大了情绪投入", "en": "peer pressure and commercial promotion intensify emotional involvement" }],
+      "effect1": [{ "zh": "这可能挤占学习时间并削弱独立判断", "en": "this may take time away from study and weaken independent judgement" }],
+      "measure1": [{ "zh": "家庭和学校引导青少年欣赏作品而非盲目模仿", "en": "families and schools should guide teenagers to appreciate work instead of copying stars blindly" }],
+      "measure2": [{ "zh": "青少年为娱乐支出和追星时间设定合理边界", "en": "teenagers should set reasonable limits on entertainment spending and fan activities" }],
+      "example": [{ "zh": "学生把对运动员的欣赏转化为规律训练，而不是高消费", "en": "a student turned admiration for an athlete into regular practice instead of excessive spending" }]
+    },
+    "overprotection": {
+      "label": "家庭过度保护",
+      "issue": [{ "zh": "父母替孩子安排一切，限制了自主探索", "en": "some parents arrange everything for their children and limit independent exploration" }],
+      "cause1": [{ "zh": "父母担心孩子犯错或受到伤害", "en": "parents fear that their children may make mistakes or get hurt" }],
+      "effect1": [{ "zh": "孩子可能缺乏独立决策和承担后果的能力", "en": "children may fail to develop independent decision-making and responsibility" }],
+      "measure1": [{ "zh": "父母在安全范围内逐步给予选择权", "en": "parents should gradually give children choices within safe boundaries" }],
+      "measure2": [{ "zh": "允许孩子从可控的小错误中学习", "en": "children should be allowed to learn from small and manageable mistakes" }],
+      "example": [{ "zh": "父母让孩子独立规划一次短途活动，并在需要时提供建议", "en": "parents let a child plan a short trip independently while offering advice when needed" }]
+    },
+    "environment": {
+      "label": "环保生活",
+      "topic": [{ "zh": "环保生活方式", "en": "an environmentally friendly lifestyle" }],
+      "reason1": [{ "zh": "日常消费选择会累积成显著的环境影响", "en": "everyday consumption choices add up to a significant environmental impact" }],
+      "reason2": [{ "zh": "节约资源也能降低长期生活成本", "en": "saving resources can also reduce long-term living costs" }],
+      "example": [{ "zh": "学生自带水杯、乘坐公共交通并减少一次性用品", "en": "students carried reusable bottles, used public transport and reduced disposable products" }],
+      "action": [{ "zh": "选择可重复使用的物品并减少不必要的能源消耗", "en": "choose reusable products and reduce unnecessary energy use" }]
+    },
+    "helping": {
+      "label": "帮助他人",
+      "topic": [{ "zh": "主动帮助有需要的人", "en": "offering practical help to people in need" }],
+      "reason1": [{ "zh": "及时帮助能缓解他人的现实困难", "en": "timely help can relieve practical difficulties faced by others" }],
+      "reason2": [{ "zh": "互助能够增强社会信任和归属感", "en": "mutual support strengthens social trust and belonging" }],
+      "example": [{ "zh": "大学生利用专业知识为社区提供志愿服务", "en": "college students used their professional knowledge to volunteer in the community" }],
+      "action": [{ "zh": "在能力范围内提供具体、尊重且持续的帮助", "en": "offer specific, respectful and sustainable help within one's ability" }]
+    },
+    "education-tech": {
+      "label": "教育技术",
+      "topic": [{ "zh": "信息技术支持的多样高效学习", "en": "diverse and efficient learning supported by information technology" }],
+      "reason1": [{ "zh": "数字资源突破了时间和地点限制", "en": "digital resources remove many limits of time and place" }],
+      "reason2": [{ "zh": "学习者可以根据反馈调整节奏和内容", "en": "learners can adjust pace and content according to feedback" }],
+      "example": [{ "zh": "学生先在线预习，再在课堂讨论中解决难点", "en": "students previewed material online and then solved difficult points in classroom discussion" }],
+      "action": [{ "zh": "选择可靠资源并把数字工具与主动练习结合", "en": "choose reliable resources and combine digital tools with active practice" }]
+    },
+    "critical-thinking": {
+      "label": "批判性思维",
+      "topic": [{ "zh": "批判性思维与理性选择", "en": "critical thinking and rational decision-making" }],
+      "reason1": [{ "zh": "比较证据能避免被片面信息误导", "en": "comparing evidence helps people avoid being misled by one-sided information" }],
+      "reason2": [{ "zh": "审视假设能提高复杂决策的质量", "en": "examining assumptions improves the quality of complex decisions" }],
+      "example": [{ "zh": "学生核对多个来源后才采用一项研究结论", "en": "a student checked several sources before accepting a research claim" }],
+      "action": [{ "zh": "提问、核实证据，并在作决定前考虑替代解释", "en": "ask questions, verify evidence and consider alternative explanations before deciding" }]
+    },
+    "mental-health": {
+      "label": "心理健康",
+      "topic": [{ "zh": "心理健康与身体健康同等重要", "en": "mental well-being as a priority equal to physical health" }],
+      "reason1": [{ "zh": "稳定的心理状态影响学习、工作和关系", "en": "a stable mental state affects study, work and relationships" }],
+      "reason2": [{ "zh": "及早识别压力能防止问题进一步恶化", "en": "recognizing stress early can prevent problems from becoming more serious" }],
+      "example": [{ "zh": "学生在压力过大时寻求咨询并调整作息", "en": "a student sought counselling and adjusted daily routines when stress became excessive" }],
+      "action": [{ "zh": "保持规律生活，并在需要时主动寻求专业帮助", "en": "maintain healthy routines and seek professional help when necessary" }]
+    },
+    "family-independence": {
+      "label": "儿童独立成长",
+      "topic": [{ "zh": "给孩子自主探索和学习的空间", "en": "giving children room to explore and learn independently" }],
+      "reason1": [{ "zh": "自主选择能训练判断与责任感", "en": "independent choices train judgement and responsibility" }],
+      "reason2": [{ "zh": "从小错误中学习能够建立真实自信", "en": "learning from small mistakes builds genuine confidence" }],
+      "example": [{ "zh": "孩子独立完成一个小项目，父母只在关键处提供建议", "en": "a child completed a small project independently while the parents advised only when necessary" }],
+      "action": [{ "zh": "提供安全边界，同时逐步减少不必要的干预", "en": "provide safe boundaries while gradually reducing unnecessary intervention" }]
+    },
+    "senior-contribution": {
+      "label": "老年社会参与",
+      "topic": [{ "zh": "老年人的技能、经验与社会贡献", "en": "the skills, experience and social contributions of elderly people" }],
+      "reason1": [{ "zh": "长期经验能为年轻人提供实践指导", "en": "long experience provides practical guidance for younger people" }],
+      "reason2": [{ "zh": "持续参与能增强老年人的价值感与社会联系", "en": "continued participation strengthens older people's sense of value and social connection" }],
+      "example": [{ "zh": "退休工程师在社区项目中指导青年志愿者", "en": "a retired engineer mentored young volunteers in a community project" }],
+      "action": [{ "zh": "创造灵活、安全且尊重经验的参与机会", "en": "create flexible and safe opportunities that respect their experience" }]
+    },
+    "social-practice": {
+      "label": "社会实践",
+      "topic": [{ "zh": "社会实践与学术学习相结合", "en": "the combination of social practice and academic learning" }],
+      "reason1": [{ "zh": "实践能检验课堂知识在真实情境中的适用性", "en": "practice tests how classroom knowledge works in real situations" }],
+      "reason2": [{ "zh": "实际任务能培养沟通、协作和解决问题的能力", "en": "real tasks develop communication, teamwork and problem-solving skills" }],
+      "example": [{ "zh": "学生在社区调研中运用课程方法并发现新的问题", "en": "students applied course methods in a community survey and discovered new questions" }],
+      "action": [{ "zh": "把课程学习与有明确目标的实践项目结合", "en": "combine academic study with purposeful practical projects" }]
+    },
+    "digital-literacy": {
+      "label": "数字素养",
+      "topic": [{ "zh": "数字素养与负责任的技术使用", "en": "digital literacy and responsible use of technology" }],
+      "reason1": [{ "zh": "理解数字工具有助于安全高效地处理信息", "en": "understanding digital tools helps people handle information safely and efficiently" }],
+      "reason2": [{ "zh": "数据意识能够保护隐私并改善在线判断", "en": "data awareness protects privacy and improves online judgement" }],
+      "example": [{ "zh": "学生核对网站来源、管理权限并保护个人数据", "en": "students checked website sources, managed permissions and protected personal data" }],
+      "action": [{ "zh": "持续学习数字技能，并遵守安全与伦理规范", "en": "keep learning digital skills and follow safety and ethical standards" }]
+    },
+    "social-media": {
+      "label": "社交媒体责任",
+      "topic": [{ "zh": "正确且负责任地使用社交媒体", "en": "proper and responsible use of social media" }],
+      "reason1": [{ "zh": "发布与转发会影响他人的判断和情绪", "en": "posts and shares can influence other people's judgement and emotions" }],
+      "reason2": [{ "zh": "合理控制使用时间有助于保护专注力", "en": "reasonable time limits help protect concentration" }],
+      "example": [{ "zh": "用户核实消息来源、尊重隐私并关闭无关提醒", "en": "a user verified sources, respected privacy and disabled unnecessary notifications" }],
+      "action": [{ "zh": "分享前核实、交流时尊重他人，并管理使用时间", "en": "verify before sharing, communicate respectfully and manage screen time" }]
+    },
+    "career": {
+      "label": "职业准备",
+      "topic": [{ "zh": "为未来职业与挑战做好准备", "en": "better preparation for future careers and challenges" }],
+      "reason1": [{ "zh": "专业知识为解决岗位问题提供基础", "en": "professional knowledge provides a basis for solving workplace problems" }],
+      "reason2": [{ "zh": "实践经验能帮助学生理解职业要求", "en": "practical experience helps students understand career requirements" }],
+      "example": [{ "zh": "学生通过实习积累经验并改进沟通能力", "en": "a student gained practical experience and improved communication skills through an internship" }],
+      "action": [{ "zh": "积累专业知识、获得实践经验并了解职业要求", "en": "gain professional knowledge, obtain practical experience and understand career requirements" }]
+    },
+    "ai-creativity": {
+      "label": "AI 与创造力",
+      "topic": [{ "zh": "在使用人工智能时保护人类创造力", "en": "protecting human creativity while using artificial intelligence" }],
+      "reason1": [{ "zh": "过度依赖自动答案可能削弱独立探索", "en": "overreliance on automatic answers may weaken independent exploration" }],
+      "reason2": [{ "zh": "把 AI 用作辅助工具可以释放时间进行更深入思考", "en": "using AI as an assistant can free time for deeper thinking" }],
+      "example": [{ "zh": "学生先独立形成方案，再用 AI 检查遗漏而不照搬答案", "en": "a student formed an original plan first and then used AI to check omissions instead of copying its answer" }],
+      "action": [{ "zh": "先独立思考，再有边界地使用 AI 进行反馈与验证", "en": "think independently first and use AI within clear limits for feedback and verification" }]
+    },
+    "youth-opportunity": {
+      "label": "青年机会",
+      "topic": [{ "zh": "青年通过时代机会实现自我价值", "en": "young people realizing self-worth through opportunities of the times" }],
+      "reason1": [{ "zh": "更广阔的平台让青年把能力用于真实需要", "en": "broader platforms allow young people to apply their abilities to real needs" }],
+      "reason2": [{ "zh": "个人理想与社会发展相结合能产生持久动力", "en": "linking personal aspirations with social development creates lasting motivation" }],
+      "example": [{ "zh": "青年把专业所长用于科技创新和社区服务", "en": "young people applied their expertise to technological innovation and community service" }],
+      "action": [{ "zh": "提升能力、把握机会并以实际贡献实现价值", "en": "improve abilities, seize opportunities and realize value through practical contributions" }]
+    },
+    "teacher-influence": {
+      "label": "教师影响",
+      "topic": [{ "zh": "教师对学业与个人发展的深远影响", "en": "teachers' profound influence on academic and personal development" }],
+      "reason1": [{ "zh": "清晰指导能帮助学生建立有效学习方法", "en": "clear guidance helps students develop effective ways of learning" }],
+      "reason2": [{ "zh": "真诚鼓励能够增强学生面对困难的信心", "en": "sincere encouragement strengthens students' confidence when facing difficulties" }],
+      "example": [{ "zh": "教师通过具体反馈帮助学生发现潜力并改进方法", "en": "a teacher used specific feedback to help a student discover potential and improve methods" }],
+      "action": [{ "zh": "以专业指导、尊重和持续反馈支持学生", "en": "support students with professional guidance, respect and consistent feedback" }]
+    },
+    "chart-development": {
+      "label": "中国发展成就",
+      "trend": [{ "zh": "图中指标在多年间持续改善", "en": "the indicator in the chart improved steadily over many years" }],
+      "achievement": [{ "zh": "数据体现了中国在相关领域取得的显著成就", "en": "the data demonstrates China's notable achievements in the relevant field" }],
+      "reason1": [{ "zh": "持续投入和长期规划扩大了发展机会", "en": "sustained investment and long-term planning expanded development opportunities" }],
+      "reason2": [{ "zh": "各级机构的协同执行把政策转化为实际成果", "en": "coordinated implementation at different levels turned policy into concrete results" }],
+      "example": [{ "zh": "图表所示的长期变化说明成果具有连续性", "en": "the long-term change shown in the chart demonstrates the continuity of the achievement" }]
+    }
+  }
+}

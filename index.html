@@ -32,6 +32,8 @@
     <script src="js/statistics-service.js" defer></script>
     <script src="js/backup-service.js" defer></script>
     <script src="js/study.js" defer></script>
+    <script src="js/writing-data.js" defer></script>
+    <script src="js/writing.js" defer></script>
     <script src="js/app.js" defer></script>
   </head>
   <body>
@@ -223,6 +225,15 @@
           </div>
 
           <div class="quick-grid">
+            <button class="quick-card" type="button" data-page="writing">
+              <span class="quick-card__icon quick-card__icon--writing" aria-hidden="true">📝</span>
+              <span class="quick-card__text">
+                <strong>六级作文</strong>
+                <small>本地真题 · 傻瓜式填空写作</small>
+              </span>
+              <span class="quick-card__arrow" aria-hidden="true">›</span>
+            </button>
+
             <button class="quick-card" type="button" data-mode="review">
               <span class="quick-card__icon quick-card__icon--green" aria-hidden="true">⟳</span>
               <span class="quick-card__text">
@@ -1101,6 +1112,25 @@
               </div>
               <button class="danger-button" id="reset-all-button" type="button">重置全部数据</button>
             </section>
+          </section>
+        </main>
+      </div>
+    </section>
+
+    <section class="view writing-view" id="writing-view" aria-label="六级作文真题训练" hidden>
+      <div class="subpage-shell writing-shell">
+        <header class="subpage-topbar">
+          <button class="back-button" id="writing-back-button" type="button">
+            <span aria-hidden="true">←</span>
+            <span id="writing-back-label">返回首页</span>
+          </button>
+          <span class="study-book-badge">CET-6 WRITING</span>
+        </header>
+        <main id="writing-root">
+          <section class="writing-loading">
+            <span aria-hidden="true">📝</span>
+            <h1>正在准备本地真题</h1>
+            <p>只加载整理后的作文数据，不加载原始 PDF。</p>
           </section>
         </main>
       </div>

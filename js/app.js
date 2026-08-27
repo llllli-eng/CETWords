@@ -26,6 +26,7 @@ const {
   confusableWords,
   confusableAi,
   confusableDetection,
+  writing,
 } = window.CETWords;
 
 const studyConfusionDetector = confusableDetection.createService({
@@ -99,6 +100,7 @@ const elements = {
   confusableListView: document.querySelector("#confusable-list-view"),
   statisticsView: document.querySelector("#statistics-view"),
   settingsView: document.querySelector("#settings-view"),
+  writingView: document.querySelector("#writing-view"),
   bookOptions: document.querySelectorAll(".book-option"),
   currentBookBadge: document.querySelector("#current-book-badge"),
   dailyProgressRing: document.querySelector("#daily-progress-ring"),
@@ -480,6 +482,7 @@ function setVisibleView(viewName) {
     confusables: elements.confusableListView,
     statistics: elements.statisticsView,
     settings: elements.settingsView,
+    writing: elements.writingView,
   };
 
   Object.entries(views).forEach(([name, view]) => {
@@ -490,7 +493,7 @@ function setVisibleView(viewName) {
   document.body.classList.toggle("is-study-mode", viewName === "study");
   document.body.classList.toggle(
     "is-subpage-mode",
-    viewName === "collection" || viewName === "words" || viewName === "confusables" || viewName === "statistics" || viewName === "settings",
+    viewName === "collection" || viewName === "words" || viewName === "confusables" || viewName === "statistics" || viewName === "settings" || viewName === "writing",
   );
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -724,6 +727,11 @@ function showHome() {
   setVisibleView("home");
   document.title = "拾词 · 四六级背单词";
   updateDashboard();
+}
+
+function showWriting() {
+  setVisibleView("writing");
+  writing.open();
 }
 
 function closeReviewAdjustDialog() {
@@ -3140,6 +3148,8 @@ elements.quickCleanupDialog.addEventListener("click", (event) => {
   if (event.target === elements.quickCleanupDialog) closeQuickCleanupDialog();
 });
 
+writing.initialize({ onBackHome: showHome, showToast });
+
 document.querySelectorAll("[data-page]").forEach((button) => {
   button.addEventListener("click", () => {
     const page = button.dataset.page;
@@ -3148,6 +3158,7 @@ document.querySelectorAll("[data-page]").forEach((button) => {
     if (page === "confusables") showConfusableList();
     if (page === "statistics") showStatistics();
     if (page === "settings") showSettings();
+    if (page === "writing") showWriting();
   });
 });
 

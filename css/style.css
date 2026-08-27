@@ -2667,6 +2667,725 @@ body.has-modal-open {
   }
 }
 
+/* ==============================
+   Phase16.6 · CET6 真题作文训练
+   ============================== */
+
+.quick-card__icon--writing {
+  background: color-mix(in srgb, var(--gold) 16%, transparent);
+  color: color-mix(in srgb, var(--gold) 80%, var(--text));
+  font-family: inherit;
+}
+
+.writing-shell {
+  width: min(calc(100% - 48px), 1040px);
+}
+
+.writing-shell button,
+.writing-shell select,
+.writing-shell input,
+.writing-shell textarea {
+  font: inherit;
+}
+
+.writing-hero,
+.writing-result-hero,
+.writing-detail-card__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.writing-hero,
+.writing-form-hero,
+.writing-result-hero {
+  padding: 34px 0 27px;
+}
+
+.writing-hero h1,
+.writing-form-hero h1,
+.writing-result-hero h1,
+.writing-detail-card h1 {
+  margin: 0;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: clamp(34px, 5vw, 46px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.writing-hero > div > p:last-child,
+.writing-form-hero > p,
+.writing-result-hero > div > p:last-child,
+.writing-detail-card__heading > div > p:last-child {
+  margin: 10px 0 0;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.writing-zero-ai {
+  display: flex;
+  min-width: 205px;
+  padding: 15px 17px;
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--line));
+  border-radius: 17px;
+  background: var(--primary-soft);
+  flex-direction: column;
+}
+
+.writing-zero-ai strong {
+  color: var(--primary-dark);
+  font-size: 13px;
+}
+
+.writing-zero-ai span {
+  margin-top: 3px;
+  color: var(--text-soft);
+  font-size: 10px;
+}
+
+.writing-toolbar {
+  display: grid;
+  grid-template-columns: 130px 130px 150px minmax(220px, 1fr);
+  gap: 11px;
+  margin-bottom: 17px;
+}
+
+.writing-toolbar label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.writing-toolbar select,
+.writing-toolbar input {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.writing-toolbar select:focus,
+.writing-toolbar input:focus,
+.writing-field-card textarea:focus {
+  border-color: color-mix(in srgb, var(--primary) 48%, var(--line));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 9%, transparent);
+}
+
+.writing-list-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 11px 2px 13px;
+  color: var(--text-faint);
+  font-size: 10px;
+}
+
+.writing-list-meta strong {
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.writing-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.writing-topic-card {
+  display: flex;
+  min-width: 0;
+  min-height: 246px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 9px 28px rgba(30, 64, 55, 0.05);
+  flex-direction: column;
+  transition: border-color var(--ease), box-shadow var(--ease), transform var(--ease);
+}
+
+.writing-topic-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--line));
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.writing-topic-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.writing-type-badge {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.writing-topic-card h2 {
+  margin: 20px 0 0;
+  overflow-wrap: anywhere;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.writing-topic-card > p {
+  margin: 9px 0 0;
+  color: var(--text-faint);
+  font-size: 10px;
+}
+
+.writing-topic-card__flags {
+  display: flex;
+  min-height: 25px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 13px;
+}
+
+.writing-topic-card__flags span {
+  padding: 4px 7px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: 9px;
+}
+
+.writing-topic-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.writing-topic-card__actions button,
+.writing-detail-start,
+.writing-generate-button,
+.writing-result-actions button,
+.writing-result-toolbar .secondary-button {
+  min-height: 48px;
+}
+
+.writing-topic-card__actions .secondary-button,
+.writing-topic-card__actions .primary-button {
+  width: 100%;
+}
+
+.writing-detail-card {
+  margin: 34px 0 0;
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.writing-favorite-button {
+  min-height: 48px;
+  padding: 10px 16px;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--gold) 8%, var(--surface));
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.writing-favorite-button.is-favorite {
+  background: color-mix(in srgb, var(--gold) 17%, var(--surface));
+}
+
+.writing-source-block {
+  margin-top: 27px;
+  padding: 23px;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  border-radius: 19px;
+  background: var(--surface-soft);
+}
+
+.writing-source-block h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+}
+
+.writing-directions,
+.writing-prompt-context {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.writing-directions {
+  margin: 13px 0 0;
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.78;
+}
+
+.writing-prompt-context {
+  margin: 13px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--text-soft);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+}
+
+.writing-detail-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  margin: 23px 0 0;
+}
+
+.writing-detail-list > div {
+  display: grid;
+  min-width: 0;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.writing-detail-list dt {
+  color: var(--text-faint);
+  font-size: 10px;
+}
+
+.writing-detail-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.writing-detail-start {
+  width: 100%;
+  margin-top: 24px;
+}
+
+.writing-form-hero,
+.writing-practice-form,
+.writing-result-hero,
+.writing-result-toolbar,
+.writing-essay,
+.writing-result-actions,
+.writing-result-note {
+  width: min(100%, 820px);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.writing-form-note {
+  margin-top: 17px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  border-radius: 14px;
+  background: var(--primary-soft);
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.writing-practice-form {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 38px;
+}
+
+.writing-field-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 7px 23px rgba(30, 64, 55, 0.035);
+}
+
+.writing-field-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.writing-field-card label {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.writing-idea-button {
+  min-height: 48px;
+  padding: 7px 3px;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  color: var(--primary-dark);
+  font-size: 10px;
+  font-weight: 760;
+}
+
+.writing-field-card textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 74px;
+  margin-top: 8px;
+  padding: 12px 13px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  outline: 0;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.writing-field-card > small {
+  display: block;
+  margin-top: 7px;
+  color: var(--text-faint);
+  font-size: 9px;
+}
+
+.writing-suggestion-panel {
+  margin-top: 12px;
+  padding: 13px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.writing-suggestion-panel > p {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.writing-suggestion-panel > div {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.writing-suggestion-panel button {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  flex-direction: column;
+  text-align: left;
+}
+
+.writing-suggestion-panel button:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--line));
+}
+
+.writing-suggestion-panel strong {
+  font-size: 11px;
+}
+
+.writing-suggestion-panel span {
+  margin-top: 3px;
+  color: var(--text-soft);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.writing-generate-button {
+  margin-top: 5px;
+}
+
+.writing-word-count {
+  display: flex;
+  min-width: 145px;
+  align-items: flex-end;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  flex-direction: column;
+}
+
+.writing-word-count strong {
+  color: var(--primary-dark);
+  font-family: Georgia, serif;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.writing-word-count span {
+  margin-top: 5px;
+  color: var(--text-faint);
+  font-size: 9px;
+}
+
+.writing-result-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 3px;
+  margin-bottom: 13px;
+}
+
+.writing-result-toolbar label {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.writing-result-toolbar input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.writing-essay {
+  padding: 27px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.writing-essay section + section {
+  margin-top: 22px;
+}
+
+.writing-essay p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.82;
+}
+
+.writing-essay__zh {
+  margin-top: 10px !important;
+  padding: 12px 14px;
+  border-left: 3px solid color-mix(in srgb, var(--primary) 48%, var(--line));
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-family: inherit !important;
+  font-size: 11px !important;
+  line-height: 1.7 !important;
+}
+
+.writing-result-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.writing-result-actions button {
+  width: 100%;
+}
+
+.writing-result-note {
+  margin-top: 12px;
+  margin-bottom: 34px;
+  color: var(--text-faint);
+  font-size: 9px;
+  text-align: center;
+}
+
+.writing-loading {
+  padding: 110px 20px;
+  text-align: center;
+}
+
+.writing-loading > span {
+  display: block;
+  font-size: 42px;
+}
+
+.writing-loading h1 {
+  margin: 17px 0 0;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 25px;
+}
+
+.writing-loading p {
+  margin: 8px 0 0;
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.writing-load-error {
+  margin-top: 48px;
+}
+
+@media (max-width: 760px) {
+  .writing-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .writing-search {
+    grid-column: 1 / -1;
+  }
+
+  .writing-topic-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .writing-shell {
+    width: min(calc(100% - 24px), 520px);
+  }
+
+  .writing-hero,
+  .writing-result-hero,
+  .writing-detail-card__heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .writing-hero,
+  .writing-form-hero,
+  .writing-result-hero {
+    padding: 27px 0 22px;
+  }
+
+  .writing-hero h1,
+  .writing-form-hero h1,
+  .writing-result-hero h1,
+  .writing-detail-card h1 {
+    font-size: 34px;
+  }
+
+  .writing-zero-ai,
+  .writing-word-count {
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .writing-topic-card {
+    min-height: 235px;
+    padding: 19px;
+    border-radius: 20px;
+  }
+
+  .writing-detail-card {
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 21px;
+  }
+
+  .writing-favorite-button {
+    width: 100%;
+  }
+
+  .writing-source-block {
+    padding: 17px;
+  }
+
+  .writing-directions {
+    font-size: 14px;
+    line-height: 1.72;
+  }
+
+  .writing-detail-list {
+    grid-template-columns: 1fr;
+  }
+
+  .writing-field-card {
+    padding: 15px;
+  }
+
+  .writing-field-card__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .writing-idea-button {
+    min-height: 48px;
+  }
+
+  .writing-result-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .writing-result-toolbar .secondary-button {
+    width: 100%;
+  }
+
+  .writing-essay {
+    padding: 20px 17px;
+    border-radius: 19px;
+  }
+
+  .writing-essay p {
+    font-size: 15px;
+    line-height: 1.76;
+  }
+
+  .writing-result-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 390px) {
+  .writing-shell {
+    width: calc(100% - 18px);
+  }
+
+  .writing-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .writing-search {
+    grid-column: auto;
+  }
+
+  .writing-topic-card__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 第 4 阶段 · 每日计划与间隔重复 */
 
 .quick-card__icon--green {
