@@ -26,6 +26,8 @@ const {
   confusableWords,
   confusableAi,
   confusableDetection,
+  meaningOverrides,
+  meaningAudit,
   writing,
 } = window.CETWords;
 
@@ -71,6 +73,17 @@ const appState = {
     generating: false,
     recordedConfusionEvents: new Set(),
     candidatePairStates: new Map(),
+  },
+  meaningAudit: {
+    currentWordId: null,
+    source: null,
+    returnDialog: null,
+    returnScrollY: null,
+    results: new Map(),
+    pending: false,
+    chatPending: false,
+    editorReturn: null,
+    confirmAction: null,
   },
   books: {
     cet4: {
@@ -179,6 +192,14 @@ const elements = {
   wordDetailMeaning: document.querySelector("#word-detail-meaning"),
   wordDetailCoreMeaning: document.querySelector("#word-detail-core-meaning"),
   wordDetailMeaningGroups: document.querySelector("#word-detail-meaning-groups"),
+  wordDetailPersonalBadge: document.querySelector("#word-detail-personal-badge"),
+  wordDetailPersonalEmpty: document.querySelector("#word-detail-personal-empty"),
+  wordDetailPersonalComparison: document.querySelector("#word-detail-personal-comparison"),
+  wordDetailPersonalCurrent: document.querySelector("#word-detail-personal-current"),
+  wordDetailPersonalBase: document.querySelector("#word-detail-personal-base"),
+  wordDetailMeaningAudit: document.querySelector("#word-detail-meaning-audit"),
+  wordDetailMeaningEdit: document.querySelector("#word-detail-meaning-edit"),
+  wordDetailMeaningRestore: document.querySelector("#word-detail-meaning-restore"),
   wordDetailExample: document.querySelector("#word-detail-example"),
   wordDetailTranslation: document.querySelector("#word-detail-translation"),
   wordDetailExampleList: document.querySelector("#word-detail-example-list"),
@@ -200,6 +221,48 @@ const elements = {
   wordDetailAddConfusable: document.querySelector("#word-detail-add-confusable"),
   wordDetailConfusableList: document.querySelector("#word-detail-confusable-list"),
   wordDetailConfusableEmpty: document.querySelector("#word-detail-confusable-empty"),
+  meaningAuditDialog: document.querySelector("#meaning-audit-dialog"),
+  meaningAuditClose: document.querySelector("#meaning-audit-close"),
+  meaningAuditWord: document.querySelector("#meaning-audit-word"),
+  meaningAuditCurrentMeaning: document.querySelector("#meaning-audit-current-meaning"),
+  meaningAuditBaseMeaning: document.querySelector("#meaning-audit-base-meaning"),
+  meaningAuditStatus: document.querySelector("#meaning-audit-status"),
+  meaningAuditResult: document.querySelector("#meaning-audit-result"),
+  meaningAuditVerdictBadge: document.querySelector("#meaning-audit-verdict-badge"),
+  meaningAuditSummary: document.querySelector("#meaning-audit-summary"),
+  meaningAuditSuggestedCore: document.querySelector("#meaning-audit-suggested-core"),
+  meaningAuditCommonMeanings: document.querySelector("#meaning-audit-common-meanings"),
+  meaningAuditSecondaryRow: document.querySelector("#meaning-audit-secondary-row"),
+  meaningAuditSecondary: document.querySelector("#meaning-audit-secondary"),
+  meaningAuditAdvice: document.querySelector("#meaning-audit-advice"),
+  meaningAuditCautionRow: document.querySelector("#meaning-audit-caution-row"),
+  meaningAuditCaution: document.querySelector("#meaning-audit-caution"),
+  meaningAuditAccept: document.querySelector("#meaning-audit-accept"),
+  meaningAuditEdit: document.querySelector("#meaning-audit-edit"),
+  meaningAuditKeep: document.querySelector("#meaning-audit-keep"),
+  meaningAuditRetry: document.querySelector("#meaning-audit-retry"),
+  meaningAuditChatHistory: document.querySelector("#meaning-audit-chat-history"),
+  meaningAuditChatForm: document.querySelector("#meaning-audit-chat-form"),
+  meaningAuditChatInput: document.querySelector("#meaning-audit-chat-input"),
+  meaningAuditChatSend: document.querySelector("#meaning-audit-chat-send"),
+  meaningAuditChatStatus: document.querySelector("#meaning-audit-chat-status"),
+  meaningEditorDialog: document.querySelector("#meaning-editor-dialog"),
+  meaningEditorClose: document.querySelector("#meaning-editor-close"),
+  meaningEditorWord: document.querySelector("#meaning-editor-word"),
+  meaningEditorForm: document.querySelector("#meaning-editor-form"),
+  meaningEditorCore: document.querySelector("#meaning-editor-core"),
+  meaningEditorShort: document.querySelector("#meaning-editor-short"),
+  meaningEditorOthers: document.querySelector("#meaning-editor-others"),
+  meaningEditorNote: document.querySelector("#meaning-editor-note"),
+  meaningEditorStatus: document.querySelector("#meaning-editor-status"),
+  meaningOverrideConfirm: document.querySelector("#meaning-override-confirm"),
+  meaningOverrideConfirmTitle: document.querySelector("#meaning-override-confirm-title"),
+  meaningOverrideConfirmMessage: document.querySelector("#meaning-override-confirm-message"),
+  meaningOverrideConfirmComparison: document.querySelector("#meaning-override-confirm-comparison"),
+  meaningOverrideConfirmBase: document.querySelector("#meaning-override-confirm-base"),
+  meaningOverrideConfirmNext: document.querySelector("#meaning-override-confirm-next"),
+  meaningOverrideConfirmCancel: document.querySelector("#meaning-override-confirm-cancel"),
+  meaningOverrideConfirmAction: document.querySelector("#meaning-override-confirm-action"),
   confusableListBack: document.querySelector("#confusable-list-back"),
   confusableListQuery: document.querySelector("#confusable-list-query"),
   confusableListCount: document.querySelector("#confusable-list-count"),
@@ -1483,6 +1546,11 @@ const studyController = new StudyController({
     if (options.source === "study-result") appState.confusables.returnScrollY = window.scrollY;
     startConfusablePractice(pairKey);
   },
+  getLearningWord: getLearningWordView,
+  getMeaningReferenceWord,
+  hasMeaningOverride: (word) => Boolean(getPersonalMeaningOverride(word)),
+  onOpenMeaningAudit: openMeaningAudit,
+  onEditMeaningOverride: openMeaningEditor,
 });
 
 elements.dailyReviewGenerate.addEventListener("click", generateDailyReview);
@@ -1804,6 +1872,8 @@ function renderWordDetail() {
   const book = getActiveBook();
   const word = getDetailWord();
   if (!word) return;
+  const personalOverride = getPersonalMeaningOverride(word);
+  const learningWord = getLearningWordView(word);
   const progress = storage.getWordProgress(book.id, word.word);
   const level = reviewScheduler.getMasteryLevel(progress);
 
@@ -1811,7 +1881,7 @@ function renderWordDetail() {
   elements.wordDetailTitle.textContent = word.word;
   elements.wordDetailPhonetic.textContent = word.phonetic || "";
   elements.wordDetailPhonetic.hidden = !word.phonetic;
-  elements.wordDetailCoreMeaning.textContent = word.coreMeaning || word.shortMeaning || word.meaning;
+  elements.wordDetailCoreMeaning.textContent = learningWord.coreMeaning || learningWord.shortMeaning || learningWord.meaning;
   const meaningsByPos = word.meaningsByPos && typeof word.meaningsByPos === "object"
     ? word.meaningsByPos
     : {};
@@ -1827,6 +1897,16 @@ function renderWordDetail() {
   );
   elements.wordDetailMeaning.textContent = word.meaning;
   elements.wordDetailMeaning.hidden = true;
+  elements.wordDetailPersonalBadge.hidden = !personalOverride;
+  elements.wordDetailPersonalEmpty.hidden = Boolean(personalOverride);
+  elements.wordDetailPersonalComparison.hidden = !personalOverride;
+  elements.wordDetailMeaningRestore.hidden = !personalOverride;
+  elements.wordDetailMeaningAudit.textContent = personalOverride ? "✨ 再次 AI 核验" : "✨ AI核验词义";
+  elements.wordDetailMeaningEdit.textContent = personalOverride ? "编辑" : "修改我的释义";
+  if (personalOverride) {
+    elements.wordDetailPersonalCurrent.textContent = personalOverride.coreMeaning;
+    elements.wordDetailPersonalBase.textContent = meaningOverrides.getBaseCoreMeaning(word);
+  }
   elements.wordDetailExample.textContent = word.example || "暂无例句";
   elements.wordDetailExample.hidden = true;
   elements.wordDetailTranslation.textContent = word.translation || "";
@@ -1898,6 +1978,366 @@ function closeWordDetail() {
     elements.wordDetailDialog.close();
   } else {
     elements.wordDetailDialog.removeAttribute("open");
+  }
+}
+
+const MEANING_AUDIT_LABELS = Object.freeze({
+  correct: ["✓ 正确", "is-correct"],
+  incomplete: ["△ 基本正确，但不完整", "is-warning"],
+  priority_issue: ["△ 释义存在，但核心优先级不合理", "is-warning"],
+  misleading: ["⚠ 有误导性，需要调整", "is-danger"],
+  wrong: ["✕ 明显错误", "is-danger"],
+});
+
+function showNativeDialog(dialog) {
+  if (!dialog) return;
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+  document.body.classList.add("has-modal-open");
+}
+
+function closeNativeDialog(dialog) {
+  if (!dialog) return;
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  const anyOpen = [
+    elements.meaningAuditDialog,
+    elements.meaningEditorDialog,
+    elements.meaningOverrideConfirm,
+    elements.confusableDialog,
+    elements.confusableFinderDialog,
+    elements.confusablePracticeDialog,
+  ].some((item) => item?.open || item?.hasAttribute("open"));
+  document.body.classList.toggle("has-modal-open", anyOpen);
+}
+
+function getCurrentMeaningAuditWord() {
+  return findMeaningWord(appState.meaningAudit.currentWordId);
+}
+
+function getMeaningAuditSession(wordId, create = true) {
+  if (!wordId) return null;
+  let session = appState.meaningAudit.results.get(wordId);
+  if (!session && create) {
+    session = { audit: null, history: [], error: "" };
+    appState.meaningAudit.results.set(wordId, session);
+  }
+  return session || null;
+}
+
+function renderMeaningAuditChat(session) {
+  const history = meaningAudit.normalizeHistory(session?.history);
+  elements.meaningAuditChatHistory.replaceChildren(...history.map((entry) => {
+    const row = createElement("article", `meaning-audit-chat__message is-${entry.role}`);
+    row.append(
+      createElement("strong", "", entry.role === "assistant" ? "AI" : "你"),
+      createElement("p", "", entry.content),
+    );
+    return row;
+  }));
+}
+
+function renderMeaningAuditDialog() {
+  const word = getCurrentMeaningAuditWord();
+  if (!word) return;
+  const wordId = meaningOverrides.getWordId(word);
+  const personalOverride = storage.getPersonalMeaningOverride(wordId);
+  const learningWord = getLearningWordView(word);
+  const session = getMeaningAuditSession(wordId);
+  const result = session?.audit;
+
+  elements.meaningAuditWord.textContent = `${word.word} · ${word.book.toUpperCase()}`;
+  elements.meaningAuditCurrentMeaning.textContent = `当前学习释义：${learningWord.coreMeaning || learningWord.shortMeaning || learningWord.meaning}`;
+  elements.meaningAuditBaseMeaning.textContent = personalOverride
+    ? `原始词库：${meaningOverrides.getBaseCoreMeaning(word)}`
+    : "当前未设置个人释义覆盖";
+  elements.meaningAuditStatus.classList.toggle("is-error", Boolean(session?.error));
+  elements.meaningAuditStatus.textContent = appState.meaningAudit.pending
+    ? "正在核验当前词义…"
+    : session?.error || (result ? "核验结果只作为学习建议，保存前仍需你确认。" : "");
+  elements.meaningAuditResult.hidden = !result;
+  if (!result) return;
+
+  const [label, className] = MEANING_AUDIT_LABELS[result.verdict] || MEANING_AUDIT_LABELS.correct;
+  elements.meaningAuditVerdictBadge.className = `meaning-audit-verdict__badge ${className}`;
+  elements.meaningAuditVerdictBadge.textContent = label;
+  elements.meaningAuditSummary.textContent = result.summary;
+  elements.meaningAuditSuggestedCore.textContent = result.suggestedCoreMeaning;
+  elements.meaningAuditCommonMeanings.replaceChildren(...(
+    result.commonMeanings.length
+      ? result.commonMeanings.map((item) => createElement("p", "", `${item.pos ? `${item.pos} ` : ""}${item.meaning}`))
+      : [createElement("p", "", "未补充其他常见词性")]
+  ));
+  elements.meaningAuditSecondaryRow.hidden = result.secondaryMeanings.length === 0;
+  elements.meaningAuditSecondary.textContent = result.secondaryMeanings.join("；");
+  elements.meaningAuditAdvice.textContent = result.cetAdvice;
+  elements.meaningAuditCautionRow.hidden = !result.caution;
+  elements.meaningAuditCaution.textContent = result.caution;
+  elements.meaningAuditAccept.textContent = personalOverride ? "更新为 AI 建议" : "采用 AI 建议";
+  renderMeaningAuditChat(session);
+}
+
+async function requestMeaningAudit({ force = false } = {}) {
+  const word = getCurrentMeaningAuditWord();
+  if (!word || appState.meaningAudit.pending) return;
+  const wordId = meaningOverrides.getWordId(word);
+  const session = getMeaningAuditSession(wordId);
+  if (session.audit && !force) {
+    renderMeaningAuditDialog();
+    return;
+  }
+  if (force) {
+    session.audit = null;
+    session.history = [];
+  }
+  session.error = "";
+  appState.meaningAudit.pending = true;
+  renderMeaningAuditDialog();
+  try {
+    const settings = storage.getAiJudgeSettings();
+    session.audit = await meaningAudit.audit({
+      word,
+      personalOverride: storage.getPersonalMeaningOverride(wordId),
+      proxyUrl: settings.proxyUrl,
+      token: storage.getAiProxyToken(),
+    });
+  } catch {
+    session.error = "AI 核验暂时失败，请稍后重试。";
+  } finally {
+    appState.meaningAudit.pending = false;
+    renderMeaningAuditDialog();
+  }
+}
+
+function openMeaningAudit(word, options = {}) {
+  const wordId = meaningOverrides.getWordId(word);
+  const baseWord = findMeaningWord(wordId) || word;
+  if (!wordId || !baseWord) return;
+  appState.meaningAudit.currentWordId = wordId;
+  appState.meaningAudit.source = options.source || "word-detail";
+  appState.meaningAudit.returnDialog = options.source === "word-detail" || elements.wordDetailDialog.open
+    ? "word-detail"
+    : null;
+  appState.meaningAudit.returnScrollY = options.source === "study-result" ? window.scrollY : null;
+  if (appState.meaningAudit.returnDialog) closeWordDetail();
+  renderMeaningAuditDialog();
+  showNativeDialog(elements.meaningAuditDialog);
+  const session = getMeaningAuditSession(wordId);
+  if (!session.audit && !session.error) requestMeaningAudit();
+}
+
+function restoreMeaningAuditOrigin() {
+  if (appState.meaningAudit.returnDialog === "word-detail" && getDetailWord()) {
+    appState.meaningAudit.returnDialog = null;
+    openWordDetail(appState.wordList.detailWordId);
+    return;
+  }
+  const scrollY = appState.meaningAudit.returnScrollY;
+  appState.meaningAudit.returnScrollY = null;
+  if (Number.isFinite(scrollY)) window.requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: "auto" }));
+}
+
+function closeMeaningAudit({ restore = true } = {}) {
+  closeNativeDialog(elements.meaningAuditDialog);
+  if (restore) restoreMeaningAuditOrigin();
+}
+
+function parseEditorMeanings(value) {
+  return String(value || "")
+    .split(/[\r\n；;,，、/|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, meaningOverrides.MAX_MEANINGS);
+}
+
+function openMeaningEditor(word, options = {}) {
+  const wordId = meaningOverrides.getWordId(word);
+  const baseWord = findMeaningWord(wordId) || word;
+  if (!wordId || !baseWord) return;
+  appState.meaningAudit.currentWordId = wordId;
+  const fromAudit = options.source === "audit" || elements.meaningAuditDialog.open;
+  const fromWordDetail = options.source === "word-detail" || elements.wordDetailDialog.open;
+  appState.meaningAudit.editorReturn = fromAudit ? "audit" : fromWordDetail ? "word-detail" : "study-result";
+  if (fromAudit) closeMeaningAudit({ restore: false });
+  if (fromWordDetail) closeWordDetail();
+  const personal = storage.getPersonalMeaningOverride(wordId);
+  const auditResult = getMeaningAuditSession(wordId, false)?.audit;
+  const seed = personal || (fromAudit && auditResult ? meaningOverrides.buildOverrideFromAudit(auditResult) : null);
+  elements.meaningEditorWord.textContent = `${baseWord.word} · 原始核心义：${meaningOverrides.getBaseCoreMeaning(baseWord)}`;
+  elements.meaningEditorCore.value = seed?.coreMeaning || meaningOverrides.getBaseCoreMeaning(baseWord);
+  elements.meaningEditorShort.value = seed?.shortMeaning || "";
+  elements.meaningEditorOthers.value = (seed?.meanings || []).join("\n");
+  elements.meaningEditorNote.value = seed?.note || "";
+  elements.meaningEditorStatus.textContent = "";
+  showNativeDialog(elements.meaningEditorDialog);
+  window.setTimeout(() => elements.meaningEditorCore.focus(), 0);
+}
+
+function closeMeaningEditor({ restore = true } = {}) {
+  closeNativeDialog(elements.meaningEditorDialog);
+  if (!restore) return;
+  if (appState.meaningAudit.editorReturn === "audit") {
+    renderMeaningAuditDialog();
+    showNativeDialog(elements.meaningAuditDialog);
+  } else if (appState.meaningAudit.editorReturn === "word-detail" && getDetailWord()) {
+    openWordDetail(appState.wordList.detailWordId);
+  }
+}
+
+function refreshMeaningOverrideSurfaces() {
+  studyController.refreshCurrentMeaning?.();
+  if (getDetailWord()) renderWordDetail();
+  if (appState.currentView === "words") renderWordList();
+  if (appState.currentView === "collection") renderCollection();
+  renderConfusableList();
+  if (appState.confusables.currentWordId) {
+    renderConfusableDialog();
+    renderConfusableFinder();
+  }
+}
+
+function showMeaningUndo(word, previous, message) {
+  const wordId = meaningOverrides.getWordId(word);
+  showToast(message, {
+    actionLabel: "撤销",
+    duration: 8000,
+    onAction: () => {
+      storage.restorePersonalMeaningOverrideSnapshot(wordId, previous);
+      refreshMeaningOverrideSurfaces();
+      renderMeaningAuditDialog();
+      showToast("已撤销个人释义修改");
+    },
+  });
+}
+
+function saveEditedMeaning(event) {
+  event.preventDefault();
+  const word = getCurrentMeaningAuditWord();
+  if (!word) return;
+  const coreMeaning = elements.meaningEditorCore.value.trim();
+  if (!coreMeaning) {
+    elements.meaningEditorStatus.textContent = "个人核心释义不能为空";
+    elements.meaningEditorCore.focus();
+    return;
+  }
+  const result = storage.savePersonalMeaningOverride(meaningOverrides.getWordId(word), {
+    coreMeaning,
+    shortMeaning: elements.meaningEditorShort.value.trim() || coreMeaning,
+    meanings: parseEditorMeanings(elements.meaningEditorOthers.value),
+    note: elements.meaningEditorNote.value.trim(),
+    source: "manual",
+  });
+  if (!result.override) {
+    elements.meaningEditorStatus.textContent = result.error || "保存失败，请稍后重试";
+    return;
+  }
+  closeMeaningEditor({ restore: false });
+  refreshMeaningOverrideSurfaces();
+  renderMeaningAuditDialog();
+  showMeaningUndo(word, result.previous, `✓ ${word.word} 已保存为个人释义`);
+  if (appState.meaningAudit.editorReturn === "audit") showNativeDialog(elements.meaningAuditDialog);
+  else if (appState.meaningAudit.editorReturn === "word-detail" && getDetailWord()) openWordDetail(appState.wordList.detailWordId);
+}
+
+function openMeaningConfirm(mode) {
+  const word = getCurrentMeaningAuditWord();
+  if (!word) return;
+  const session = getMeaningAuditSession(meaningOverrides.getWordId(word), false);
+  const personal = getPersonalMeaningOverride(word);
+  appState.meaningAudit.confirmAction = mode;
+  closeMeaningAudit({ restore: false });
+  closeWordDetail();
+  elements.meaningOverrideConfirmComparison.hidden = false;
+  if (mode === "restore") {
+    elements.meaningOverrideConfirmTitle.textContent = "恢复原始词库释义？";
+    elements.meaningOverrideConfirmMessage.textContent = "将删除这个词的个人释义覆盖，学习进度与答题统计不受影响。";
+    elements.meaningOverrideConfirmBase.textContent = personal?.coreMeaning || "未设置个人释义";
+    elements.meaningOverrideConfirmNext.textContent = meaningOverrides.getBaseCoreMeaning(word);
+    elements.meaningOverrideConfirmAction.textContent = "确认恢复";
+  } else {
+    if (!session?.audit) return;
+    elements.meaningOverrideConfirmTitle.textContent = "确认采用 AI 建议？";
+    elements.meaningOverrideConfirmMessage.textContent = "只保存到你的个人释义，不会修改正式词库。";
+    elements.meaningOverrideConfirmBase.textContent = meaningOverrides.getBaseCoreMeaning(word);
+    elements.meaningOverrideConfirmNext.textContent = session.audit.suggestedCoreMeaning;
+    elements.meaningOverrideConfirmAction.textContent = "确认采用";
+  }
+  showNativeDialog(elements.meaningOverrideConfirm);
+}
+
+function closeMeaningConfirm({ restore = true } = {}) {
+  closeNativeDialog(elements.meaningOverrideConfirm);
+  if (!restore) return;
+  if (appState.meaningAudit.confirmAction === "restore") {
+    if (getDetailWord()) openWordDetail(appState.wordList.detailWordId);
+  } else {
+    renderMeaningAuditDialog();
+    showNativeDialog(elements.meaningAuditDialog);
+  }
+}
+
+function confirmMeaningOverrideAction() {
+  const word = getCurrentMeaningAuditWord();
+  if (!word) return;
+  const wordId = meaningOverrides.getWordId(word);
+  const mode = appState.meaningAudit.confirmAction;
+  if (mode === "restore") {
+    const result = storage.removePersonalMeaningOverride(wordId);
+    closeMeaningConfirm({ restore: false });
+    refreshMeaningOverrideSurfaces();
+    showMeaningUndo(word, result.previous, `已恢复 ${word.word} 的原始词库释义`);
+    if (getDetailWord()) openWordDetail(appState.wordList.detailWordId);
+    return;
+  }
+  const auditResult = getMeaningAuditSession(wordId, false)?.audit;
+  const override = meaningOverrides.buildOverrideFromAudit(auditResult);
+  if (!override) return;
+  const result = storage.savePersonalMeaningOverride(wordId, override);
+  closeMeaningConfirm({ restore: false });
+  refreshMeaningOverrideSurfaces();
+  renderMeaningAuditDialog();
+  showMeaningUndo(word, result.previous, `✓ ${word.word} 已采用 AI 建议`);
+  showNativeDialog(elements.meaningAuditDialog);
+}
+
+async function submitMeaningAuditChat(event) {
+  event.preventDefault();
+  const word = getCurrentMeaningAuditWord();
+  if (!word || appState.meaningAudit.chatPending) return;
+  const wordId = meaningOverrides.getWordId(word);
+  const session = getMeaningAuditSession(wordId, false);
+  const question = elements.meaningAuditChatInput.value.trim();
+  if (!session?.audit || !question) {
+    elements.meaningAuditChatStatus.textContent = "请先输入关于当前词的问题";
+    return;
+  }
+  appState.meaningAudit.chatPending = true;
+  elements.meaningAuditChatSend.disabled = true;
+  elements.meaningAuditChatStatus.textContent = "正在回答…";
+  try {
+    const settings = storage.getAiJudgeSettings();
+    const response = await meaningAudit.chat({
+      word,
+      audit: session.audit,
+      personalOverride: storage.getPersonalMeaningOverride(wordId),
+      history: session.history,
+      question,
+      proxyUrl: settings.proxyUrl,
+      token: storage.getAiProxyToken(),
+    });
+    session.history = meaningAudit.normalizeHistory([
+      ...session.history,
+      { role: "user", content: question },
+      { role: "assistant", content: response.answer },
+    ]);
+    elements.meaningAuditChatInput.value = "";
+    elements.meaningAuditChatStatus.textContent = "";
+  } catch {
+    elements.meaningAuditChatStatus.textContent = "追问暂时失败；已完成的核验结论不受影响。";
+  } finally {
+    appState.meaningAudit.chatPending = false;
+    elements.meaningAuditChatSend.disabled = false;
+    renderMeaningAuditChat(session);
   }
 }
 
@@ -2248,8 +2688,33 @@ function confirmClearBook() {
   showToast(`${book.shortName} 学习记录已清空，另一个词库未受影响`);
 }
 
+function getPersonalMeaningOverride(word) {
+  const wordId = meaningOverrides.getWordId(word);
+  return wordId ? storage.getPersonalMeaningOverride(wordId) : null;
+}
+
+function getLearningWordView(word) {
+  return meaningOverrides.applyPersonalOverride(word, getPersonalMeaningOverride(word));
+}
+
+function getMeaningReferenceWord(word) {
+  return meaningOverrides.buildReferenceWord(word, getPersonalMeaningOverride(word));
+}
+
+function findMeaningWord(wordId) {
+  return ["cet4", "cet6"]
+    .flatMap((bookId) => appState.books[bookId].words)
+    .find((word) => meaningOverrides.getWordId(word) === wordId) || null;
+}
+
 function getConfusableVocabulary() {
-  return ["cet4", "cet6"].flatMap((bookId) => appState.books[bookId].words);
+  const overrides = storage.getPersonalMeaningOverrides();
+  return ["cet4", "cet6"]
+    .flatMap((bookId) => appState.books[bookId].words)
+    .map((word) => meaningOverrides.buildReferenceWord(
+      word,
+      overrides[meaningOverrides.getWordId(word)],
+    ));
 }
 
 function getConfusableWordId(word) {
@@ -2261,7 +2726,8 @@ function findConfusableWord(wordId) {
 }
 
 function getConfusableMeaning(word) {
-  return word?.coreMeaning || word?.shortMeaning || word?.meaning || "暂无核心义";
+  const learningWord = getLearningWordView(word);
+  return learningWord?.coreMeaning || learningWord?.shortMeaning || learningWord?.meaning || "暂无核心义";
 }
 
 function getPairOtherWord(pair, currentWordId) {
@@ -2829,7 +3295,7 @@ function recordConfusableEncounter(word) {
 function detectStudyConfusion({ word, userAnswer, judgement, answerEventId }) {
   const personalPairs = storage.getConfusablePairs();
   const result = studyConfusionDetector.detect({
-    currentWord: word,
+    currentWord: getMeaningReferenceWord(word),
     userAnswer,
     judgement,
     answerEventId,
@@ -3017,6 +3483,58 @@ elements.wordDetailAddConfusable.addEventListener("click", () => {
   const word = getDetailWord();
   if (word) openConfusableDialog(word, { source: "word-detail" });
 });
+elements.wordDetailMeaningAudit.addEventListener("click", () => {
+  const word = getDetailWord();
+  if (word) openMeaningAudit(word, { source: "word-detail" });
+});
+elements.wordDetailMeaningEdit.addEventListener("click", () => {
+  const word = getDetailWord();
+  if (word) openMeaningEditor(word, { source: "word-detail" });
+});
+elements.wordDetailMeaningRestore.addEventListener("click", () => {
+  const word = getDetailWord();
+  if (!word) return;
+  appState.meaningAudit.currentWordId = meaningOverrides.getWordId(word);
+  appState.meaningAudit.confirmAction = "restore";
+  openMeaningConfirm("restore");
+});
+
+elements.meaningAuditClose.addEventListener("click", () => closeMeaningAudit());
+elements.meaningAuditDialog.addEventListener("click", (event) => {
+  if (event.target === elements.meaningAuditDialog) closeMeaningAudit();
+});
+elements.meaningAuditDialog.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeMeaningAudit();
+});
+elements.meaningAuditAccept.addEventListener("click", () => openMeaningConfirm("accept"));
+elements.meaningAuditEdit.addEventListener("click", () => {
+  const word = getCurrentMeaningAuditWord();
+  if (word) openMeaningEditor(word, { source: "audit" });
+});
+elements.meaningAuditKeep.addEventListener("click", () => closeMeaningAudit());
+elements.meaningAuditRetry.addEventListener("click", () => requestMeaningAudit({ force: true }));
+elements.meaningAuditChatForm.addEventListener("submit", submitMeaningAuditChat);
+
+elements.meaningEditorClose.addEventListener("click", () => closeMeaningEditor());
+elements.meaningEditorDialog.addEventListener("click", (event) => {
+  if (event.target === elements.meaningEditorDialog) closeMeaningEditor();
+});
+elements.meaningEditorDialog.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeMeaningEditor();
+});
+elements.meaningEditorForm.addEventListener("submit", saveEditedMeaning);
+
+elements.meaningOverrideConfirmCancel.addEventListener("click", () => closeMeaningConfirm());
+elements.meaningOverrideConfirm.addEventListener("click", (event) => {
+  if (event.target === elements.meaningOverrideConfirm) closeMeaningConfirm();
+});
+elements.meaningOverrideConfirm.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeMeaningConfirm();
+});
+elements.meaningOverrideConfirmAction.addEventListener("click", confirmMeaningOverrideAction);
 
 elements.confusableListBack.addEventListener("click", showHome);
 elements.confusableListQuery.addEventListener("input", renderConfusableList);

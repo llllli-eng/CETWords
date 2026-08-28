@@ -20,10 +20,12 @@
     <script src="js/active-recall-result.js" defer></script>
     <script src="js/daily-group-service.js" defer></script>
     <script src="js/confusable-words.js" defer></script>
+    <script src="js/meaning-overrides.js" defer></script>
     <script src="js/storage.js" defer></script>
     <script src="js/word-utils.js" defer></script>
     <script src="js/study-modes.js" defer></script>
     <script src="js/ai-judge.js" defer></script>
+    <script src="js/meaning-audit.js" defer></script>
     <script src="js/confusable-ai.js" defer></script>
     <script src="js/confusable-detection.js" defer></script>
     <script src="js/daily-review-service.js" defer></script>
@@ -495,6 +497,14 @@
             <button class="secondary-button study-confusable-button" id="study-confusable-button" type="button" hidden>
               ⇄ 看易混词
             </button>
+
+            <section class="study-meaning-tools" id="study-meaning-tools" aria-label="个人释义工具" hidden>
+              <p class="study-meaning-tools__status" id="study-meaning-status" hidden>✎ 已个人修订</p>
+              <div>
+                <button class="secondary-button" id="study-meaning-audit" type="button">✨ AI核验词义</button>
+                <button class="secondary-button" id="study-meaning-edit" type="button">✏️ 修改我的释义</button>
+              </div>
+            </section>
 
             <article class="word-details" id="word-details" aria-label="单词详情" hidden>
               <div class="word-details__heading">
@@ -1166,6 +1176,23 @@
           <p class="word-detail-dialog__meaning" id="word-detail-meaning" hidden>v. 放弃；遗弃</p>
         </section>
 
+        <section class="word-detail-personal-meaning" aria-labelledby="word-detail-personal-title">
+          <div class="word-detail-personal-meaning__heading">
+            <h3 id="word-detail-personal-title">个人释义</h3>
+            <span id="word-detail-personal-badge" hidden>✎ 已个人修订</span>
+          </div>
+          <p id="word-detail-personal-empty">当前使用原始词库释义；你可以按需核验或修改。</p>
+          <dl id="word-detail-personal-comparison" hidden>
+            <div><dt>当前学习释义</dt><dd id="word-detail-personal-current"></dd></div>
+            <div><dt>原始词库</dt><dd id="word-detail-personal-base"></dd></div>
+          </dl>
+          <div class="word-detail-personal-meaning__actions">
+            <button class="secondary-button" id="word-detail-meaning-audit" type="button">✨ AI核验词义</button>
+            <button class="secondary-button" id="word-detail-meaning-edit" type="button">编辑</button>
+            <button class="text-button" id="word-detail-meaning-restore" type="button" hidden>恢复原始释义</button>
+          </div>
+        </section>
+
         <section class="word-detail-example" aria-labelledby="word-detail-example-title">
           <h3 id="word-detail-example-title">核心例句</h3>
           <div class="word-detail-example-list" id="word-detail-example-list"></div>
@@ -1213,6 +1240,87 @@
           </button>
         </div>
       </article>
+    </dialog>
+
+    <dialog class="meaning-audit-dialog" id="meaning-audit-dialog" aria-labelledby="meaning-audit-title">
+      <article class="meaning-audit-dialog__card">
+        <button class="dialog-close-button" id="meaning-audit-close" type="button" aria-label="关闭词义核验">×</button>
+        <p class="section-kicker">AI MEANING AUDIT</p>
+        <h2 id="meaning-audit-title">AI 词义核验</h2>
+        <p class="meaning-audit-dialog__word" id="meaning-audit-word"></p>
+        <section class="meaning-audit-current" aria-labelledby="meaning-audit-current-title">
+          <h3 id="meaning-audit-current-title">当前参考释义</h3>
+          <p id="meaning-audit-current-meaning"></p>
+          <p id="meaning-audit-base-meaning"></p>
+        </section>
+        <p class="meaning-audit-status" id="meaning-audit-status" role="status"></p>
+        <section class="meaning-audit-result" id="meaning-audit-result" hidden>
+          <div class="meaning-audit-verdict">
+            <span id="meaning-audit-verdict-badge"></span>
+            <strong id="meaning-audit-summary"></strong>
+          </div>
+          <dl class="meaning-audit-result__details">
+            <div><dt>四六级建议核心义</dt><dd id="meaning-audit-suggested-core"></dd></div>
+            <div><dt>常见词性与含义</dt><dd id="meaning-audit-common-meanings"></dd></div>
+            <div id="meaning-audit-secondary-row"><dt>可保留的次要义</dt><dd id="meaning-audit-secondary"></dd></div>
+            <div><dt>学习建议</dt><dd id="meaning-audit-advice"></dd></div>
+            <div id="meaning-audit-caution-row"><dt>注意</dt><dd id="meaning-audit-caution"></dd></div>
+          </dl>
+          <div class="meaning-audit-actions">
+            <button class="primary-button" id="meaning-audit-accept" type="button">采用 AI 建议</button>
+            <button class="secondary-button" id="meaning-audit-edit" type="button">自己修改</button>
+            <button class="secondary-button" id="meaning-audit-keep" type="button">保留原释义</button>
+          </div>
+          <button class="text-button meaning-audit-retry" id="meaning-audit-retry" type="button">重新核验</button>
+          <section class="meaning-audit-chat" aria-labelledby="meaning-audit-chat-title">
+            <h3 id="meaning-audit-chat-title">还有疑问？直接问</h3>
+            <div class="meaning-audit-chat__history" id="meaning-audit-chat-history"></div>
+            <form id="meaning-audit-chat-form">
+              <label for="meaning-audit-chat-input">只询问当前词的现代常见用法</label>
+              <textarea id="meaning-audit-chat-input" rows="2" maxlength="500" placeholder="例如：fast 为什么有‘牢固的’这个意思？"></textarea>
+              <button class="secondary-button" id="meaning-audit-chat-send" type="submit">发送</button>
+            </form>
+            <p class="meaning-audit-status" id="meaning-audit-chat-status" role="status"></p>
+          </section>
+        </section>
+      </article>
+    </dialog>
+
+    <dialog class="meaning-editor-dialog" id="meaning-editor-dialog" aria-labelledby="meaning-editor-title">
+      <article class="meaning-editor-dialog__card">
+        <button class="dialog-close-button" id="meaning-editor-close" type="button" aria-label="关闭释义编辑器">×</button>
+        <p class="section-kicker">PERSONAL MEANING</p>
+        <h2 id="meaning-editor-title">修改我的释义</h2>
+        <p id="meaning-editor-word"></p>
+        <form id="meaning-editor-form">
+          <label for="meaning-editor-core">核心释义 <span>必填</span></label>
+          <input id="meaning-editor-core" maxlength="300" required />
+          <label for="meaning-editor-short">简短释义</label>
+          <input id="meaning-editor-short" maxlength="300" />
+          <label for="meaning-editor-others">其他义项 <span>每行一项，也可用分号分隔</span></label>
+          <textarea id="meaning-editor-others" rows="4" maxlength="1800"></textarea>
+          <label for="meaning-editor-note">个人备注</label>
+          <textarea id="meaning-editor-note" rows="3" maxlength="500"></textarea>
+          <p class="meaning-audit-status" id="meaning-editor-status" role="status"></p>
+          <button class="primary-button" id="meaning-editor-save" type="submit">保存我的释义</button>
+        </form>
+      </article>
+    </dialog>
+
+    <dialog class="confirm-dialog meaning-override-confirm" id="meaning-override-confirm" aria-labelledby="meaning-override-confirm-title">
+      <div class="confirm-dialog__content">
+        <span class="confirm-dialog__icon" aria-hidden="true">✎</span>
+        <h2 id="meaning-override-confirm-title">确认保存个人释义？</h2>
+        <p id="meaning-override-confirm-message">原始词库不会被修改。</p>
+        <dl class="meaning-override-confirm__comparison" id="meaning-override-confirm-comparison">
+          <div><dt>当前原始释义</dt><dd id="meaning-override-confirm-base"></dd></div>
+          <div><dt>建议个人释义</dt><dd id="meaning-override-confirm-next"></dd></div>
+        </dl>
+        <div class="confirm-dialog__actions">
+          <button class="secondary-button" id="meaning-override-confirm-cancel" type="button">取消</button>
+          <button class="primary-button" id="meaning-override-confirm-action" type="button">确认采用</button>
+        </div>
+      </div>
     </dialog>
 
     <dialog class="confusable-dialog" id="confusable-dialog" aria-labelledby="confusable-dialog-title">

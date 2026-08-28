@@ -246,7 +246,7 @@ await test("27 micro-practice wrongCount remains independent from confusionCount
 
 await test("28 the result immediately renders warning, meanings and both actions", () => {
   assert.match(studySource, /`你又把 \$\{question\.word\.word\} 和 \$\{candidate\.word\.word\} 混淆了`/);
-  assert.match(studySource, /question\.word\.coreMeaning \|\| question\.word\.shortMeaning/);
+  assert.match(studySource, /learningWord\.coreMeaning \|\| learningWord\.shortMeaning/);
   assert.match(studySource, /candidate\.word\?\.coreMeaning \|\| candidate\.word\?\.shortMeaning/);
   assert.match(studySource, /this\.elements\.confusionPractice\.textContent = "立即做3题辨析"/);
   assert.match(html, /id="study-confusion-practice"/);

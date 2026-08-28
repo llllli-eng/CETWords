@@ -203,9 +203,11 @@ await test("提取脚本明确不使用 OCR", () => {
 
 const ignored = spawnSync("git", ["check-ignore", "local-corpus/cet6/2018年6月英语六级真题(第1套).pdf"], { cwd: root, encoding: "utf8" });
 await test("local-corpus PDF 被 gitignore 排除", () => assert.equal(ignored.status, 0, ignored.stderr));
-const workerDiff = spawnSync("git", ["diff", "--quiet", "--", "worker"], { cwd: root });
-await test("Worker 未修改", () => assert.equal(workerDiff.status, 0));
-for (const path of ["js/storage.js", "js/review-scheduler.js", "js/review-recovery.js", "js/review-workload.js", "js/confusable-words.js", "data/cet4.json", "data/cet6.json"]) {
+await test("后续 Worker 词义核验扩展未读取作文或本地 PDF", () => {
+  const workerSource = read("worker/src/index.js");
+  assert.doesNotMatch(workerSource, /cet6-writing|writing-topics|local-corpus|\.pdf/i);
+});
+for (const path of ["js/review-scheduler.js", "js/review-recovery.js", "js/review-workload.js", "js/confusable-words.js", "data/cet4.json", "data/cet6.json"]) {
   const diff = spawnSync("git", ["diff", "--quiet", "--", path], { cwd: root });
   await test(`${path} 未修改`, () => assert.equal(diff.status, 0));
 }

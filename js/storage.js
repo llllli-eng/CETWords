@@ -12,6 +12,7 @@
     smartLearningOrder,
     dailyGroupService,
     confusableWords,
+    meaningOverrides,
   } = app;
   const STORAGE_KEY = "cetwords-user-data-v1";
   const DATA_VERSION = 15;
@@ -135,6 +136,7 @@
         lastExportTime: null,
       },
       aiStats: deepClone(EMPTY_AI_STATS),
+      personalMeaningOverrides: {},
       confusablePairs: {},
       confusableSuggestionCache: {},
       recentEncounteredWordIds: [],
@@ -391,6 +393,12 @@
     return result;
   }
 
+  function normalizePersonalMeaningOverrides(raw) {
+    return meaningOverrides?.normalizeOverrideMap
+      ? meaningOverrides.normalizeOverrideMap(raw)
+      : {};
+  }
+
   function normalizeWordProgress(raw, sourceVersion = DATA_VERSION, migrationNow = Date.now()) {
     const value = raw && typeof raw === "object" ? raw : {};
     const learned = Boolean(value.learned);
@@ -627,6 +635,7 @@
         lastExportTime: normalizeIsoTime(raw.preferences?.lastExportTime),
       },
       aiStats: normalizeAiStats(raw.aiStats),
+      personalMeaningOverrides: normalizePersonalMeaningOverrides(raw.personalMeaningOverrides),
       confusablePairs: sourceVersion >= 15
         ? confusableWords.normalizePairs(raw.confusablePairs)
         : {},
@@ -1985,6 +1994,48 @@
     return deepClone(getMutableData().confusablePairs);
   }
 
+  function getPersonalMeaningOverrides() {
+    return deepClone(getMutableData().personalMeaningOverrides);
+  }
+
+  function getPersonalMeaningOverride(wordId) {
+    if (typeof wordId !== "string" || !wordId.trim()) return null;
+    const value = getMutableData().personalMeaningOverrides[wordId.trim()];
+    return value ? deepClone(value) : null;
+  }
+
+  function savePersonalMeaningOverride(wordId, value, now = Date.now()) {
+    if (typeof wordId !== "string" || !wordId.trim()) return { changed: false, error: "wordId 无效" };
+    const key = wordId.trim();
+    const previous = getPersonalMeaningOverride(key);
+    const timestamp = new Date(now).toISOString();
+    const normalized = meaningOverrides?.normalizeOverride?.({
+      ...value,
+      createdAt: previous?.createdAt || value?.createdAt || timestamp,
+      updatedAt: timestamp,
+    });
+    if (!normalized) return { changed: false, error: "个人核心释义不能为空" };
+    const changed = JSON.stringify(previous) !== JSON.stringify(normalized);
+    getMutableData().personalMeaningOverrides[key] = normalized;
+    if (changed) persist();
+    return { changed, previous, override: deepClone(normalized), wordId: key };
+  }
+
+  function removePersonalMeaningOverride(wordId) {
+    if (typeof wordId !== "string" || !wordId.trim()) return { changed: false, previous: null };
+    const key = wordId.trim();
+    const previous = getPersonalMeaningOverride(key);
+    if (!previous) return { changed: false, previous: null, wordId: key };
+    delete getMutableData().personalMeaningOverrides[key];
+    persist();
+    return { changed: true, previous, wordId: key };
+  }
+
+  function restorePersonalMeaningOverrideSnapshot(wordId, snapshot) {
+    if (snapshot) return savePersonalMeaningOverride(wordId, snapshot, Date.parse(snapshot.updatedAt) || Date.now());
+    return removePersonalMeaningOverride(wordId);
+  }
+
   function getConfusablePairsForWord(wordId) {
     return deepClone(confusableWords.getPairsForWord(getMutableData().confusablePairs, wordId));
   }
@@ -2099,6 +2150,9 @@
     ensureBook(bookId);
     getMutableData().books[bookId] = createEmptyBookData();
     const prefix = `${bookId}-`;
+    Object.keys(getMutableData().personalMeaningOverrides).forEach((wordId) => {
+      if (wordId.startsWith(prefix)) delete getMutableData().personalMeaningOverrides[wordId];
+    });
     Object.keys(getMutableData().confusablePairs).forEach((pairKey) => {
       const pair = getMutableData().confusablePairs[pairKey];
       if (pair.wordIdA.startsWith(prefix) || pair.wordIdB.startsWith(prefix)) delete getMutableData().confusablePairs[pairKey];
@@ -2214,6 +2268,11 @@
     getFavoriteWords,
     getDueWords,
     getDailyReviewSummary,
+    getPersonalMeaningOverrides,
+    getPersonalMeaningOverride,
+    savePersonalMeaningOverride,
+    removePersonalMeaningOverride,
+    restorePersonalMeaningOverrideSnapshot,
     getConfusablePairs,
     getConfusablePairsForWord,
     addConfusablePair,

@@ -6150,3 +6150,376 @@ kbd {
     font-size: 8px;
   }
 }
+
+/* ==============================
+   Phase 16.6.1 · AI 词义核验与个人释义
+   ============================== */
+
+.study-meaning-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.study-meaning-tools > div {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
+  gap: 10px;
+}
+
+.study-meaning-tools > div > button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.study-meaning-tools__status {
+  grid-column: 1 / -1;
+  margin: -2px 2px 0;
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.word-detail-personal-meaning {
+  margin-top: 18px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-soft);
+}
+
+.word-detail-personal-meaning__heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.word-detail-personal-meaning h3 {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.word-detail-personal-meaning__heading span {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.word-detail-personal-meaning > p {
+  margin: 10px 0 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.word-detail-personal-meaning dl,
+.meaning-override-confirm__comparison {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.word-detail-personal-meaning dl > div,
+.meaning-override-confirm__comparison > div {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.35fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.word-detail-personal-meaning dt,
+.meaning-override-confirm__comparison dt {
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.word-detail-personal-meaning dd,
+.meaning-override-confirm__comparison dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.word-detail-personal-meaning__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+  gap: 9px;
+  margin-top: 13px;
+}
+
+.word-detail-personal-meaning__actions button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.word-detail-personal-meaning__actions .text-button {
+  grid-column: 1 / -1;
+}
+
+.meaning-audit-dialog,
+.meaning-editor-dialog {
+  width: min(calc(100% - 32px), 700px);
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+  color: var(--text);
+}
+
+.meaning-audit-dialog::backdrop,
+.meaning-editor-dialog::backdrop,
+.meaning-override-confirm::backdrop {
+  background: rgba(10, 24, 20, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.meaning-audit-dialog__card,
+.meaning-editor-dialog__card {
+  position: relative;
+  padding: 30px;
+}
+
+.meaning-audit-dialog h2,
+.meaning-editor-dialog h2 {
+  margin: 5px 54px 0 0;
+  font-size: clamp(24px, 5vw, 32px);
+}
+
+.meaning-audit-dialog__word,
+#meaning-editor-word {
+  margin: 7px 54px 0 0;
+  color: var(--text-soft);
+  overflow-wrap: anywhere;
+}
+
+.meaning-audit-current {
+  margin-top: 19px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.meaning-audit-current h3,
+.meaning-audit-chat h3 {
+  margin: 0 0 7px;
+  color: var(--primary-dark);
+  font-size: 11px;
+}
+
+.meaning-audit-current p {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.meaning-audit-status {
+  min-height: 20px;
+  margin: 12px 0 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.meaning-audit-status.is-error,
+#meaning-editor-status:not(:empty) {
+  color: var(--coral);
+}
+
+.meaning-audit-result {
+  margin-top: 8px;
+}
+
+.meaning-audit-verdict {
+  display: grid;
+  gap: 9px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.meaning-audit-verdict__badge {
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.meaning-audit-verdict__badge.is-warning {
+  background: color-mix(in srgb, var(--gold) 18%, var(--surface));
+}
+
+.meaning-audit-verdict__badge.is-danger {
+  background: color-mix(in srgb, var(--coral) 16%, var(--surface));
+  color: var(--coral);
+}
+
+.meaning-audit-result__details {
+  display: grid;
+  gap: 0;
+  margin: 14px 0 0;
+}
+
+.meaning-audit-result__details > div {
+  display: grid;
+  grid-template-columns: minmax(118px, 0.3fr) minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.meaning-audit-result__details dt {
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.meaning-audit-result__details dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.meaning-audit-result__details dd p {
+  margin: 0 0 5px;
+}
+
+.meaning-audit-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 17px;
+}
+
+.meaning-audit-actions button,
+.meaning-audit-chat button,
+.meaning-editor-dialog button {
+  min-height: 48px;
+}
+
+.meaning-audit-retry {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 7px;
+}
+
+.meaning-audit-chat {
+  margin-top: 17px;
+  padding: 15px;
+  border-radius: 17px;
+  background: var(--surface-soft);
+}
+
+.meaning-audit-chat__history {
+  display: grid;
+  gap: 8px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.meaning-audit-chat__message {
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.meaning-audit-chat__message.is-user {
+  border-left: 3px solid var(--primary);
+}
+
+.meaning-audit-chat__message strong,
+.meaning-audit-chat__message p {
+  margin: 0;
+}
+
+.meaning-audit-chat form,
+.meaning-editor-dialog form {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.meaning-audit-chat label,
+.meaning-editor-dialog label {
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.meaning-editor-dialog label span {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.meaning-audit-chat textarea,
+.meaning-editor-dialog textarea,
+.meaning-editor-dialog input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.meaning-override-confirm__comparison {
+  width: 100%;
+  text-align: left;
+}
+
+@media (max-width: 620px) {
+  .study-meaning-tools,
+  .study-meaning-tools > div,
+  .word-detail-personal-meaning__actions,
+  .meaning-audit-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .meaning-audit-dialog,
+  .meaning-editor-dialog {
+    width: calc(100% - 18px);
+    max-height: calc(100dvh - 18px);
+    border-radius: 20px;
+  }
+
+  .meaning-audit-dialog__card,
+  .meaning-editor-dialog__card {
+    padding: 24px 17px 18px;
+  }
+
+  .meaning-audit-result__details > div,
+  .word-detail-personal-meaning dl > div,
+  .meaning-override-confirm__comparison > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .meaning-audit-actions button,
+  .word-detail-personal-meaning__actions button {
+    width: 100%;
+  }
+}

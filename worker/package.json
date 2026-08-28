@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "node ../scripts/test-phase14.mjs --worker-only && node ../scripts/test-phase16.mjs --worker-only && node ../scripts/test-phase16-5-1.mjs --worker-only"
+    "test": "node ../scripts/test-phase14.mjs --worker-only && node ../scripts/test-phase16.mjs --worker-only && node ../scripts/test-phase16-5-1.mjs --worker-only && node ../scripts/test-phase16-6-1.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.30.0"

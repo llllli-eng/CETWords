@@ -57,6 +57,11 @@
       onAcceptConfusion,
       onCreateConfusablePair,
       onStartConfusablePractice,
+      getLearningWord,
+      getMeaningReferenceWord,
+      hasMeaningOverride,
+      onOpenMeaningAudit,
+      onEditMeaningOverride,
     }) {
       this.onExit = onExit;
       this.onAnswer = onAnswer;
@@ -91,6 +96,11 @@
       this.onAcceptConfusion = onAcceptConfusion;
       this.onCreateConfusablePair = onCreateConfusablePair;
       this.onStartConfusablePractice = onStartConfusablePractice;
+      this.getLearningWord = getLearningWord;
+      this.getMeaningReferenceWord = getMeaningReferenceWord;
+      this.hasMeaningOverride = hasMeaningOverride;
+      this.onOpenMeaningAudit = onOpenMeaningAudit;
+      this.onEditMeaningOverride = onEditMeaningOverride;
       this.sessions = new Map();
       this.activeSession = null;
       this.isActive = false;
@@ -154,6 +164,10 @@
         detailTranslation: document.querySelector("#detail-translation"),
         detailSpeakButton: document.querySelector("#detail-speak-button"),
         confusableButton: document.querySelector("#study-confusable-button"),
+        meaningTools: document.querySelector("#study-meaning-tools"),
+        meaningStatus: document.querySelector("#study-meaning-status"),
+        meaningAudit: document.querySelector("#study-meaning-audit"),
+        meaningEdit: document.querySelector("#study-meaning-edit"),
         confusionDetected: document.querySelector("#study-confusion-detected"),
         confusionIcon: document.querySelector("#study-confusion-icon"),
         confusionTitle: document.querySelector("#study-confusion-title"),
@@ -241,6 +255,14 @@
       this.elements.confusableButton.addEventListener("click", () => {
         const question = this.getCurrentQuestion();
         if (question?.selectedIndex !== null) this.onOpenConfusable?.(question.word, { source: "study-result" });
+      });
+      this.elements.meaningAudit.addEventListener("click", () => {
+        const question = this.getCurrentQuestion();
+        if (this.isMeaningAuditAvailable(question)) this.onOpenMeaningAudit?.(question.word, { source: "study-result" });
+      });
+      this.elements.meaningEdit.addEventListener("click", () => {
+        const question = this.getCurrentQuestion();
+        if (this.isMeaningAuditAvailable(question)) this.onEditMeaningOverride?.(question.word, { source: "study-result" });
       });
       this.elements.confusionAdd.addEventListener("click", () => this.addDetectedConfusion());
       this.elements.confusionPractice.addEventListener("click", () => this.practiceDetectedConfusion());
@@ -461,6 +483,36 @@
       );
     }
 
+    getLearningWordView(word) {
+      return this.getLearningWord?.(word) || word;
+    }
+
+    getMeaningReference(word) {
+      return this.getMeaningReferenceWord?.(word) || word;
+    }
+
+    isMeaningAuditAvailable(question) {
+      return Boolean(
+        question
+        && question.selectedIndex !== null
+        && [
+          newWordLearning.LEARNING_PHASES.INTRO,
+          newWordLearning.LEARNING_PHASES.CHOICE_RETRY,
+          newWordLearning.LEARNING_PHASES.AI_REINFORCEMENT,
+        ].includes(question.learningPhase),
+      );
+    }
+
+    renderMeaningTools(question) {
+      const visible = this.isMeaningAuditAvailable(question);
+      this.elements.meaningTools.hidden = !visible;
+      if (!visible) return;
+      const overridden = Boolean(this.hasMeaningOverride?.(question.word));
+      this.elements.meaningStatus.hidden = !overridden;
+      this.elements.meaningAudit.textContent = overridden ? "✨ 再次 AI 核验" : "✨ AI核验词义";
+      this.elements.meaningEdit.textContent = overridden ? "✏️ 编辑我的释义" : "✏️ 修改我的释义";
+    }
+
     prepareCurrentQuestion() {
       const session = this.activeSession;
       let question = this.getCurrentQuestion();
@@ -483,7 +535,7 @@
           return question;
         }
         const generated = createStudyQuestion(
-          question.word,
+          this.getLearningWordView(question.word),
           session.book.allWords,
           question.forcedStudyMode || this.getStudyMode(),
         );
@@ -562,6 +614,7 @@
         this.elements.manualActions.hidden = true;
         this.elements.details.hidden = true;
         this.elements.confusableButton.hidden = true;
+        this.elements.meaningTools.hidden = true;
         this.elements.confusionDetected.hidden = true;
         this.elements.nextButton.hidden = true;
       } else {
@@ -877,10 +930,11 @@
       this.elements.newWordMasteryStatus.textContent = "正在核对你的主动释义…";
       this.elements.newWordMasteryStatus.classList.remove("is-error");
       try {
-        const localResult = aiJudge.localMeaningJudge(question.word, userAnswer);
+        const referenceWord = this.getMeaningReference(question.word);
+        const localResult = aiJudge.localMeaningJudge(referenceWord, userAnswer);
         const judgementResult = localResult.decision === "judged"
           ? localResult
-          : await this.onAiJudgeMeaning({ word: question.word, userAnswer });
+          : await this.onAiJudgeMeaning({ word: referenceWord, userAnswer });
         if (this.newWordMasteryState !== state || this.getCurrentQuestion() !== question) return;
         state.pending = false;
         state.judgement = judgementResult.result;
@@ -930,9 +984,10 @@
         ? "✓ 已确认掌握"
         : partial ? "释义接近，但还不能跳过学习" : "释义未通过确认";
       this.elements.newWordMasteryUserAnswer.textContent = state.userAnswer;
-      this.elements.newWordMasteryStandard.textContent = state.question.word.coreMeaning
-        || state.question.word.shortMeaning
-        || state.question.word.meaning;
+      const learningWord = this.getLearningWordView(state.question.word);
+      this.elements.newWordMasteryStandard.textContent = learningWord.coreMeaning
+        || learningWord.shortMeaning
+        || learningWord.meaning;
       this.elements.newWordMasteryJudgement.textContent = state.judgementDetails?.feedback
         || (correct ? "核心意思正确" : partial ? "方向接近，但核心义不够完整" : "当前回答与核心义不匹配");
       this.elements.newWordMasteryResultNote.textContent = correct
@@ -1061,7 +1116,8 @@
       }
       question.userAnswer = userAnswer;
       question.interactionDurationMs = this.getInteractionDuration(question);
-      const localResult = aiJudge.localMeaningJudge(question.word, userAnswer);
+      const referenceWord = this.getMeaningReference(question.word);
+      const localResult = aiJudge.localMeaningJudge(referenceWord, userAnswer);
       if (localResult.decision === "judged") {
         this.applySubjectiveJudgement(localResult.result, localResult);
         return;
@@ -1071,7 +1127,7 @@
       this.renderAnswerArea(question);
       this.elements.meaningStatus.textContent = "正在理解你的表述…";
       try {
-        const result = await this.onAiJudgeMeaning({ word: question.word, userAnswer });
+        const result = await this.onAiJudgeMeaning({ word: referenceWord, userAnswer });
         if (this.getCurrentQuestion() !== question || question.selectedIndex !== null) return;
         this.applySubjectiveJudgement(result.result, result);
       } catch (error) {
@@ -1463,6 +1519,7 @@
       this.elements.manualActions.hidden = true;
       this.renderWordDetails(question);
       this.renderConfusableActions(question);
+      this.renderMeaningTools(question);
       this.elements.nextButton.hidden = false;
       this.updateNextButtonLabel();
     }
@@ -1518,6 +1575,7 @@
       this.elements.manualActions.hidden = true;
       this.renderWordDetails(question);
       this.renderConfusableActions(question);
+      this.renderMeaningTools(question);
       this.elements.nextButton.hidden = false;
       this.updateNextButtonLabel();
       this.scheduleFeedbackVisibility(question);
@@ -1544,19 +1602,21 @@
     }
 
     renderAiFeedbackDetails(question, judgementText) {
+      const learningWord = this.getLearningWordView(question.word);
       this.elements.aiFeedbackUserAnswer.textContent = question.userAnswer || "（未填写）";
-      this.elements.aiFeedbackStandardMeaning.textContent = question.word.coreMeaning
-        || question.word.shortMeaning
-        || question.word.meaning;
+      this.elements.aiFeedbackStandardMeaning.textContent = learningWord.coreMeaning
+        || learningWord.shortMeaning
+        || learningWord.meaning;
       this.elements.aiFeedbackJudgement.textContent = judgementText;
       this.elements.aiFeedbackDetails.hidden = false;
     }
 
     renderWordDetails(question) {
-      this.elements.detailWord.textContent = question.word.word;
-      this.elements.detailPhonetic.textContent = question.word.phonetic || "";
-      this.elements.detailPhonetic.hidden = !question.word.phonetic;
-      this.elements.detailMeaning.textContent = `核心义：${question.word.coreMeaning || question.word.shortMeaning || question.word.meaning}\n${question.word.meaning}`;
+      const learningWord = this.getLearningWordView(question.word);
+      this.elements.detailWord.textContent = learningWord.word;
+      this.elements.detailPhonetic.textContent = learningWord.phonetic || "";
+      this.elements.detailPhonetic.hidden = !learningWord.phonetic;
+      this.elements.detailMeaning.textContent = `核心义：${learningWord.coreMeaning || learningWord.shortMeaning || learningWord.meaning}\n${learningWord.meaning}`;
       const primaryExample = Array.isArray(question.word.examples) && question.word.examples.length
         ? question.word.examples[0]
         : { sentence: question.word.example, translation: question.word.translation };
@@ -1575,7 +1635,8 @@
       const candidate = answered ? question?.confusionCandidate : null;
       this.elements.confusionDetected.hidden = !candidate;
       if (candidate) {
-        const currentMeaning = question.word.coreMeaning || question.word.shortMeaning || question.word.meaning;
+        const learningWord = this.getLearningWordView(question.word);
+        const currentMeaning = learningWord.coreMeaning || learningWord.shortMeaning || learningWord.meaning;
         const candidateMeaning = candidate.word?.coreMeaning || candidate.word?.shortMeaning || candidate.word?.meaning || "";
         const pair = candidate.pair || null;
         this.elements.confusionCurrentWord.textContent = question.word.word;
@@ -1614,6 +1675,26 @@
           this.elements.confusionView.hidden = true;
         }
       }
+    }
+
+    refreshCurrentMeaning() {
+      const question = this.getCurrentQuestion();
+      if (!question || question.selectedIndex === null) return;
+      const learningWord = this.getLearningWordView(question.word);
+      if (question.studyMode === STUDY_MODES.EN_TO_ZH && Array.isArray(question.options)) {
+        question.options.forEach((option) => {
+          if (!option.isCorrect) return;
+          option.meaning = learningWord.coreMeaning || learningWord.shortMeaning || learningWord.meaning;
+          option.text = option.meaning;
+        });
+        this.renderOptions(question);
+      }
+      if (question.studyMode === "ai-meaning") {
+        this.renderAiFeedbackDetails(question, question.judgementFeedback || "已完成判断");
+      }
+      this.renderWordDetails(question);
+      this.renderMeaningTools(question);
+      this.renderConfusableActions(question);
     }
 
     getDetectedConfusionPairOptions(question, candidate) {

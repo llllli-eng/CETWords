@@ -5,6 +5,7 @@ const MAX_DAILY_REVIEW_BODY_BYTES = 24 * 1024;
 const MAX_DAILY_GROUP_BODY_BYTES = 8 * 1024;
 const MAX_CONFUSABLE_BODY_BYTES = 4 * 1024;
 const MAX_CONFUSABLE_MATCH_BODY_BYTES = 8 * 1024;
+const MAX_MEANING_AUDIT_BODY_BYTES = 12 * 1024;
 const MAX_DAILY_WEAK_WORDS = 10;
 const MAX_DAILY_CORRECTED_WORDS = 5;
 const REQUEST_TIMEOUT_MS = 12 * 1000;
@@ -21,7 +22,15 @@ const DAILY_GROUP_FIELDS = new Set([
 const CONFUSABLE_SUGGEST_FIELDS = new Set(["word", "coreMeaning", "meanings"]);
 const CONFUSABLE_FIND_FIELDS = new Set(["currentWord", "description"]);
 const CONFUSABLE_MATCH_EXISTING_FIELDS = new Set(["currentWord", "userAnswer", "candidates"]);
+const MEANING_AUDIT_FIELDS = new Set([
+  "word", "book", "sourceLevel", "coreMeaning", "shortMeaning",
+  "meanings", "meaningsByPos", "personalOverride",
+]);
+const MEANING_AUDIT_CHAT_FIELDS = new Set([
+  "word", "book", "audit", "currentMeanings", "history", "question",
+]);
 const CONFUSABLE_TYPES = new Set(["spelling", "meaning", "usage"]);
+const MEANING_AUDIT_VERDICTS = new Set(["correct", "incomplete", "priority_issue", "misleading", "wrong"]);
 
 const SYSTEM_PROMPT = `你是大学英语四六级单词中文释义判题器。
 
@@ -126,6 +135,36 @@ const CONFUSABLE_MATCH_EXISTING_SYSTEM_PROMPT = `你是大学英语四六级个�
 JSON 格式：
 命中：{"match":true,"word":"candidate exact spelling","confidence":"high"}
 未命中：{"match":false,"reason":"no_match|ambiguous"}`;
+
+const MEANING_AUDIT_SYSTEM_PROMPT = `你是大学英语四六级词义质量核验助手。
+
+用户会主动请求你核验当前词库释义。你只评估这个英文单词的中文释义质量，不判定学习答案，也不修改任何学习数据。
+
+核验原则：
+1. 以现代标准英语、真实常见程度和大学英语四六级相关性为准。
+2. 必须区分“这个义项是否真实存在”和“它是否适合作为四六级核心义”。真实但低频的义项不能冒充高优先级核心义。
+3. 拒绝古旧义、方言义、极罕见义、狭窄专业义和牵强的上下文延伸义。
+4. personalOverride 只是用户当前个人释义，也需要同样严格核验，不能默认正确。
+5. commonMeanings 只列现代常见且对四六级有价值的义项；secondaryMeanings 只保留真实但学习优先级较低的义项。
+6. verdict 只能是：
+   - correct：当前核心义准确且优先级合理；
+   - incomplete：基本准确，但缺少重要常见义；
+   - priority_issue：义项真实，但不适合作为四六级首要核心义；
+   - misleading：表述容易造成明显误解或范围偏差；
+   - wrong：释义明显错误。
+7. suggestedCoreMeaning 必须是可直接用于中文学习卡的简洁核心释义。
+8. 只输出合法 JSON，不输出 Markdown 或额外文字。
+
+JSON 格式：
+{"verdict":"correct|incomplete|priority_issue|misleading|wrong","summary":"","commonMeanings":[{"pos":"","meaning":""}],"suggestedCoreMeaning":"","secondaryMeanings":[""],"cetAdvice":"","caution":""}`;
+
+const MEANING_AUDIT_CHAT_SYSTEM_PROMPT = `你是大学英语四六级词义核验的追问助手。
+
+你只能围绕请求中的当前单词、已完成核验结论及现代常见用法回答，不得切换到其他词或修改核验数据。
+回答时继续区分“义项确实存在”和“是否值得作为四六级核心义”；拒绝古旧、方言、罕见、狭窄专业和牵强延伸义。
+使用简洁中文，不超过 800 字。只输出合法 JSON，不输出 Markdown 或额外文字。
+
+JSON 格式：{"answer":""}`;
 
 function getAllowedOrigins(env) {
   return new Set(String(env.ALLOWED_ORIGINS || "")
@@ -241,6 +280,157 @@ function validatePayload(raw) {
       meanings,
       meaningsByPos,
       userAnswer: userAnswer.value,
+    },
+  };
+}
+
+function validateMeaningAuditPayload(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "请求体必须是 JSON 对象" };
+  const unexpected = Object.keys(raw).find((key) => !MEANING_AUDIT_FIELDS.has(key));
+  if (unexpected) return { error: `不允许的字段：${unexpected}` };
+  const word = validateString(raw.word, "word", 100);
+  const coreMeaning = validateString(raw.coreMeaning, "coreMeaning", 300);
+  const shortMeaning = validateString(raw.shortMeaning, "shortMeaning", 300);
+  if (word.error || coreMeaning.error || shortMeaning.error) {
+    return { error: word.error || coreMeaning.error || shortMeaning.error };
+  }
+  if (!["cet4", "cet6"].includes(raw.book)) return { error: "book 格式不正确" };
+  const sourceLevel = typeof raw.sourceLevel === "string" ? raw.sourceLevel.trim() : "";
+  if (sourceLevel.length > 30) return { error: "sourceLevel 超出长度限制" };
+  if (!Array.isArray(raw.meanings) || raw.meanings.length > MAX_MEANINGS) {
+    return { error: "meanings 格式不正确" };
+  }
+  const meanings = [];
+  let totalLength = coreMeaning.value.length + shortMeaning.value.length;
+  for (const rawMeaning of raw.meanings) {
+    if (!rawMeaning || typeof rawMeaning !== "object" || Array.isArray(rawMeaning)) {
+      return { error: "meanings 项格式不正确" };
+    }
+    if (Object.keys(rawMeaning).some((key) => !["pos", "meaning"].includes(key))) {
+      return { error: "meanings 包含不允许的字段" };
+    }
+    const meaning = validateString(rawMeaning.meaning, "meaning", 300);
+    const pos = typeof rawMeaning.pos === "string" ? rawMeaning.pos.trim() : "";
+    if (meaning.error || pos.length > 30) return { error: meaning.error || "meanings 词性超出长度限制" };
+    totalLength += meaning.value.length + pos.length;
+    if (totalLength > 5000) return { error: "释义总长度超出限制" };
+    meanings.push({ pos, meaning: meaning.value });
+  }
+  if (!raw.meaningsByPos || typeof raw.meaningsByPos !== "object" || Array.isArray(raw.meaningsByPos)) {
+    return { error: "meaningsByPos 格式不正确" };
+  }
+  const byPosEntries = Object.entries(raw.meaningsByPos);
+  if (byPosEntries.length > MAX_MEANINGS) return { error: "meaningsByPos 数量超出限制" };
+  const meaningsByPos = {};
+  for (const [pos, rawItems] of byPosEntries) {
+    if (!pos || pos.length > 30 || !Array.isArray(rawItems) || rawItems.length > 6) {
+      return { error: "meaningsByPos 格式不正确" };
+    }
+    const items = [];
+    for (const rawItem of rawItems) {
+      const item = validateString(rawItem, "meaningsByPos meaning", 300);
+      if (item.error) return item;
+      totalLength += item.value.length;
+      if (totalLength > 5000) return { error: "释义总长度超出限制" };
+      items.push(item.value);
+    }
+    meaningsByPos[pos] = items;
+  }
+  let personalOverride;
+  if (raw.personalOverride !== undefined) {
+    if (!raw.personalOverride || typeof raw.personalOverride !== "object" || Array.isArray(raw.personalOverride)) {
+      return { error: "personalOverride 格式不正确" };
+    }
+    if (Object.keys(raw.personalOverride).some((key) => !["coreMeaning", "shortMeaning", "meanings"].includes(key))) {
+      return { error: "personalOverride 包含不允许的字段" };
+    }
+    const personalCore = validateString(raw.personalOverride.coreMeaning, "personalOverride.coreMeaning", 300);
+    const personalShort = validateString(raw.personalOverride.shortMeaning, "personalOverride.shortMeaning", 300);
+    if (personalCore.error || personalShort.error) return { error: personalCore.error || personalShort.error };
+    if (!Array.isArray(raw.personalOverride.meanings) || raw.personalOverride.meanings.length > MAX_MEANINGS) {
+      return { error: "personalOverride.meanings 格式不正确" };
+    }
+    const personalMeanings = [];
+    for (const rawItem of raw.personalOverride.meanings) {
+      const item = validateString(rawItem, "personalOverride.meanings", 300);
+      if (item.error) return item;
+      totalLength += item.value.length;
+      if (totalLength > 7000) return { error: "释义总长度超出限制" };
+      personalMeanings.push(item.value);
+    }
+    personalOverride = {
+      coreMeaning: personalCore.value,
+      shortMeaning: personalShort.value,
+      meanings: personalMeanings,
+    };
+  }
+  return {
+    value: {
+      word: word.value,
+      book: raw.book,
+      sourceLevel,
+      coreMeaning: coreMeaning.value,
+      shortMeaning: shortMeaning.value,
+      meanings,
+      meaningsByPos,
+      ...(personalOverride ? { personalOverride } : {}),
+    },
+  };
+}
+
+function validateMeaningAuditChatPayload(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "请求体必须是 JSON 对象" };
+  const unexpected = Object.keys(raw).find((key) => !MEANING_AUDIT_CHAT_FIELDS.has(key));
+  if (unexpected) return { error: `不允许的字段：${unexpected}` };
+  const word = validateString(raw.word, "word", 100);
+  const question = validateString(raw.question, "question", 500);
+  if (word.error || question.error) return { error: word.error || question.error };
+  if (!["cet4", "cet6"].includes(raw.book)) return { error: "book 格式不正确" };
+  if (!raw.audit || typeof raw.audit !== "object" || Array.isArray(raw.audit)) return { error: "audit 格式不正确" };
+  if (Object.keys(raw.audit).some((key) => !["verdict", "summary", "suggestedCoreMeaning"].includes(key))) {
+    return { error: "audit 包含不允许的字段" };
+  }
+  if (!MEANING_AUDIT_VERDICTS.has(raw.audit.verdict)) return { error: "audit.verdict 格式不正确" };
+  const summary = validateString(raw.audit.summary, "audit.summary", 500);
+  const suggestedCoreMeaning = validateString(raw.audit.suggestedCoreMeaning, "audit.suggestedCoreMeaning", 300);
+  if (summary.error || suggestedCoreMeaning.error) return { error: summary.error || suggestedCoreMeaning.error };
+  if (!raw.currentMeanings || typeof raw.currentMeanings !== "object" || Array.isArray(raw.currentMeanings)) {
+    return { error: "currentMeanings 格式不正确" };
+  }
+  if (Object.keys(raw.currentMeanings).some((key) => !["baseCoreMeaning", "personalCoreMeaning"].includes(key))) {
+    return { error: "currentMeanings 包含不允许的字段" };
+  }
+  const baseCoreMeaning = validateString(raw.currentMeanings.baseCoreMeaning, "currentMeanings.baseCoreMeaning", 300);
+  if (baseCoreMeaning.error) return baseCoreMeaning;
+  const personalCoreMeaning = typeof raw.currentMeanings.personalCoreMeaning === "string"
+    ? raw.currentMeanings.personalCoreMeaning.trim()
+    : "";
+  if (personalCoreMeaning.length > 300) return { error: "currentMeanings.personalCoreMeaning 超出长度限制" };
+  if (!Array.isArray(raw.history) || raw.history.length > 8) return { error: "history 格式不正确" };
+  const history = [];
+  let historyLength = 0;
+  for (const rawMessage of raw.history) {
+    if (!rawMessage || typeof rawMessage !== "object" || Array.isArray(rawMessage)) return { error: "history 项格式不正确" };
+    if (Object.keys(rawMessage).some((key) => !["role", "content"].includes(key))) return { error: "history 包含不允许的字段" };
+    if (!["user", "assistant"].includes(rawMessage.role)) return { error: "history.role 格式不正确" };
+    const content = validateString(rawMessage.content, "history.content", 600);
+    if (content.error) return content;
+    historyLength += content.value.length;
+    if (historyLength > 4800) return { error: "history 总长度超出限制" };
+    history.push({ role: rawMessage.role, content: content.value });
+  }
+  return {
+    value: {
+      word: word.value,
+      book: raw.book,
+      audit: {
+        verdict: raw.audit.verdict,
+        summary: summary.value,
+        suggestedCoreMeaning: suggestedCoreMeaning.value,
+      },
+      currentMeanings: { baseCoreMeaning: baseCoreMeaning.value, personalCoreMeaning },
+      history,
+      question: question.value,
     },
   };
 }
@@ -563,6 +753,58 @@ function normalizeConfusableMatchExistingModelResult(content) {
   return { match: true, word, confidence: "high" };
 }
 
+function normalizeMeaningAuditModelResult(content) {
+  const parsed = parseJsonObject(content);
+  const allowed = new Set([
+    "verdict", "summary", "commonMeanings", "suggestedCoreMeaning",
+    "secondaryMeanings", "cetAdvice", "caution",
+  ]);
+  if (!parsed || Object.keys(parsed).some((key) => !allowed.has(key))) return null;
+  if (!MEANING_AUDIT_VERDICTS.has(parsed.verdict)) return null;
+  const summary = typeof parsed.summary === "string" ? parsed.summary.trim() : "";
+  const suggestedCoreMeaning = typeof parsed.suggestedCoreMeaning === "string"
+    ? parsed.suggestedCoreMeaning.trim()
+    : "";
+  const cetAdvice = typeof parsed.cetAdvice === "string" ? parsed.cetAdvice.trim() : "";
+  const caution = typeof parsed.caution === "string" ? parsed.caution.trim() : "";
+  if (!summary || summary.length > 500 || !suggestedCoreMeaning || suggestedCoreMeaning.length > 300) return null;
+  if (!cetAdvice || cetAdvice.length > 500 || caution.length > 500) return null;
+  if (!Array.isArray(parsed.commonMeanings) || parsed.commonMeanings.length > 8) return null;
+  const commonMeanings = [];
+  for (const rawMeaning of parsed.commonMeanings) {
+    if (!rawMeaning || typeof rawMeaning !== "object" || Array.isArray(rawMeaning)) return null;
+    if (Object.keys(rawMeaning).some((key) => !["pos", "meaning"].includes(key))) return null;
+    const pos = typeof rawMeaning.pos === "string" ? rawMeaning.pos.trim() : "";
+    const meaning = typeof rawMeaning.meaning === "string" ? rawMeaning.meaning.trim() : "";
+    if (pos.length > 30 || !meaning || meaning.length > 240) return null;
+    commonMeanings.push({ pos, meaning });
+  }
+  if (!Array.isArray(parsed.secondaryMeanings) || parsed.secondaryMeanings.length > 8) return null;
+  const secondaryMeanings = [];
+  for (const rawMeaning of parsed.secondaryMeanings) {
+    const meaning = typeof rawMeaning === "string" ? rawMeaning.trim() : "";
+    if (!meaning || meaning.length > 240) return null;
+    secondaryMeanings.push(meaning);
+  }
+  return {
+    verdict: parsed.verdict,
+    summary,
+    commonMeanings,
+    suggestedCoreMeaning,
+    secondaryMeanings,
+    cetAdvice,
+    caution,
+  };
+}
+
+function normalizeMeaningAuditChatModelResult(content) {
+  const parsed = parseJsonObject(content);
+  if (!parsed || Object.keys(parsed).some((key) => key !== "answer")) return null;
+  const answer = typeof parsed.answer === "string" ? parsed.answer.trim() : "";
+  if (!answer || answer.length > 1000) return null;
+  return { answer };
+}
+
 function normalizeModelResult(content) {
   if (typeof content !== "string" || !content.trim()) return null;
   let parsed;
@@ -698,6 +940,44 @@ function buildConfusableMatchExistingDeepSeekBody(payload) {
   };
 }
 
+function buildMeaningAuditDeepSeekBody(payload) {
+  return {
+    model: "deepseek-v4-flash",
+    messages: [
+      { role: "system", content: MEANING_AUDIT_SYSTEM_PROMPT },
+      { role: "user", content: `请只输出合法 JSON，核验以下当前单词释义：\n${JSON.stringify(payload)}` },
+    ],
+    thinking: { type: "disabled" },
+    response_format: { type: "json_object" },
+    stream: false,
+    temperature: 0,
+    max_tokens: 800,
+  };
+}
+
+function buildMeaningAuditChatDeepSeekBody(payload) {
+  const context = {
+    word: payload.word,
+    book: payload.book,
+    audit: payload.audit,
+    currentMeanings: payload.currentMeanings,
+  };
+  return {
+    model: "deepseek-v4-flash",
+    messages: [
+      { role: "system", content: MEANING_AUDIT_CHAT_SYSTEM_PROMPT },
+      { role: "user", content: `当前单词与核验上下文：\n${JSON.stringify(context)}` },
+      ...payload.history,
+      { role: "user", content: payload.question },
+    ],
+    thinking: { type: "disabled" },
+    response_format: { type: "json_object" },
+    stream: false,
+    temperature: 0.1,
+    max_tokens: 480,
+  };
+}
+
 async function callDeepSeek(payload, env, fetchImpl, options = {}) {
   const bodyBuilder = options.bodyBuilder || buildDeepSeekBody;
   const resultNormalizer = options.resultNormalizer || normalizeModelResult;
@@ -778,6 +1058,8 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     "/api/confusable-suggest",
     "/api/confusable-find",
     "/api/confusable-match-existing",
+    "/api/meaning-audit",
+    "/api/meaning-audit-chat",
   ].includes(url.pathname)) {
     return errorResponse(request, 404, "NOT_FOUND", "接口不存在");
   }
@@ -794,6 +1076,8 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     ? MAX_DAILY_REVIEW_BODY_BYTES
     : url.pathname === "/api/daily-group-plan"
       ? MAX_DAILY_GROUP_BODY_BYTES
+      : url.pathname.startsWith("/api/meaning-audit")
+        ? MAX_MEANING_AUDIT_BODY_BYTES
       : url.pathname === "/api/confusable-match-existing"
         ? MAX_CONFUSABLE_MATCH_BODY_BYTES
       : url.pathname.startsWith("/api/confusable-") ? MAX_CONFUSABLE_BODY_BYTES : MAX_BODY_BYTES;
@@ -816,6 +1100,10 @@ async function handleRequest(request, env, fetchImpl = fetch) {
       ? validateDailyGroupPayload(rawPayload)
       : url.pathname === "/api/confusable-suggest"
         ? validateConfusableSuggestPayload(rawPayload)
+        : url.pathname === "/api/meaning-audit"
+          ? validateMeaningAuditPayload(rawPayload)
+          : url.pathname === "/api/meaning-audit-chat"
+            ? validateMeaningAuditChatPayload(rawPayload)
         : url.pathname === "/api/confusable-find"
           ? validateConfusableFindPayload(rawPayload)
           : url.pathname === "/api/confusable-match-existing"
@@ -845,6 +1133,18 @@ async function handleRequest(request, env, fetchImpl = fetch) {
       result = await callDeepSeek(validation.value, env, fetchImpl, {
         bodyBuilder: buildConfusableSuggestDeepSeekBody,
         resultNormalizer: normalizeConfusableSuggestModelResult,
+        maxAttempts: 1,
+      });
+    } else if (url.pathname === "/api/meaning-audit") {
+      result = await callDeepSeek(validation.value, env, fetchImpl, {
+        bodyBuilder: buildMeaningAuditDeepSeekBody,
+        resultNormalizer: normalizeMeaningAuditModelResult,
+        maxAttempts: 1,
+      });
+    } else if (url.pathname === "/api/meaning-audit-chat") {
+      result = await callDeepSeek(validation.value, env, fetchImpl, {
+        bodyBuilder: buildMeaningAuditChatDeepSeekBody,
+        resultNormalizer: normalizeMeaningAuditChatModelResult,
         maxAttempts: 1,
       });
     } else if (url.pathname === "/api/confusable-find") {
@@ -883,6 +1183,8 @@ async function handleRequest(request, env, fetchImpl = fetch) {
     else if (url.pathname === "/api/confusable-suggest") invalidResponseMessage = "AI 返回了无法识别的易混词结果";
     else if (url.pathname === "/api/confusable-find") invalidResponseMessage = "AI 返回了无法识别的找词结果";
     else if (url.pathname === "/api/confusable-match-existing") invalidResponseMessage = "AI 返回了无法识别的易混语义结果";
+    else if (url.pathname === "/api/meaning-audit") invalidResponseMessage = "AI 返回了无法识别的词义核验结果";
+    else if (url.pathname === "/api/meaning-audit-chat") invalidResponseMessage = "AI 返回了无法识别的词义追问结果";
     const message = code === "AI_INVALID_RESPONSE"
       ? invalidResponseMessage
       : code === "AI_TIMEOUT"
@@ -893,6 +1195,8 @@ async function handleRequest(request, env, fetchImpl = fetch) {
 }
 
 export {
+  buildMeaningAuditChatDeepSeekBody,
+  buildMeaningAuditDeepSeekBody,
   buildConfusableMatchExistingDeepSeekBody,
   buildConfusableFindDeepSeekBody,
   buildConfusableSuggestDeepSeekBody,
@@ -906,12 +1210,16 @@ export {
   normalizeConfusableMatchExistingModelResult,
   normalizeConfusableFindModelResult,
   normalizeConfusableSuggestModelResult,
+  normalizeMeaningAuditChatModelResult,
+  normalizeMeaningAuditModelResult,
   normalizeModelResult,
   validateDailyGroupPayload,
   validateDailyReviewPayload,
   validateConfusableMatchExistingPayload,
   validateConfusableFindPayload,
   validateConfusableSuggestPayload,
+  validateMeaningAuditChatPayload,
+  validateMeaningAuditPayload,
   validatePayload,
 };
 

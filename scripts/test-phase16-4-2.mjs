@@ -194,7 +194,7 @@ await test("20 the success card distinguishes newly added and already present", 
 });
 
 await test("21 the confirmation card uses both formal local core meanings", () => {
-  assert.match(studySource, /question\.word\.coreMeaning \|\| question\.word\.shortMeaning/);
+  assert.match(studySource, /learningWord\.coreMeaning \|\| learningWord\.shortMeaning/);
   assert.match(studySource, /candidate\.word\?\.coreMeaning \|\| candidate\.word\?\.shortMeaning/);
 });
 

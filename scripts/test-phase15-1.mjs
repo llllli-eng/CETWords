@@ -76,7 +76,7 @@ await test("the compact card places the standard meaning before the explanation"
 });
 
 await test("the compact card uses the core meaning as the immediate standard answer", () => {
-  assert.match(studySource, /aiFeedbackStandardMeaning\.textContent = question\.word\.coreMeaning/);
+  assert.match(studySource, /aiFeedbackStandardMeaning\.textContent = learningWord\.coreMeaning/);
 });
 
 await test("the judgement explanation remains in the common result card", () => {
